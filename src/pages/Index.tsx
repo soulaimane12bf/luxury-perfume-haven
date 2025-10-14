@@ -1,21 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
 import CartDrawer from "@/components/CartDrawer";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { productsApi } from "@/lib/api";
+import { useNavigate } from "react-router-dom";
 
 import heroImage from "@/assets/hero-perfume.jpg";
-import perfume1 from "@/assets/perfume-1.jpg";
-import perfume2 from "@/assets/perfume-2.jpg";
-import perfume3 from "@/assets/perfume-3.jpg";
-import perfume4 from "@/assets/perfume-4.jpg";
-import perfume5 from "@/assets/perfume-5.jpg";
-import perfume6 from "@/assets/perfume-6.jpg";
 
 interface CartItem {
-  id: number;
+  id: string;
   name: string;
   price: number;
   image: string;
@@ -23,19 +19,29 @@ interface CartItem {
 }
 
 const Index = () => {
+  const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const products = [
-    { id: 1, name: "CREED Aventus 75ML", price: 3500, image: perfume1 },
-    { id: 2, name: "CHANEL Coco Mademoiselle", price: 2800, image: perfume2 },
-    { id: 3, name: "Dior Sauvage Elixir", price: 3200, image: perfume3 },
-    { id: 4, name: "Tom Ford Black Orchid", price: 4200, image: perfume4 },
-    { id: 5, name: "Versace Eros Flame", price: 1680, image: perfume5 },
-    { id: 6, name: "Lancôme La Vie Est Belle", price: 2400, image: perfume6 },
-  ];
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await productsApi.getAll({ category: 'men' });
+        setProducts(data.slice(0, 6)); // Get first 6 products
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        toast.error('فشل تحميل المنتجات');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleAddToCart = (product: { id: number; name: string; price: number; image: string }) => {
+    fetchProducts();
+  }, []);
+
+  const handleAddToCart = (product: any) => {
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
@@ -45,11 +51,17 @@ const Index = () => {
         );
       }
       toast.success("تمت الإضافة إلى السلة");
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { 
+        id: product.id, 
+        name: product.name, 
+        price: product.price, 
+        image: product.image_urls[0],
+        quantity: 1 
+      }];
     });
   };
 
-  const handleUpdateQuantity = (id: number, change: number) => {
+  const handleUpdateQuantity = (id: string, change: number) => {
     setCartItems((prev) => {
       return prev
         .map((item) => {
@@ -64,7 +76,7 @@ const Index = () => {
     });
   };
 
-  const handleRemoveItem = (id: number) => {
+  const handleRemoveItem = (id: string) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
     toast.success("تم الحذف من السلة");
   };
@@ -96,7 +108,12 @@ const Index = () => {
               <p className="text-xl md:text-2xl text-white/90">
                 اكتشف مجموعتنا الحصرية من أفخم العطور العالمية
               </p>
-              <Button variant="gold" size="lg" className="text-lg px-8 py-6">
+              <Button 
+                variant="gold" 
+                size="lg" 
+                className="text-lg px-8 py-6"
+                onClick={() => navigate('/collection')}
+              >
                 تسوق الآن
               </Button>
             </div>
@@ -111,18 +128,19 @@ const Index = () => {
           <p className="text-xl text-muted-foreground">العطور الأصلية الأكثر شهرة</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              id={product.id}
-              name={product.name}
-              price={product.price}
-              image={product.image}
-              onAddToCart={handleAddToCart}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-20">جاري التحميل...</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={handleAddToCart}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       <Footer />

@@ -1,0 +1,257 @@
+{
+  "categories": [
+    { "id": "1", "name": "عطور الرجال", "slug": "men", "description": "أفضل عطور الرجال الفاخرة" },
+    { "id": "2", "name": "عطور النساء", "slug": "women", "description": "عطور نسائية راقية ومميزة" },
+    { "id": "3", "name": "Coffret Cadeau", "slug": "gift-sets", "description": "مجموعات عطور هدايا فاخرة" },
+    { "id": "4", "name": "ARMAF", "slug": "armaf", "description": "مجموعة عطور أرماف الشهيرة" },
+    { "id": "5", "name": "عطور الجسم و مزيل العرق", "slug": "body-deo", "description": "عطور الجسم ومزيلات العرق" },
+    { "id": "6", "name": "الشعر و التجميل", "slug": "beauty", "description": "منتجات العناية بالشعر والجمال" },
+    { "id": "7", "name": "عينات العطور", "slug": "samples", "description": "عينات عطور للتجربة" },
+    { "id": "8", "name": "أقل من 200 درهم", "slug": "under-200", "description": "عطور بأسعار مناسبة" }
+  ],
+
+  "products": [
+    {
+      "id": "baraonda-nasomatto",
+      "name": "BARAONDA Nasomatto",
+      "brand": "Nasomatto",
+      "price": 1680,
+      "type": "PRODUIT",
+      "image_urls": [
+        "https://images.unsplash.com/photo-1541643600914-78b084683601?w=500",
+        "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=500"
+      ],
+      "description": "عطر فاخر غني بنفحات خشبية ومكونات دافئة تضيف طابعاً فريداً من نوعه. يتميز بثباته العالي ورائحته الغنية التي تدوم طويلاً. مثالي للمناسبات الخاصة والأمسيات الشتوية.",
+      "notes": {
+        "main_notes": ["woody", "warm spicy", "amber", "smoky"],
+        "top_notes": ["Whiskey", "Musk", "Oak", "Rose"]
+      },
+      "category": "men",
+      "best_selling": false,
+      "rating": 4.9,
+      "stock": 15,
+      "created_at": "2025-01-15T10:00:00Z"
+    },
+    {
+      "id": "creed-absolu-aventus",
+      "name": "CREED ABSOLU AVENTUS 75ML",
+      "brand": "Creed",
+      "price": 3500,
+      "type": "PRODUIT",
+      "image_urls": [
+        "https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=500",
+        "https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=500",
+        "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500"
+      ],
+      "description": "نسخة فاخرة من العطر الكلاسيكي Aventus من Creed. مزيج من الحمضيات والتوابل والأخشاب. عطر ملكي يجمع بين الأناقة والقوة، صنع خصيصاً للرجل الطموح والواثق من نفسه.",
+      "notes": {
+        "main_notes": ["citrus", "fresh spicy", "woody", "aromatic"],
+        "top_notes": ["Grapefruit", "Bergamot", "Pink Pepper", "Black Currant"]
+      },
+      "category": "men",
+      "best_selling": true,
+      "rating": 5,
+      "stock": 8,
+      "created_at": "2024-12-01T10:00:00Z"
+    },
+    {
+      "id": "myslf-le-parfum",
+      "name": "MYSLF Le Parfum",
+      "brand": "YSL",
+      "price": 1280,
+      "type": "PRODUIT",
+      "image_urls": [
+        "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500",
+        "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=500"
+      ],
+      "description": "عطر رجالي أنيق من إيف سان لوران يتميز بروائح خشبية وزهرية. عطر عصري يعكس شخصية الرجل المعاصر، يجمع بين الانتعاش والدفء في آن واحد.",
+      "notes": {
+        "main_notes": ["floral", "woody", "citrus", "fresh"],
+        "top_notes": ["Orange Blossom", "Bergamot", "Patchouli", "Vetiver"]
+      },
+      "category": "men",
+      "best_selling": true,
+      "rating": 4.7,
+      "stock": 20,
+      "created_at": "2025-02-10T10:00:00Z"
+    },
+    {
+      "id": "dior-sauvage",
+      "name": "DIOR SAUVAGE EDP 100ML",
+      "brand": "Dior",
+      "price": 2200,
+      "type": "PRODUIT",
+      "image_urls": [
+        "https://images.unsplash.com/photo-1588405748880-12d1d2a59d75?w=500",
+        "https://images.unsplash.com/photo-1541643600914-78b084683601?w=500"
+      ],
+      "description": "عطر رجالي قوي ومنعش من ديور. يجمع بين النفحات الحارة والمنعشة لخلق تجربة عطرية فريدة. مثالي للاستخدام اليومي والمناسبات الرسمية.",
+      "notes": {
+        "main_notes": ["fresh spicy", "woody", "aromatic"],
+        "top_notes": ["Bergamot", "Pepper", "Lavender", "Ambroxan"]
+      },
+      "category": "men",
+      "best_selling": true,
+      "rating": 4.8,
+      "stock": 12,
+      "created_at": "2024-11-20T10:00:00Z"
+    },
+    {
+      "id": "armaf-club-de-nuit",
+      "name": "ARMAF CLUB DE NUIT INTENSE",
+      "brand": "Armaf",
+      "price": 450,
+      "type": "TESTEUR",
+      "image_urls": [
+        "https://images.unsplash.com/photo-1563170351-be82bc888aa4?w=500"
+      ],
+      "description": "عطر رجالي قوي وجذاب من أرماف. بديل ممتاز للعطور الفاخرة بسعر معقول. يتميز بثباته العالي ورائحته القوية.",
+      "notes": {
+        "main_notes": ["woody", "citrus", "spicy"],
+        "top_notes": ["Lemon", "Blackcurrant", "Pineapple", "Bergamot"]
+      },
+      "category": "men",
+      "best_selling": false,
+      "rating": 4.5,
+      "stock": 30,
+      "created_at": "2025-03-01T10:00:00Z"
+    },
+    {
+      "id": "chanel-coco-mademoiselle",
+      "name": "CHANEL COCO MADEMOISELLE 100ML",
+      "brand": "Chanel",
+      "price": 2800,
+      "type": "PRODUIT",
+      "image_urls": [
+        "https://images.unsplash.com/photo-1592069002308-2e614fd2f88d?w=500",
+        "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500"
+      ],
+      "description": "عطر نسائي راقي وأنيق من شانيل. يجمع بين الأنوثة والجرأة. عطر كلاسيكي يناسب جميع الأوقات والمناسبات.",
+      "notes": {
+        "main_notes": ["floral", "fresh", "oriental"],
+        "top_notes": ["Orange", "Bergamot", "Rose", "Jasmine"]
+      },
+      "category": "women",
+      "best_selling": true,
+      "rating": 4.9,
+      "stock": 10,
+      "created_at": "2024-10-15T10:00:00Z"
+    },
+    {
+      "id": "lattafa-asad",
+      "name": "LATTAFA ASAD EDP 100ML",
+      "brand": "Lattafa",
+      "price": 380,
+      "type": "PRODUIT",
+      "image_urls": [
+        "https://images.unsplash.com/photo-1541643600914-78b084683601?w=500"
+      ],
+      "description": "عطر شرقي فاخر من لطافة. يتميز برائحته القوية والجذابة. مثالي لعشاق العطور الشرقية الأصيلة.",
+      "notes": {
+        "main_notes": ["oriental", "woody", "spicy"],
+        "top_notes": ["Saffron", "Nutmeg", "Lavender", "Oud"]
+      },
+      "category": "men",
+      "best_selling": false,
+      "rating": 4.6,
+      "stock": 25,
+      "created_at": "2025-01-25T10:00:00Z"
+    },
+    {
+      "id": "tom-ford-oud-wood",
+      "name": "TOM FORD OUD WOOD 100ML",
+      "brand": "Tom Ford",
+      "price": 4200,
+      "type": "PRODUIT",
+      "image_urls": [
+        "https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=500",
+        "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500"
+      ],
+      "description": "عطر فاخر من توم فورد غني بخشب العود النادر. عطر استثنائي يجمع بين الفخامة والأصالة الشرقية.",
+      "notes": {
+        "main_notes": ["woody", "oriental", "spicy"],
+        "top_notes": ["Oud", "Rosewood", "Cardamom", "Sandalwood"]
+      },
+      "category": "men",
+      "best_selling": true,
+      "rating": 4.9,
+      "stock": 6,
+      "created_at": "2024-09-10T10:00:00Z"
+    }
+  ],
+
+  "reviews": [
+    {
+      "id": "r1",
+      "product_id": "creed-absolu-aventus",
+      "name": "Salaheddine Benali",
+      "rating": 5,
+      "comment": "عطر خرافي وثابت جداً! يستحق كل درهم دفعته فيه. رائحة ملكية بحق.",
+      "date": "2025-10-14T20:00:00Z",
+      "approved": true
+    },
+    {
+      "id": "r2",
+      "product_id": "myslf-le-parfum",
+      "name": "Marwane Lachhab",
+      "rating": 4,
+      "comment": "رائحة جميلة ومميزة. مناسب للاستخدام اليومي. أنصح به.",
+      "date": "2025-10-13T15:30:00Z",
+      "approved": true
+    },
+    {
+      "id": "r3",
+      "product_id": "creed-absolu-aventus",
+      "name": "Ahmed Tazi",
+      "rating": 5,
+      "comment": "أفضل عطر جربته في حياتي! الثبات ممتاز والرائحة فخمة جداً.",
+      "date": "2025-10-12T14:20:00Z",
+      "approved": true
+    },
+    {
+      "id": "r4",
+      "product_id": "dior-sauvage",
+      "name": "Youssef Amrani",
+      "rating": 5,
+      "comment": "عطر كلاسيكي ورائع. يناسب كل الأوقات والمناسبات.",
+      "date": "2025-10-11T10:15:00Z",
+      "approved": true
+    },
+    {
+      "id": "r5",
+      "product_id": "chanel-coco-mademoiselle",
+      "name": "Fatima Zahra",
+      "rating": 5,
+      "comment": "عطر راقي جداً ورائحته تدوم طويلاً. أجمل هدية تلقيتها!",
+      "date": "2025-10-10T18:45:00Z",
+      "approved": true
+    },
+    {
+      "id": "r6",
+      "product_id": "baraonda-nasomatto",
+      "name": "Karim Benjelloun",
+      "rating": 5,
+      "comment": "عطر فريد من نوعه! رائحة خشبية دافئة مميزة جداً.",
+      "date": "2025-10-09T16:30:00Z",
+      "approved": true
+    },
+    {
+      "id": "r7",
+      "product_id": "armaf-club-de-nuit",
+      "name": "Mehdi Alaoui",
+      "rating": 4,
+      "comment": "قيمة ممتازة مقابل السعر. رائحة قوية وثابتة.",
+      "date": "2025-10-08T12:00:00Z",
+      "approved": true
+    },
+    {
+      "id": "r8",
+      "product_id": "tom-ford-oud-wood",
+      "name": "Rachid Khalil",
+      "rating": 5,
+      "comment": "تحفة فنية! خشب العود فيه نقي وأصلي. يستحق السعر.",
+      "date": "2025-10-07T09:20:00Z",
+      "approved": true
+    }
+  ]
+}
