@@ -1,6 +1,9 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { ShoppingCart, Search, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { categoriesApi } from "@/lib/api";
 
 interface HeaderProps {
   cartItemCount: number;
@@ -8,20 +11,27 @@ interface HeaderProps {
   onCartClick: () => void;
 }
 
+type Category = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+};
+
 const Header = ({ cartItemCount, cartTotal, onCartClick }: HeaderProps) => {
-  const menuItems = [
-    "الصفحة الرئيسية",
-    "Coffret Cadeau",
-    "عطور الرجال",
-    "الأكثر مبيعا للرجال",
-    "عطور النساء",
-    "الأكثر مبيعا للنساء",
-    "عطور أقل من 200 درهم",
-    "ARMAF",
-    "عطور الجسم ومزيل العرق",
-    "الشعر والتجميل",
-    "عينات العطور",
-  ];
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await categoriesApi.getAll();
+        setCategories(data);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-background shadow-elegant">
@@ -72,14 +82,26 @@ const Header = ({ cartItemCount, cartTotal, onCartClick }: HeaderProps) => {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px]">
                 <nav className="flex flex-col gap-4 mt-8">
-                  {menuItems.map((item, index) => (
-                    <a
-                      key={index}
-                      href="#"
+                  <Link
+                    to="/"
+                    className="text-lg hover:text-gold transition-smooth py-2 border-b border-border"
+                  >
+                    الصفحة الرئيسية
+                  </Link>
+                  <Link
+                    to="/best-sellers"
+                    className="text-lg hover:text-gold transition-smooth py-2 border-b border-border"
+                  >
+                    الأكثر مبيعاً
+                  </Link>
+                  {categories.map((category) => (
+                    <Link
+                      key={category.id}
+                      to={`/collection/${category.slug}`}
                       className="text-lg hover:text-gold transition-smooth py-2 border-b border-border"
                     >
-                      {item}
-                    </a>
+                      {category.name}
+                    </Link>
                   ))}
                 </nav>
               </SheetContent>

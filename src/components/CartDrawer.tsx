@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Minus, Plus, X } from "lucide-react";
 
 interface CartItem {
-  id: number;
+  id: string;
   name: string;
   price: number;
   image: string;
@@ -14,8 +14,8 @@ interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
-  onUpdateQuantity: (id: number, change: number) => void;
-  onRemoveItem: (id: number) => void;
+  onUpdateQuantity: (id: string, change: number) => void;
+  onRemoveItem: (id: string) => void;
 }
 
 const CartDrawer = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }: CartDrawerProps) => {
