@@ -5,13 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Star, Minus, Plus, ShoppingCart, ArrowLeft } from 'lucide-react';
+import { Star, Minus, Plus, ShoppingCart, ArrowLeft, MessageCircle } from 'lucide-react';
+import { useCart } from '@/contexts/CartContext';
+import { buyNowWhatsApp } from '@/lib/whatsapp';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import ReviewForm from '../components/ReviewForm';
 import ReviewList from '../components/ReviewList';
 
 export default function ProductSingle() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -51,16 +56,18 @@ export default function ProductSingle() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b">
-        <div className="container py-4">
-          <Button variant="ghost" onClick={() => navigate(-1)}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            العودة
-          </Button>
+    <>
+      <Header />
+      <div className="min-h-screen bg-background">
+        {/* Header Navigation */}
+        <div className="border-b">
+          <div className="container py-4">
+            <Button variant="ghost" onClick={() => navigate(-1)}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              العودة
+            </Button>
+          </div>
         </div>
-      </div>
 
       {/* Breadcrumb */}
       <div className="container py-4 text-sm text-muted-foreground">
@@ -72,11 +79,11 @@ export default function ProductSingle() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left Side - Images */}
           <div className="space-y-4">
-            <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+            <div className="aspect-square rounded-lg overflow-hidden bg-muted group">
               <img
                 src={product.image_urls[selectedImage]}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 cursor-zoom-in"
               />
             </div>
             <div className="grid grid-cols-4 gap-4">
@@ -84,11 +91,15 @@ export default function ProductSingle() {
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 transition ${
+                  className={`aspect-square rounded-lg overflow-hidden border-2 transition group ${
                     selectedImage === index ? 'border-primary' : 'border-transparent'
                   }`}
                 >
-                  <img src={url} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                  <img 
+                    src={url} 
+                    alt={`${product.name} ${index + 1}`} 
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
+                  />
                 </button>
               ))}
             </div>
@@ -157,11 +168,31 @@ export default function ProductSingle() {
               </div>
             </div>
 
-            {/* Add to Cart Button */}
-            <Button size="lg" className="w-full text-lg" disabled={product.stock === 0}>
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              اضغط هنا للطلب
-            </Button>
+            {/* Buttons */}
+            <div className="space-y-3">
+              {/* Buy Now with WhatsApp */}
+              <Button 
+                size="lg" 
+                className="w-full text-lg bg-green-600 hover:bg-green-700" 
+                disabled={product.stock === 0}
+                onClick={() => buyNowWhatsApp(product, quantity)}
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                اشتري الآن عبر واتساب
+              </Button>
+
+              {/* Add to Cart Button */}
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="w-full text-lg" 
+                disabled={product.stock === 0}
+                onClick={() => addToCart(product, quantity)}
+              >
+                <ShoppingCart className="mr-2 h-5 w-5" />
+                أضف إلى السلة
+              </Button>
+            </div>
 
             {product.best_selling && (
               <Badge variant="destructive" className="w-full justify-center py-2">
@@ -227,5 +258,7 @@ export default function ProductSingle() {
         </div>
       </div>
     </div>
+    <Footer />
+    </>
   );
 }

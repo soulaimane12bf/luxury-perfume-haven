@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { LogOut, ShoppingBag } from 'lucide-react';
+import { LogOut, ShoppingBag, Store } from 'lucide-react';
 
 export default function AdminNavbar() {
   const { admin, logout } = useAuth();
@@ -13,26 +13,38 @@ export default function AdminNavbar() {
   };
 
   return (
-    <div className="border-b bg-white">
-      <div className="container py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <ShoppingBag className="h-6 w-6" />
+    <div className="border-b bg-background dark:bg-card">
+      <div className="container py-3 md:py-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 md:gap-3">
+          <ShoppingBag className="h-5 w-5 md:h-6 md:w-6 flex-shrink-0" />
           <div>
-            <h1 className="text-xl font-bold">لوحة التحكم</h1>
-            <p className="text-sm text-muted-foreground">Luxury Perfume Haven</p>
+            <h1 className="text-base md:text-xl font-bold">لوحة التحكم</h1>
+            <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">Luxury Perfume Haven</p>
           </div>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           {admin && (
-            <div className="text-sm text-right">
+            <div className="text-xs md:text-sm text-right hidden md:block">
               <div className="font-medium">{admin.username}</div>
               <div className="text-xs text-muted-foreground">{admin.role}</div>
             </div>
           )}
-          <Button variant="outline" size="sm" onClick={handleLogout}>
+          <Button variant="outline" size="sm" onClick={() => navigate('/')} className="hidden sm:flex">
+            <Store className="h-4 w-4 mr-2" />
+            <span className="hidden md:inline">العودة للمتجر</span>
+            <span className="md:hidden">المتجر</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate('/')} className="sm:hidden">
+            <Store className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleLogout} className="hidden sm:flex">
             <LogOut className="h-4 w-4 mr-2" />
-            تسجيل الخروج
+            <span className="hidden md:inline">تسجيل الخروج</span>
+            <span className="md:hidden">خروج</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleLogout} className="sm:hidden">
+            <LogOut className="h-4 w-4" />
           </Button>
         </div>
       </div>

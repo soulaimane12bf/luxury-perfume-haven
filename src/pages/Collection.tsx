@@ -3,6 +3,8 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { productsApi, categoriesApi } from '@/lib/api';
 import ProductCard from '@/components/ProductCard';
 import FilterBar from '@/components/FilterBar';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Filter } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -64,30 +66,31 @@ export default function Collection() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b">
-        <div className="container py-8">
-          <h1 className="text-4xl font-bold mb-2">
-            {categoryData?.name || 'جميع العطور'}
-          </h1>
-          {categoryData?.description && (
-            <p className="text-muted-foreground">{categoryData.description}</p>
-          )}
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Desktop Filter Sidebar */}
-          <div className="hidden lg:block">
-            <FilterBar 
-              filters={filters} 
-              onFilterChange={handleFilterChange}
-              brands={brands}
-            />
+    <>
+      <Header />
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="border-b">
+          <div className="container py-8">
+            <h1 className="text-4xl font-bold mb-2">
+              {categoryData?.name || 'جميع العطور'}
+            </h1>
+            {categoryData?.description && (
+              <p className="text-muted-foreground">{categoryData.description}</p>
+            )}
           </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="container py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">{/* Desktop Filter Sidebar */}
+            <div className="hidden lg:block">
+              <FilterBar 
+                filters={filters} 
+                onFilterChange={handleFilterChange}
+                brands={brands}
+              />
+            </div>
 
           {/* Mobile Filter Button */}
           <div className="lg:hidden fixed bottom-4 right-4 z-50">
@@ -132,5 +135,7 @@ export default function Collection() {
         </div>
       </div>
     </div>
+      <Footer />
+    </>
   );
 }

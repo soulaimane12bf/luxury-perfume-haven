@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
-import CartDrawer from "@/components/CartDrawer";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -10,18 +9,8 @@ import { useNavigate } from "react-router-dom";
 
 import heroImage from "@/assets/hero-perfume.jpg";
 
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  quantity: number;
-}
-
 const Index = () => {
   const navigate = useNavigate();
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,56 +30,9 @@ const Index = () => {
     fetchProducts();
   }, []);
 
-  const handleAddToCart = (product: any) => {
-    setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
-        toast.success("تم تحديث الكمية");
-        return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      toast.success("تمت الإضافة إلى السلة");
-      return [...prev, { 
-        id: product.id, 
-        name: product.name, 
-        price: product.price, 
-        image: product.image_urls[0],
-        quantity: 1 
-      }];
-    });
-  };
-
-  const handleUpdateQuantity = (id: string, change: number) => {
-    setCartItems((prev) => {
-      return prev
-        .map((item) => {
-          if (item.id === id) {
-            const newQuantity = item.quantity + change;
-            if (newQuantity <= 0) return null;
-            return { ...item, quantity: newQuantity };
-          }
-          return item;
-        })
-        .filter((item): item is CartItem => item !== null);
-    });
-  };
-
-  const handleRemoveItem = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
-    toast.success("تم الحذف من السلة");
-  };
-
-  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const cartTotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
   return (
     <div className="min-h-screen bg-background">
-      <Header
-        cartItemCount={cartItemCount}
-        cartTotal={cartTotal}
-        onCartClick={() => setIsCartOpen(true)}
-      />
+      <Header />
 
       {/* Hero Section */}
       <section className="relative h-[600px] overflow-hidden">
@@ -136,7 +78,6 @@ const Index = () => {
               <ProductCard
                 key={product.id}
                 product={product}
-                onAddToCart={handleAddToCart}
               />
             ))}
           </div>
@@ -144,14 +85,6 @@ const Index = () => {
       </section>
 
       <Footer />
-
-      <CartDrawer
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        items={cartItems}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveItem}
-      />
     </div>
   );
 };

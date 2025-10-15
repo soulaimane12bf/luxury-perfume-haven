@@ -137,3 +137,40 @@ export const getBrands = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Search products
+export const searchProducts = async (req, res) => {
+  try {
+    const { q, limit = 10 } = req.query;
+    
+    if (!q || q.trim() === '') {
+      return res.json([]);
+    }
+    
+    const searchTerm = q.trim();
+    
+    // Search in name, brand, category, description, and type
+    const products = await Product.findAll({
+      where: {
+        [Op.or]: [
+          { name: { [Op.like]: `%${searchTerm}%` } },
+          { brand: { [Op.like]: `%${searchTerm}%` } },
+          { category: { [Op.like]: `%${searchTerm}%` } },
+          { type: { [Op.like]: `%${searchTerm}%` } },
+          { description: { [Op.like]: `%${searchTerm}%` } }
+        ]
+      },
+      limit: Number(limit),
+      order: [
+        // Prioritize exact name matches
+        [sequelize.literal(`CASE WHEN LOWER(name) LIKE '${searchTerm.toLowerCase()}%' THEN 0 WHEN LOWER(brand) LIKE '${searchTerm.toLowerCase()}%' THEN 1 ELSE 2 END`), 'ASC'],
+        ['name', 'ASC']
+      ]
+    });
+    
+    res.json(products);
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};

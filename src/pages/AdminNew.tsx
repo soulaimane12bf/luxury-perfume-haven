@@ -358,76 +358,120 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background">
       <AdminNavbar />
       
-      <div className="container py-8">
+      <div className="container py-4 md:py-8 px-4">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">إجمالي المنتجات</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+              <CardTitle className="text-xs md:text-sm font-medium">إجمالي المنتجات</CardTitle>
+              <Package className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalProducts}</div>
+            <CardContent className="p-4 md:p-6 pt-0">
+              <div className="text-xl md:text-2xl font-bold">{stats.totalProducts}</div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">الفئات</CardTitle>
-              <FolderTree className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+              <CardTitle className="text-xs md:text-sm font-medium">الفئات</CardTitle>
+              <FolderTree className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalCategories}</div>
+            <CardContent className="p-4 md:p-6 pt-0">
+              <div className="text-xl md:text-2xl font-bold">{stats.totalCategories}</div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">الأكثر مبيعاً</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+              <CardTitle className="text-xs md:text-sm font-medium">الأكثر مبيعاً</CardTitle>
+              <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.bestSellers}</div>
+            <CardContent className="p-4 md:p-6 pt-0">
+              <div className="text-xl md:text-2xl font-bold">{stats.bestSellers}</div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">تقييمات معلقة</CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+              <CardTitle className="text-xs md:text-sm font-medium">تقييمات معلقة</CardTitle>
+              <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingReviews}</div>
+            <CardContent className="p-4 md:p-6 pt-0">
+              <div className="text-xl md:text-2xl font-bold">{stats.pendingReviews}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="products" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="products">المنتجات</TabsTrigger>
-            <TabsTrigger value="categories">الفئات</TabsTrigger>
-            <TabsTrigger value="reviews">التقييمات</TabsTrigger>
-            <TabsTrigger value="bestsellers">الأكثر مبيعاً</TabsTrigger>
+        <Tabs defaultValue="products" className="space-y-4 md:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">
+            <TabsTrigger value="products" className="text-xs md:text-sm">المنتجات</TabsTrigger>
+            <TabsTrigger value="categories" className="text-xs md:text-sm">الفئات</TabsTrigger>
+            <TabsTrigger value="reviews" className="text-xs md:text-sm">التقييمات</TabsTrigger>
+            <TabsTrigger value="bestsellers" className="text-xs md:text-sm">الأكثر مبيعاً</TabsTrigger>
           </TabsList>
 
           {/* Products Tab */}
           <TabsContent value="products">
             <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
+              <CardHeader className="p-4 md:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <CardTitle>إدارة المنتجات</CardTitle>
-                    <CardDescription>عرض وتعديل وحذف المنتجات</CardDescription>
+                    <CardTitle className="text-lg md:text-xl">إدارة المنتجات</CardTitle>
+                    <CardDescription className="text-xs md:text-sm">عرض وتعديل وحذف المنتجات</CardDescription>
                   </div>
-                  <Button onClick={() => openProductDialog()}>
+                  <Button onClick={() => openProductDialog()} size="sm" className="w-full sm:w-auto">
                     <Plus className="h-4 w-4 mr-2" />
                     إضافة منتج
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
+              <CardContent className="p-0 md:p-6 md:pt-0">
+                {/* Mobile View - Cards */}
+                <div className="md:hidden space-y-3 p-4">
+                  {products.map((product) => (
+                    <Card key={product.id} className="p-4">
+                      <div className="flex gap-3">
+                        <img 
+                          src={product.image_urls[0]} 
+                          alt={product.name}
+                          className="h-20 w-20 rounded object-cover flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm truncate">{product.name}</h3>
+                          <p className="text-xs text-muted-foreground">{product.brand}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant="outline" className="text-xs">{product.category}</Badge>
+                            <span className="text-sm font-bold text-gold">{product.price} DH</span>
+                          </div>
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openProductDialog(product)}
+                              className="flex-1"
+                            >
+                              <Edit className="h-3 w-3 mr-1" />
+                              تعديل
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteProduct(product.id)}
+                              className="flex-1"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              حذف
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Desktop View - Table */}
+                <div className="hidden md:block rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -487,20 +531,58 @@ export default function AdminDashboard() {
           {/* Categories Tab */}
           <TabsContent value="categories">
             <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
+              <CardHeader className="p-4 md:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <CardTitle>إدارة الفئات</CardTitle>
-                    <CardDescription>عرض وتعديل الفئات</CardDescription>
+                    <CardTitle className="text-lg md:text-xl">إدارة الفئات</CardTitle>
+                    <CardDescription className="text-xs md:text-sm">عرض وتعديل الفئات</CardDescription>
                   </div>
-                  <Button onClick={() => openCategoryDialog()}>
+                  <Button onClick={() => openCategoryDialog()} size="sm" className="w-full sm:w-auto">
                     <Plus className="h-4 w-4 mr-2" />
                     إضافة فئة
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
+              <CardContent className="p-0 md:p-6 md:pt-0">
+                {/* Mobile View - Cards */}
+                <div className="md:hidden space-y-3 p-4">
+                  {categories.map((category) => (
+                    <Card key={category.id} className="p-4">
+                      <div className="space-y-2">
+                        <div>
+                          <h3 className="font-semibold text-sm">{category.name}</h3>
+                          <p className="text-xs text-muted-foreground">{category.slug}</p>
+                        </div>
+                        {category.description && (
+                          <p className="text-xs text-muted-foreground line-clamp-2">{category.description}</p>
+                        )}
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openCategoryDialog(category)}
+                            className="flex-1"
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            تعديل
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteCategory(category.id)}
+                            className="flex-1"
+                          >
+                            <Trash2 className="h-3 w-3 text-destructive mr-1" />
+                            حذف
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Desktop View - Table */}
+                <div className="hidden md:block rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -546,12 +628,74 @@ export default function AdminDashboard() {
           {/* Reviews Tab */}
           <TabsContent value="reviews">
             <Card>
-              <CardHeader>
-                <CardTitle>إدارة التقييمات</CardTitle>
-                <CardDescription>الموافقة على التقييمات أو حذفها</CardDescription>
+              <CardHeader className="p-4 md:p-6">
+                <div>
+                  <CardTitle className="text-lg md:text-xl">إدارة التقييمات</CardTitle>
+                  <CardDescription className="text-xs md:text-sm">الموافقة على التقييمات أو حذفها</CardDescription>
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
+              <CardContent className="p-0 md:p-6 md:pt-0">
+                {/* Mobile View - Cards */}
+                <div className="md:hidden space-y-3 p-4">
+                  {reviews.map((review) => {
+                    const product = products.find(p => p.id === review.product_id);
+                    return (
+                      <Card key={review.id} className="p-4">
+                        <div className="space-y-3">
+                          <div>
+                            <h3 className="font-semibold text-sm">{review.name}</h3>
+                            <p className="text-xs text-muted-foreground">{product?.name || review.product_id}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-3 w-3 ${
+                                    i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            {review.approved ? (
+                              <Badge variant="default" className="text-xs">موافق عليه</Badge>
+                            ) : (
+                              <Badge variant="secondary" className="text-xs">معلق</Badge>
+                            )}
+                          </div>
+                          {review.comment && (
+                            <p className="text-xs text-muted-foreground line-clamp-3">{review.comment}</p>
+                          )}
+                          <div className="flex gap-2 pt-2">
+                            {!review.approved && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleApproveReview(review.id)}
+                                className="flex-1"
+                              >
+                                <Check className="h-3 w-3 text-green-600 mr-1" />
+                                موافقة
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteReview(review.id)}
+                              className={!review.approved ? 'flex-1' : 'w-full'}
+                            >
+                              <Trash2 className="h-3 w-3 text-destructive mr-1" />
+                              حذف
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop View - Table */}
+                <div className="hidden md:block rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -623,12 +767,37 @@ export default function AdminDashboard() {
           {/* Best Sellers Tab */}
           <TabsContent value="bestsellers">
             <Card>
-              <CardHeader>
-                <CardTitle>إدارة الأكثر مبيعاً</CardTitle>
-                <CardDescription>تبديل حالة "الأكثر مبيعاً" للمنتجات</CardDescription>
+              <CardHeader className="p-4 md:p-6">
+                <div>
+                  <CardTitle className="text-lg md:text-xl">إدارة الأكثر مبيعاً</CardTitle>
+                  <CardDescription className="text-xs md:text-sm">تبديل حالة "الأكثر مبيعاً" للمنتجات</CardDescription>
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
+              <CardContent className="p-0 md:p-6 md:pt-0">
+                {/* Mobile View - Cards */}
+                <div className="md:hidden space-y-3 p-4">
+                  {products.map((product) => (
+                    <Card key={product.id} className="p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm truncate">{product.name}</h3>
+                          <p className="text-xs text-muted-foreground">{product.brand}</p>
+                          <p className="text-sm font-bold text-gold mt-1">{product.price} درهم</p>
+                        </div>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-xs text-muted-foreground">الأكثر مبيعاً</span>
+                          <Switch
+                            checked={product.best_selling}
+                            onCheckedChange={() => handleToggleBestSelling(product.id)}
+                          />
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Desktop View - Table */}
+                <div className="hidden md:block rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -671,7 +840,7 @@ export default function AdminDashboard() {
             </DialogHeader>
             
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="product-id">معرّف المنتج</Label>
                   <Input
@@ -692,7 +861,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="product-brand">العلامة التجارية</Label>
                   <Input
@@ -712,7 +881,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="product-category">الفئة</Label>
                   <Select
@@ -800,11 +969,11 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setProductDialog(false)}>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={() => setProductDialog(false)} className="w-full sm:w-auto">
                 إلغاء
               </Button>
-              <Button onClick={handleSaveProduct}>
+              <Button onClick={handleSaveProduct} className="w-full sm:w-auto">
                 {editingProduct ? 'حفظ التعديلات' : 'إضافة المنتج'}
               </Button>
             </DialogFooter>
@@ -813,7 +982,7 @@ export default function AdminDashboard() {
 
         {/* Category Dialog */}
         <Dialog open={categoryDialog} onOpenChange={setCategoryDialog}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>{editingCategory ? 'تعديل الفئة' : 'إضافة فئة جديدة'}</DialogTitle>
               <DialogDescription>
@@ -863,11 +1032,11 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setCategoryDialog(false)}>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={() => setCategoryDialog(false)} className="w-full sm:w-auto">
                 إلغاء
               </Button>
-              <Button onClick={handleSaveCategory}>
+              <Button onClick={handleSaveCategory} className="w-full sm:w-auto">
                 {editingCategory ? 'حفظ التعديلات' : 'إضافة الفئة'}
               </Button>
             </DialogFooter>

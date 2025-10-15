@@ -1,5 +1,35 @@
 # 🚀 Quick Start Guide - Parfumeur Walid Clone
 
+## 🎯 One-Command Setup (Fresh Codespace)
+
+```bash
+# Run the automated setup script
+bash setup.sh
+```
+
+This installs MySQL, creates the database, and installs all dependencies.
+
+## 🚀 One-Command Start
+
+```bash
+# Start both backend and frontend servers
+npm run dev
+```
+
+This will start:
+- **Backend API:** http://localhost:5000
+- **Frontend:** http://localhost:8080 (or 8081 if 8080 is in use)
+
+### Alternative: Run Servers Separately
+
+```bash
+# Terminal 1: Backend only
+npm run dev:backend
+
+# Terminal 2: Frontend only  
+npm run dev:frontend
+```
+
 ## ✅ Project is Ready!
 
 Both servers are now running:
