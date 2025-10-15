@@ -63,6 +63,14 @@ export const productsApi = {
     return response.json();
   },
 
+  search: async (query: string, limit = 10) => {
+    const params = new URLSearchParams();
+    params.append('q', query);
+    params.append('limit', String(limit));
+    const response = await fetch(`${API_BASE_URL}/products/search?${params}`);
+    return response.json();
+  },
+
   create: async (product: unknown) => {
     const response = await fetch(`${API_BASE_URL}/products`, {
       method: 'POST',

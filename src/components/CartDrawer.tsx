@@ -1,28 +1,19 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, X } from "lucide-react";
+import { Minus, Plus, X, MessageCircle } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
+import { checkoutCartWhatsApp } from "@/lib/whatsapp";
 
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  quantity: number;
-}
+const CartDrawer = () => {
+  const { items, isOpen, closeCart, updateQuantity, removeFromCart, getTotalPrice } = useCart();
 
-interface CartDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  items: CartItem[];
-  onUpdateQuantity: (id: string, change: number) => void;
-  onRemoveItem: (id: string) => void;
-}
-
-const CartDrawer = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }: CartDrawerProps) => {
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const handleWhatsAppCheckout = () => {
+    checkoutCartWhatsApp(items);
+    closeCart();
+  };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
+    <Sheet open={isOpen} onOpenChange={closeCart}>
       <SheetContent side="left" className="w-full sm:w-[400px]">
         <SheetHeader>
           <SheetTitle className="text-2xl font-bold">سلة مشترياتي</SheetTitle>
@@ -37,7 +28,7 @@ const CartDrawer = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }: 
               items.map((item) => (
                 <div key={item.id} className="flex gap-4 p-4 border border-border rounded-lg">
                   <img
-                    src={item.image}
+                    src={item.image_url}
                     alt={item.name}
                     className="w-20 h-20 object-cover rounded"
                   />
@@ -49,7 +40,7 @@ const CartDrawer = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }: 
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => onUpdateQuantity(item.id, -1)}
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
@@ -58,7 +49,7 @@ const CartDrawer = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }: 
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => onUpdateQuantity(item.id, 1)}
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -68,7 +59,7 @@ const CartDrawer = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }: 
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => onRemoveItem(item.id)}
+                    onClick={() => removeFromCart(item.id)}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -82,12 +73,17 @@ const CartDrawer = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }: 
             <div className="border-t border-border pt-4 space-y-4">
               <div className="flex justify-between items-center text-xl font-bold">
                 <span>مجموع سلة التسوق</span>
-                <span className="text-gold">{total} درهم</span>
+                <span className="text-gold">{getTotalPrice()} درهم</span>
               </div>
-              <Button variant="cta" className="w-full" size="lg">
-                شراء الآن
+              <Button 
+                className="w-full bg-green-600 hover:bg-green-700" 
+                size="lg"
+                onClick={handleWhatsAppCheckout}
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                اشتري الآن عبر واتساب
               </Button>
-              <Button variant="ghost" className="w-full" onClick={onClose}>
+              <Button variant="ghost" className="w-full" onClick={closeCart}>
                 استمر في التسوق
               </Button>
             </div>
@@ -99,3 +95,4 @@ const CartDrawer = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }: 
 };
 
 export default CartDrawer;
+

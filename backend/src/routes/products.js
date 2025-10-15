@@ -7,7 +7,8 @@ import {
   deleteProduct,
   getBestSelling,
   toggleBestSelling,
-  getBrands
+  getBrands,
+  searchProducts
 } from '../controllers/productController.js';
 import { authMiddleware } from '../middleware/auth.js';
 
@@ -17,6 +18,7 @@ const router = express.Router();
 router.get('/', getAllProducts);
 router.get('/best-selling', getBestSelling);
 router.get('/brands', getBrands);
+router.get('/search', searchProducts);
 router.get('/:id', getProductById);
 
 // Admin routes (protected)

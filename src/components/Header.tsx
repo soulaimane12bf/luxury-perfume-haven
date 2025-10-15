@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingCart, Search, Menu } from "lucide-react";
+import { ShoppingCart, Search, Menu, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { categoriesApi } from "@/lib/api";
-
-interface HeaderProps {
-  cartItemCount: number;
-  cartTotal: number;
-  onCartClick: () => void;
-}
+import { useCart } from "@/contexts/CartContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import SearchDialog from "@/components/SearchDialog";
 
 type Category = {
   id: string;
@@ -18,8 +15,11 @@ type Category = {
   description: string;
 };
 
-const Header = ({ cartItemCount, cartTotal, onCartClick }: HeaderProps) => {
+const Header = () => {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const { getTotalItems, openCart } = useCart();
+  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -50,12 +50,12 @@ const Header = ({ cartItemCount, cartTotal, onCartClick }: HeaderProps) => {
             variant="ghost"
             size="icon"
             className="relative"
-            onClick={onCartClick}
+            onClick={openCart}
           >
             <ShoppingCart className="h-6 w-6" />
-            {cartItemCount > 0 && (
+            {getTotalItems() > 0 && (
               <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-accent text-xs text-accent-foreground flex items-center justify-center">
-                {cartItemCount}
+                {getTotalItems()}
               </span>
             )}
           </Button>
@@ -68,9 +68,13 @@ const Header = ({ cartItemCount, cartTotal, onCartClick }: HeaderProps) => {
             <p className="text-xs text-muted-foreground">عطور فاخرة</p>
           </div>
 
-          {/* Right: Search & Menu */}
+          {/* Right: Dark Mode, Search & Menu */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" onClick={toggleTheme}>
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+            
+            <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)}>
               <Search className="h-5 w-5" />
             </Button>
 
@@ -109,6 +113,9 @@ const Header = ({ cartItemCount, cartTotal, onCartClick }: HeaderProps) => {
           </div>
         </div>
       </div>
+
+      {/* Search Dialog */}
+      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </header>
   );
 };

@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "bash setup.sh && npm run dev",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "start": "bash start-banner.sh && bash setup.sh && npm run dev",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "vite",
-    "dev:backend": "cd backend && npm run dev",
+    "dev:backend": "cd backend && npm start",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",

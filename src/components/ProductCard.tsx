@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 
 interface ProductCardProps {
   product: {
@@ -16,11 +17,11 @@ interface ProductCardProps {
     rating?: number;
     stock?: number;
   };
-  onAddToCart?: (product: any) => void;
 }
 
-const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
+const ProductCard = ({ product }: ProductCardProps) => {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
 
   return (
     <Card 
@@ -71,11 +72,7 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
           className="w-full"
           onClick={(e) => {
             e.stopPropagation();
-            if (onAddToCart) {
-              onAddToCart(product);
-            } else {
-              navigate(`/product/${product.id}`);
-            }
+            addToCart(product, 1);
           }}
         >
           اضغط هنا للطلب
