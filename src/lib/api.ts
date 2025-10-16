@@ -149,6 +149,10 @@ export const categoriesApi = {
 export const reviewsApi = {
   getByProduct: async (productId: string | number) => {
     const response = await fetch(`${API_BASE_URL}/reviews/product/${productId}`);
+    if (!response.ok) {
+      console.error(`Failed to fetch reviews for product ${productId}`);
+      return [];
+    }
     return response.json();
   },
 
@@ -156,6 +160,12 @@ export const reviewsApi = {
     const response = await fetch(`${API_BASE_URL}/reviews`, {
       headers: withAuth(),
     });
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.error('Unauthorized: Please login to view reviews');
+      }
+      return [];
+    }
     return response.json();
   },
 
