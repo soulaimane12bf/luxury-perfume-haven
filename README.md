@@ -30,37 +30,54 @@ A full-stack luxury perfume e-commerce platform built with React, TypeScript, Ex
 
 ### Prerequisites
 - Node.js (v18 or higher)
-- MongoDB (running locally or MongoDB Atlas)
+- MySQL 8.0 or higher
 - npm or yarn
 
-### Installation & Running
+### Quick Start (Recommended)
 
-1. **Install frontend dependencies**
+**One Command Setup & Start:**
+```bash
+npm run start
+```
+
+This command will:
+1. ✅ Install MySQL (if needed)
+2. ✅ Configure database
+3. ✅ Install all dependencies
+4. ✅ Seed initial data
+5. ✅ Start both frontend and backend servers
+
+Frontend: `http://localhost:8080`  
+Backend API: `http://localhost:5000`
+
+### Manual Installation
+
+1. **Run Setup Script**
+   ```bash
+   bash setup.sh
+   ```
+
+2. **Install dependencies**
    ```bash
    npm install
+   cd backend && npm install && cd ..
    ```
 
-2. **Install backend dependencies**
+3. **Start Development Servers**
    ```bash
-   cd backend
-   npm install
-   ```
-
-3. **Start MongoDB** (if not already running)
-   ```bash
-   sudo systemctl start mongodb  # Linux
-   brew services start mongodb-community  # macOS
-   ```
-
-4. **Run Backend Server** (Terminal 1)
-   ```bash
-   cd backend
    npm run dev
    ```
-   Backend runs on: http://localhost:5000
+   This starts both frontend (port 8080) and backend (port 5000)
 
-5. **Run Frontend Server** (Terminal 2)
-   ```bash
+### Available Scripts
+
+```bash
+npm run start          # Full setup + start servers (recommended for first run)
+npm run dev            # Start both frontend & backend
+npm run dev:frontend   # Start only frontend (Vite)
+npm run dev:backend    # Start only backend (Express + MySQL)
+npm run build          # Build for production
+npm run preview        # Preview production build
    npm run dev
    ```
    Frontend runs on: http://localhost:8080
