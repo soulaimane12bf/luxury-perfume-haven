@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminNavbar from '@/components/AdminNavbar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +34,7 @@ import {
 } from '@/components/ui/dialog';
 import { productsApi, categoriesApi, reviewsApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { 
   Package, 
   FolderTree, 
@@ -82,6 +84,10 @@ type Review = {
 };
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { isAuthenticated, token } = useAuth();
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -115,7 +121,17 @@ export default function AdminDashboard() {
     image_url: '',
   });
 
-  const { toast } = useToast();
+  // Check authentication
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      toast({
+        title: 'غير مصرح',
+        description: 'يرجى تسجيل الدخول أولاً',
+        variant: 'destructive',
+      });
+      navigate('/login');
+    }
+  }, [isAuthenticated, token, navigate, toast]);
 
   useEffect(() => {
     fetchAllData();
@@ -209,10 +225,20 @@ export default function AdminDashboard() {
       
       setProductDialog(false);
       fetchAllData();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error saving product:', error);
+      if (error.message?.includes('401')) {
+        toast({
+          title: 'غير مصرح',
+          description: 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى',
+          variant: 'destructive',
+        });
+        navigate('/login');
+        return;
+      }
       toast({
         title: 'خطأ',
-        description: 'فشل حفظ المنتج',
+        description: error.message || 'فشل حفظ المنتج',
         variant: 'destructive',
       });
     }
@@ -225,10 +251,20 @@ export default function AdminDashboard() {
       await productsApi.delete(productId);
       toast({ title: 'نجح', description: 'تم حذف المنتج' });
       fetchAllData();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error deleting product:', error);
+      if (error.message?.includes('401')) {
+        toast({
+          title: 'غير مصرح',
+          description: 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى',
+          variant: 'destructive',
+        });
+        navigate('/login');
+        return;
+      }
       toast({
         title: 'خطأ',
-        description: 'فشل حذف المنتج',
+        description: error.message || 'فشل حذف المنتج',
         variant: 'destructive',
       });
     }

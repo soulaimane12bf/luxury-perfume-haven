@@ -77,6 +77,10 @@ export const productsApi = {
       headers: withAuth({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(product),
     });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to create product' }));
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
     return response.json();
   },
 
@@ -86,6 +90,10 @@ export const productsApi = {
       headers: withAuth({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(product),
     });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to update product' }));
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
     return response.json();
   },
 
@@ -94,6 +102,10 @@ export const productsApi = {
       method: 'DELETE',
       headers: withAuth(),
     });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to delete product' }));
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
     return response.json();
   },
 
@@ -124,6 +136,10 @@ export const categoriesApi = {
       headers: withAuth({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(category),
     });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to create category' }));
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
     return response.json();
   },
 
@@ -133,6 +149,10 @@ export const categoriesApi = {
       headers: withAuth({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(category),
     });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to update category' }));
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
     return response.json();
   },
 
@@ -141,6 +161,10 @@ export const categoriesApi = {
       method: 'DELETE',
       headers: withAuth(),
     });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to delete category' }));
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
     return response.json();
   },
 };
@@ -183,6 +207,10 @@ export const reviewsApi = {
       method: 'PATCH',
       headers: withAuth(),
     });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to approve review' }));
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
     return response.json();
   },
 
@@ -191,6 +219,10 @@ export const reviewsApi = {
       method: 'DELETE',
       headers: withAuth(),
     });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to delete review' }));
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
     return response.json();
   },
 };
