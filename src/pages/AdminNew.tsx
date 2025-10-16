@@ -124,18 +124,24 @@ export default function AdminDashboard() {
   const fetchAllData = async () => {
     try {
       const [productsData, categoriesData, reviewsData] = await Promise.all([
-        productsApi.getAll({}),
-        categoriesApi.getAll(),
-        reviewsApi.getAll(),
+        productsApi.getAll({}).catch(() => []),
+        categoriesApi.getAll().catch(() => []),
+        reviewsApi.getAll().catch(() => []),
       ]);
-      setProducts(productsData);
-      setCategories(categoriesData);
-      setReviews(reviewsData);
+      
+      // Ensure we always have arrays
+      setProducts(Array.isArray(productsData) ? productsData : []);
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      setReviews(Array.isArray(reviewsData) ? reviewsData : []);
     } catch (error) {
       console.error('Error fetching data:', error);
+      // Set empty arrays as fallback
+      setProducts([]);
+      setCategories([]);
+      setReviews([]);
       toast({
         title: 'خطأ',
-        description: 'فشل تحميل البيانات',
+        description: 'فشل تحميل بعض البيانات',
         variant: 'destructive',
       });
     } finally {
@@ -348,10 +354,10 @@ export default function AdminDashboard() {
   }
 
   const stats = {
-    totalProducts: products.length,
-    totalCategories: categories.length,
-    bestSellers: products.filter(p => p.best_selling).length,
-    pendingReviews: reviews.filter(r => !r.approved).length,
+    totalProducts: Array.isArray(products) ? products.length : 0,
+    totalCategories: Array.isArray(categories) ? categories.length : 0,
+    bestSellers: Array.isArray(products) ? products.filter(p => p.best_selling).length : 0,
+    pendingReviews: Array.isArray(reviews) ? reviews.filter(r => !r.approved).length : 0,
   };
 
   return (
