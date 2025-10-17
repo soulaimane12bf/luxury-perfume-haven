@@ -17,8 +17,8 @@ const Index = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await productsApi.getAll({ category: 'men' });
-        setProducts(data.slice(0, 6)); // Get first 6 products
+        const data = await productsApi.getAll({ category: 'men'}) as any;
+        setProducts(Array.isArray(data) ? data.slice(0, 6) : []); // Get first 6 products
       } catch (error) {
         console.error('Error fetching products:', error);
         toast.error('فشل تحميل المنتجات');
