@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Star, Minus, Plus, ShoppingCart, ArrowLeft, MessageCircle } from 'lucide-react';
+import { Star, Minus, Plus, ShoppingCart, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
-import { buyNowWhatsApp } from '@/lib/whatsapp';
+import OrderForm from '@/components/OrderForm';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ReviewForm from '../components/ReviewForm';
@@ -22,6 +22,7 @@ export default function ProductSingle() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [orderFormOpen, setOrderFormOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -170,15 +171,15 @@ export default function ProductSingle() {
 
             {/* Buttons */}
             <div className="space-y-3">
-              {/* Buy Now with WhatsApp */}
+              {/* Buy Now Button */}
               <Button 
                 size="lg" 
-                className="w-full text-lg bg-green-600 hover:bg-green-700" 
+                className="w-full text-lg bg-primary hover:bg-primary/90" 
                 disabled={product.stock === 0}
-                onClick={() => buyNowWhatsApp(product, quantity)}
+                onClick={() => setOrderFormOpen(true)}
               >
-                <MessageCircle className="mr-2 h-5 w-5" />
-                اشتري الآن عبر واتساب
+                <ShoppingBag className="mr-2 h-5 w-5" />
+                اشتري الآن
               </Button>
 
               {/* Add to Cart Button */}
@@ -258,6 +259,24 @@ export default function ProductSingle() {
         </div>
       </div>
     </div>
+
+    {/* Order Form Dialog */}
+    <OrderForm
+      open={orderFormOpen}
+      onOpenChange={setOrderFormOpen}
+      items={[{
+        product_id: product.id,
+        name: product.name,
+        price: parseFloat(product.price),
+        quantity,
+        image_url: product.image_urls[0],
+      }]}
+      totalAmount={parseFloat(product.price) * quantity}
+      onSuccess={() => {
+        // Optionally navigate or show success message
+      }}
+    />
+
     <Footer />
     </>
   );

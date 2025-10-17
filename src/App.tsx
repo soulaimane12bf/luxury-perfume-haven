@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import CartDrawer from "@/components/CartDrawer";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ProductSingle from "./pages/ProductSingle";
@@ -25,6 +26,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <CartDrawer />
+          <FloatingWhatsApp />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
