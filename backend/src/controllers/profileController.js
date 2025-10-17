@@ -19,10 +19,10 @@ export const getProfile = async (req, res) => {
   }
 };
 
-// Update admin profile (username, email, phone)
+// Update admin profile (username, email, phone, smtp credentials)
 export const updateProfile = async (req, res) => {
   try {
-    const { username, email, phone } = req.body;
+    const { username, email, phone, smtp_email, smtp_password } = req.body;
     const admin = await Admin.findByPk(req.admin.id);
 
     if (!admin) {
@@ -52,11 +52,20 @@ export const updateProfile = async (req, res) => {
       admin.phone = phone;
     }
 
+    // Update SMTP credentials
+    if (smtp_email !== undefined) {
+      admin.smtp_email = smtp_email;
+    }
+    if (smtp_password !== undefined) {
+      admin.smtp_password = smtp_password;
+    }
+
     await admin.save();
 
-    // Return updated admin without password
+    // Return updated admin without sensitive fields
     const updatedAdmin = admin.toJSON();
     delete updatedAdmin.password;
+    delete updatedAdmin.smtp_password; // Don't send SMTP password back
 
     res.json({ 
       message: 'Profile updated successfully', 

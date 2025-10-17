@@ -2,34 +2,27 @@ import Order from '../models/order.js';
 import Admin from '../models/admin.js';
 import nodemailer from 'nodemailer';
 
-// Email configuration
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: process.env.EMAIL_PORT || 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-// Get admin contact info from database
+// Get admin contact info and SMTP credentials from database
 const getAdminContactInfo = async () => {
   try {
     const admin = await Admin.findOne({ 
       where: { role: 'super-admin' },
-      attributes: ['email', 'phone']
+      attributes: ['email', 'phone', 'smtp_email', 'smtp_password']
     });
     
     return {
       email: admin?.email || process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
-      phone: admin?.phone || process.env.ADMIN_WHATSAPP || '212600000000'
+      phone: admin?.phone || process.env.ADMIN_WHATSAPP || '212600000000',
+      smtp_email: admin?.smtp_email || process.env.EMAIL_USER,
+      smtp_password: admin?.smtp_password || process.env.EMAIL_PASS
     };
   } catch (error) {
     console.error('Error fetching admin info:', error);
     return {
       email: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
-      phone: process.env.ADMIN_WHATSAPP || '212600000000'
+      phone: process.env.ADMIN_WHATSAPP || '212600000000',
+      smtp_email: process.env.EMAIL_USER,
+      smtp_password: process.env.EMAIL_PASS
     };
   }
 };
@@ -54,9 +47,20 @@ const sendWhatsAppNotification = async (order, adminPhone) => {
   return whatsappUrl;
 };
 
-// Send email notification
-const sendEmailNotification = async (order, adminEmail) => {
+// Send email notification (with dynamic SMTP credentials)
+const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword) => {
   try {
+    // Create transporter with admin's SMTP credentials
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: process.env.EMAIL_PORT || 587,
+      secure: false,
+      auth: {
+        user: smtpEmail,
+        pass: smtpPassword,
+      },
+    });
+
     const itemsHTML = order.items.map(item => `
       <tr>
         <td style="padding: 10px; border-bottom: 1px solid #eee;">
@@ -69,7 +73,7 @@ const sendEmailNotification = async (order, adminEmail) => {
     `).join('');
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: smtpEmail,
       to: adminEmail,
       subject: `طلب جديد - ${order.id}`,
       html: `
@@ -172,8 +176,8 @@ export const createOrder = async (req, res) => {
       try {
         const adminInfo = await getAdminContactInfo();
         
-        // Send email
-        await sendEmailNotification(order, adminInfo.email);
+        // Send email with dynamic SMTP credentials
+        await sendEmailNotification(order, adminInfo.email, adminInfo.smtp_email, adminInfo.smtp_password);
         
         // Generate WhatsApp notification
         await sendWhatsAppNotification(order, adminInfo.phone);
