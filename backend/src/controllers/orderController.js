@@ -1,4 +1,5 @@
 import Order from '../models/order.js';
+import Admin from '../models/admin.js';
 import nodemailer from 'nodemailer';
 
 // Email configuration
@@ -12,9 +13,29 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Get admin contact info from database
+const getAdminContactInfo = async () => {
+  try {
+    const admin = await Admin.findOne({ 
+      where: { role: 'super-admin' },
+      attributes: ['email', 'phone']
+    });
+    
+    return {
+      email: admin?.email || process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
+      phone: admin?.phone || process.env.ADMIN_WHATSAPP || '212600000000'
+    };
+  } catch (error) {
+    console.error('Error fetching admin info:', error);
+    return {
+      email: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
+      phone: process.env.ADMIN_WHATSAPP || '212600000000'
+    };
+  }
+};
+
 // WhatsApp notification helper
-const sendWhatsAppNotification = async (order) => {
-  const adminPhone = process.env.ADMIN_WHATSAPP || '212600000000';
+const sendWhatsAppNotification = async (order, adminPhone) => {
   const itemsList = order.items.map(item => 
     `- ${item.name} (${item.quantity}x) - ${item.price} درهم`
   ).join('\n');
@@ -28,17 +49,18 @@ const sendWhatsAppNotification = async (order) => {
     `🛍️ *المنتجات:*\n${itemsList}\n\n` +
     `💰 المجموع: ${order.total_amount} درهم`;
   
-  // Return the WhatsApp URL (you can also use WhatsApp Business API if configured)
-  return `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
+  const whatsappUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
+  console.log('📱 WhatsApp notification URL:', whatsappUrl);
+  return whatsappUrl;
 };
 
 // Send email notification
-const sendEmailNotification = async (order) => {
+const sendEmailNotification = async (order, adminEmail) => {
   try {
     const itemsHTML = order.items.map(item => `
       <tr>
         <td style="padding: 10px; border-bottom: 1px solid #eee;">
-          <img src="${item.image_url}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+          <img src="${item.image_url || ''}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
         </td>
         <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name}</td>
         <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.quantity}</td>
@@ -48,7 +70,7 @@ const sendEmailNotification = async (order) => {
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
+      to: adminEmail,
       subject: `طلب جديد - ${order.id}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; direction: rtl;">
@@ -59,6 +81,7 @@ const sendEmailNotification = async (order) => {
             <p><strong>الهاتف:</strong> ${order.customer_phone}</p>
             <p><strong>البريد الإلكتروني:</strong> ${order.customer_email || 'غير متوفر'}</p>
             <p><strong>العنوان:</strong> ${order.customer_address}</p>
+            ${order.notes ? `<p><strong>ملاحظات:</strong> ${order.notes}</p>` : ''}
           </div>
           <div style="margin: 20px 0;">
             <h3>تفاصيل الطلب</h3>
@@ -80,16 +103,18 @@ const sendEmailNotification = async (order) => {
             <h3 style="margin: 0;">المجموع الكلي: ${order.total_amount} درهم</h3>
           </div>
           <p style="text-align: center; color: #666; margin-top: 20px;">
-            رقم الطلب: ${order.id}
+            رقم الطلب: ${order.id}<br>
+            تاريخ الطلب: ${new Date(order.created_at).toLocaleString('ar-MA')}
           </p>
         </div>
       `,
     };
 
     await transporter.sendMail(mailOptions);
-    console.log('✅ Email notification sent successfully');
+    console.log('✅ Email notification sent successfully to:', adminEmail);
   } catch (error) {
     console.error('❌ Error sending email:', error);
+    throw error;
   }
 };
 
@@ -142,29 +167,41 @@ export const createOrder = async (req, res) => {
       status: 'pending',
     });
 
-    // Send notifications
-    try {
-      await sendEmailNotification(order);
-      const whatsappUrl = await sendWhatsAppNotification(order);
-      console.log('WhatsApp notification URL:', whatsappUrl);
-    } catch (notificationError) {
-      console.error('Error sending notifications:', notificationError);
-      // Don't fail the order creation if notifications fail
-    }
+    // Send notifications in background (non-blocking)
+    setImmediate(async () => {
+      try {
+        const adminInfo = await getAdminContactInfo();
+        
+        // Send email
+        await sendEmailNotification(order, adminInfo.email);
+        
+        // Generate WhatsApp notification
+        await sendWhatsAppNotification(order, adminInfo.phone);
+        
+        console.log('✅ Notifications sent successfully for order:', order.id);
+      } catch (notificationError) {
+        console.error('❌ Error sending notifications for order:', order.id, notificationError);
+        // Don't fail the order creation if notifications fail
+      }
+    });
 
-    res.status(201).json(order);
+    // Return response immediately without waiting for notifications
+    res.status(201).json({
+      message: 'Order created successfully',
+      order,
+    });
   } catch (error) {
     console.error('Error creating order:', error);
     res.status(500).json({ message: 'Failed to create order' });
   }
 };
 
-// Update order status
+// Update order status (Admin only)
 export const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const order = await Order.findByPk(req.params.id);
-    
+
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
@@ -172,23 +209,27 @@ export const updateOrderStatus = async (req, res) => {
     order.status = status;
     await order.save();
 
-    res.json(order);
+    res.json({
+      message: 'Order status updated successfully',
+      order,
+    });
   } catch (error) {
-    console.error('Error updating order:', error);
-    res.status(500).json({ message: 'Failed to update order' });
+    console.error('Error updating order status:', error);
+    res.status(500).json({ message: 'Failed to update order status' });
   }
 };
 
-// Delete order
+// Delete order (Admin only)
 export const deleteOrder = async (req, res) => {
   try {
     const order = await Order.findByPk(req.params.id);
-    
+
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
     await order.destroy();
+
     res.json({ message: 'Order deleted successfully' });
   } catch (error) {
     console.error('Error deleting order:', error);

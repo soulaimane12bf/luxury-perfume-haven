@@ -11,6 +11,7 @@ import categoryRoutes from './routes/categories.js';
 import reviewRoutes from './routes/reviews.js';
 import authRoutes from './routes/auth.js';
 import orderRoutes from './routes/orders.js';
+import profileRoutes from './routes/profile.js';
 
 import Product from './models/product.js';
 import Category from './models/category.js';
@@ -103,6 +104,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
