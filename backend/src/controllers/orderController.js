@@ -33,6 +33,16 @@ const generateWhatsAppNotification = (order, adminPhone) => {
     `- ${item.name} (${item.quantity}x) - ${item.price} درهم`
   ).join('\n');
   
+  // Use current date if created_at is not available yet
+  const orderDate = order.created_at ? new Date(order.created_at) : new Date();
+  const dateString = orderDate.toLocaleString('ar-MA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
   const message = `🔔 *طلب جديد!*\n\n` +
     `📦 رقم الطلب: ${order.id}\n` +
     `👤 العميل: ${order.customer_name}\n` +
@@ -41,7 +51,7 @@ const generateWhatsAppNotification = (order, adminPhone) => {
     `📍 العنوان: ${order.customer_address}\n\n` +
     `🛍️ *المنتجات:*\n${itemsList}\n\n` +
     `💰 المجموع: ${order.total_amount} درهم\n\n` +
-    `📅 التاريخ: ${new Date(order.created_at).toLocaleString('ar-MA')}`;
+    `📅 التاريخ: ${dateString}`;
   
   // Clean phone number (remove spaces, dashes, etc.)
   const cleanPhone = adminPhone.replace(/[\s\-\(\)]/g, '');

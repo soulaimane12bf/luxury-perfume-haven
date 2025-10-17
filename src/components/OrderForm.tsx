@@ -94,7 +94,7 @@ export default function OrderForm({ open, onOpenChange, items, totalAmount, onSu
         notes: formData.notes.trim() || undefined,
       };
 
-      const response = await ordersApi.create(orderData);
+      const response = await ordersApi.create(orderData) as any;
 
       toast({
         title: '✅ تم إرسال الطلب بنجاح',
@@ -103,10 +103,10 @@ export default function OrderForm({ open, onOpenChange, items, totalAmount, onSu
       });
 
       // Automatically open WhatsApp notification in new tab
-      if (response.data?.notifications?.whatsappUrl) {
+      if (response?.notifications?.whatsappUrl) {
         console.log('📱 Opening WhatsApp notification...');
         // Open WhatsApp in new tab/window
-        window.open(response.data.notifications.whatsappUrl, '_blank');
+        window.open(response.notifications.whatsappUrl, '_blank');
         
         // Show additional toast about WhatsApp
         setTimeout(() => {
