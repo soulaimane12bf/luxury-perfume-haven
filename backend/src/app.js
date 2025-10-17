@@ -85,7 +85,10 @@ async function seedDatabase() {
     if (adminCount === 0) {
       await Admin.create({
         username: 'admin',
-        email: 'admin@parfumeurwalid.com',
+        email: 'marwanlachhab2002@gmail.com',
+        phone: '212600000000',
+        smtp_email: 'marwanlachhab2002@gmail.com',
+        smtp_password: 'cdrjxitfmugddqjl',
         password: 'admin123', // Will be hashed by the model
         role: 'super-admin'
       });

@@ -193,7 +193,10 @@ export default function AdminProfile() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">البريد الإلكتروني *</Label>
+              <Label htmlFor="email" className="flex items-center gap-2">
+                البريد الإلكتروني المستقبل *
+                <span className="text-xs font-normal text-muted-foreground">(إلى أين تصل الطلبات)</span>
+              </Label>
               <div className="flex gap-2 items-center">
                 <Mail className="w-4 h-4 text-muted-foreground" />
                 <Input
@@ -203,10 +206,11 @@ export default function AdminProfile() {
                   onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                   placeholder="admin@example.com"
                   required
+                  dir="ltr"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                سيتم إرسال إشعارات الطلبات الجديدة إلى هذا البريد
+              <p className="text-xs text-green-600 dark:text-green-400">
+                📬 سيتم إرسال إشعارات الطلبات الجديدة إلى هذا البريد الإلكتروني
               </p>
             </div>
 
@@ -230,17 +234,21 @@ export default function AdminProfile() {
 
             <Separator className="my-4" />
             
-            <div className="space-y-4 rounded-lg border p-4 bg-amber-50 dark:bg-amber-950/20">
+            <div className="space-y-4 rounded-lg border p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
               <h4 className="font-semibold text-sm flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                إعدادات إرسال البريد (SMTP)
+                <Mail className="w-4 h-4 text-amber-600" />
+                <span>إعدادات إرسال البريد (SMTP)</span>
+                <span className="text-xs font-normal text-muted-foreground">(من أين تُرسل الرسائل)</span>
               </h4>
               <p className="text-xs text-muted-foreground">
                 حساب Gmail المستخدم لإرسال إشعارات الطلبات. يمكنك تحديثه دون تعديل الكود.
               </p>
               
               <div className="space-y-2">
-                <Label htmlFor="smtp_email">البريد الإلكتروني للإرسال (Gmail)</Label>
+                <Label htmlFor="smtp_email" className="flex items-center gap-2">
+                  <span>البريد الإلكتروني المرسل (Gmail)</span>
+                  <span className="text-xs font-normal text-muted-foreground">(الذي يرسل الرسائل)</span>
+                </Label>
                 <Input
                   id="smtp_email"
                   type="email"
@@ -249,6 +257,9 @@ export default function AdminProfile() {
                   placeholder="your-email@gmail.com"
                   dir="ltr"
                 />
+                <p className="text-xs text-blue-600 dark:text-blue-400">
+                  📤 هذا البريد سيظهر كمُرسل في رسائل الطلبات
+                </p>
               </div>
 
               <div className="space-y-2">
