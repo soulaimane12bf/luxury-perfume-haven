@@ -71,7 +71,18 @@ export default function AdminProfile() {
 
     try {
       setUpdating(true);
-      await profileApi.updateProfile(profile);
+      
+      // Only send SMTP password if it was actually changed (not empty)
+      const updateData = {
+        username: profile.username,
+        email: profile.email,
+        phone: profile.phone,
+        smtp_email: profile.smtp_email,
+        // Only include smtp_password if user entered a new one
+        ...(profile.smtp_password.trim() ? { smtp_password: profile.smtp_password } : {})
+      };
+      
+      await profileApi.updateProfile(updateData);
       toast({
         title: 'تم التحديث',
         description: 'تم تحديث الملف الشخصي بنجاح',
@@ -247,7 +258,7 @@ export default function AdminProfile() {
                   type="password"
                   value={profile.smtp_password}
                   onChange={(e) => setProfile({ ...profile, smtp_password: e.target.value })}
-                  placeholder="xxxx xxxx xxxx xxxx (16 حرف)"
+                  placeholder="xxxx xxxx xxxx xxxx (16 حرف) - اتركها فارغة للإبقاء على القديمة"
                   dir="ltr"
                 />
                 <p className="text-xs text-amber-600 dark:text-amber-400">
@@ -260,6 +271,9 @@ export default function AdminProfile() {
                   >
                     احصل عليها من هنا
                   </a>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  💡 ملاحظة: اترك الحقل فارغاً إذا كنت لا تريد تغيير كلمة المرور
                 </p>
               </div>
             </div>
