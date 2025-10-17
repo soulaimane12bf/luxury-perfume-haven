@@ -56,7 +56,8 @@ export const updateProfile = async (req, res) => {
     if (smtp_email !== undefined) {
       admin.smtp_email = smtp_email;
     }
-    if (smtp_password !== undefined) {
+    // Only update SMTP password if a new one is provided (not empty)
+    if (smtp_password !== undefined && smtp_password.trim() !== '') {
       admin.smtp_password = smtp_password;
     }
 
