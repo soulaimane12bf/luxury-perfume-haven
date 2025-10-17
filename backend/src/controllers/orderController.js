@@ -163,7 +163,10 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // Create order
+    // Get admin contact info for notifications
+    const adminInfo = await getAdminContactInfo();
+    
+    // Create order (we'll update it with whatsapp_url after generation)
     const order = await Order.create({
       customer_name,
       customer_email,
@@ -175,11 +178,11 @@ export const createOrder = async (req, res) => {
       status: 'pending',
     });
 
-    // Get admin contact info for notifications
-    const adminInfo = await getAdminContactInfo();
-    
-    // Generate WhatsApp notification URL
+    // Generate WhatsApp notification URL (after order is created to get order.id)
     const whatsappUrl = generateWhatsAppNotification(order, adminInfo.phone);
+    
+    // Update order with WhatsApp URL
+    await order.update({ whatsapp_url: whatsappUrl });
     
     // Send notifications in background (non-blocking)
     setImmediate(async () => {
