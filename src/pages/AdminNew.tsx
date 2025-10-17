@@ -32,7 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { productsApi, categoriesApi, reviewsApi } from '@/lib/api';
+import { productsApi, categoriesApi, reviewsApi, ordersApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { 
@@ -91,6 +91,7 @@ export default function AdminDashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Product form state
@@ -168,7 +169,7 @@ export default function AdminDashboard() {
 
   const fetchAllData = async () => {
     try {
-      const [productsData, categoriesData, reviewsData] = await Promise.all([
+      const [productsData, categoriesData, reviewsData, ordersData] = await Promise.all([
         productsApi.getAll({}).catch((err) => {
           console.error('Error fetching products:', err);
           return [];
@@ -181,18 +182,24 @@ export default function AdminDashboard() {
           console.error('Error fetching reviews:', err);
           return [];
         }),
+        ordersApi.getAll().catch((err) => {
+          console.error('Error fetching orders:', err);
+          return [];
+        }),
       ]);
       
       // Ensure we always have arrays
       setProducts(Array.isArray(productsData) ? productsData : []);
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
       setReviews(Array.isArray(reviewsData) ? reviewsData : []);
+      setOrders(Array.isArray(ordersData) ? ordersData : []);
     } catch (error: any) {
       console.error('Error fetching data:', error);
       // Set empty arrays as fallback
       setProducts([]);
       setCategories([]);
       setReviews([]);
+      setOrders([]);
       handleApiError(error, 'تحميل البيانات');
     } finally {
       setLoading(false);
@@ -399,6 +406,37 @@ export default function AdminDashboard() {
     }
   };
 
+  // Order handlers
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      await ordersApi.updateStatus(orderId, newStatus);
+      toast({
+        title: '✅ نجح',
+        description: 'تم تحديث حالة الطلب',
+        className: 'bg-green-50 border-green-200',
+      });
+      fetchAllData();
+    } catch (error: any) {
+      handleApiError(error, 'تحديث حالة الطلب');
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
+    
+    try {
+      await ordersApi.delete(orderId);
+      toast({
+        title: '✅ نجح',
+        description: 'تم حذف الطلب',
+        className: 'bg-green-50 border-green-200',
+      });
+      fetchAllData();
+    } catch (error: any) {
+      handleApiError(error, 'حذف الطلب');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -413,6 +451,8 @@ export default function AdminDashboard() {
     totalCategories: Array.isArray(categories) ? categories.length : 0,
     bestSellers: Array.isArray(products) ? products.filter(p => p.best_selling).length : 0,
     pendingReviews: Array.isArray(reviews) ? reviews.filter(r => !r.approved).length : 0,
+    totalOrders: Array.isArray(orders) ? orders.length : 0,
+    pendingOrders: Array.isArray(orders) ? orders.filter((o: any) => o.status === 'pending').length : 0,
   };
 
   return (
@@ -464,13 +504,151 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="products" className="space-y-4 md:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">
+        <Tabs defaultValue="orders" className="space-y-4 md:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1">
+            <TabsTrigger value="orders" className="text-xs md:text-sm">الطلبات</TabsTrigger>
             <TabsTrigger value="products" className="text-xs md:text-sm">المنتجات</TabsTrigger>
             <TabsTrigger value="categories" className="text-xs md:text-sm">الفئات</TabsTrigger>
             <TabsTrigger value="reviews" className="text-xs md:text-sm">التقييمات</TabsTrigger>
             <TabsTrigger value="bestsellers" className="text-xs md:text-sm">الأكثر مبيعاً</TabsTrigger>
           </TabsList>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders">
+            <Card>
+              <CardHeader className="p-4 md:p-6">
+                <div>
+                  <CardTitle className="text-lg md:text-xl">إدارة الطلبات</CardTitle>
+                  <CardDescription className="text-xs md:text-sm">
+                    {stats.totalOrders} طلب - {stats.pendingOrders} قيد الانتظار
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0 md:p-6 md:pt-0">
+                {/* Desktop Table */}
+                <div className="hidden md:block rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-right">رقم الطلب</TableHead>
+                        <TableHead className="text-right">العميل</TableHead>
+                        <TableHead className="text-right">الهاتف</TableHead>
+                        <TableHead className="text-right">المنتجات</TableHead>
+                        <TableHead className="text-right">المبلغ</TableHead>
+                        <TableHead className="text-right">الحالة</TableHead>
+                        <TableHead className="text-right">التاريخ</TableHead>
+                        <TableHead className="text-right">إجراءات</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {orders.map((order: any) => (
+                        <TableRow key={order.id}>
+                          <TableCell className="font-mono text-xs">{order.id}</TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{order.customer_name}</div>
+                              {order.customer_email && (
+                                <div className="text-xs text-muted-foreground">{order.customer_email}</div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{order.customer_phone}</TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {order.items.map((item: any, idx: number) => (
+                                <div key={idx}>{item.name} (x{item.quantity})</div>
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-bold text-primary">{order.total_amount} درهم</TableCell>
+                          <TableCell>
+                            <Select 
+                              value={order.status}
+                              onValueChange={(value) => handleUpdateOrderStatus(order.id, value)}
+                            >
+                              <SelectTrigger className="w-[130px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">قيد الانتظار</SelectItem>
+                                <SelectItem value="confirmed">مؤكد</SelectItem>
+                                <SelectItem value="processing">قيد التجهيز</SelectItem>
+                                <SelectItem value="shipped">تم الشحن</SelectItem>
+                                <SelectItem value="delivered">تم التسليم</SelectItem>
+                                <SelectItem value="cancelled">ملغي</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {new Date(order.created_at).toLocaleDateString('ar-MA')}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteOrder(order.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="md:hidden space-y-4 p-4">
+                  {orders.map((order: any) => (
+                    <Card key={order.id} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-bold">{order.customer_name}</div>
+                            <div className="text-xs text-muted-foreground font-mono">{order.id}</div>
+                          </div>
+                          <Badge variant={order.status === 'pending' ? 'secondary' : 'default'}>
+                            {order.status === 'pending' ? 'قيد الانتظار' : order.status}
+                          </Badge>
+                        </div>
+                        <div className="text-sm space-y-1">
+                          <div>📱 {order.customer_phone}</div>
+                          {order.customer_email && <div>📧 {order.customer_email}</div>}
+                          <div>📦 {order.items.length} منتج</div>
+                          <div className="font-bold text-primary">💰 {order.total_amount} درهم</div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Select 
+                            value={order.status}
+                            onValueChange={(value) => handleUpdateOrderStatus(order.id, value)}
+                          >
+                            <SelectTrigger className="flex-1">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">قيد الانتظار</SelectItem>
+                              <SelectItem value="confirmed">مؤكد</SelectItem>
+                              <SelectItem value="processing">قيد التجهيز</SelectItem>
+                              <SelectItem value="shipped">تم الشحن</SelectItem>
+                              <SelectItem value="delivered">تم التسليم</SelectItem>
+                              <SelectItem value="cancelled">ملغي</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => handleDeleteOrder(order.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Products Tab */}
           <TabsContent value="products">

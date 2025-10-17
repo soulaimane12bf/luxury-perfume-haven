@@ -1,14 +1,42 @@
+import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, X, MessageCircle } from "lucide-react";
+import { Minus, Plus, X, ShoppingBag } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import { checkoutCartWhatsApp } from "@/lib/whatsapp";
+import OrderForm from "@/components/OrderForm";
 
 const CartDrawer = () => {
-  const { items, isOpen, closeCart, updateQuantity, removeFromCart, getTotalPrice } = useCart();
+  const { items, isOpen, closeCart, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
+  const [orderFormOpen, setOrderFormOpen] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<any[]>([]);
 
-  const handleWhatsAppCheckout = () => {
-    checkoutCartWhatsApp(items);
+  const handleCheckout = () => {
+    // Checkout all items
+    setSelectedItems(items.map(item => ({
+      product_id: item.id,
+      name: item.name,
+      price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+      quantity: item.quantity,
+      image_url: item.image_url,
+    })));
+    setOrderFormOpen(true);
+  };
+
+  const handleCheckoutSingle = (item: any) => {
+    // Checkout single item
+    setSelectedItems([{
+      product_id: item.id,
+      name: item.name,
+      price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+      quantity: item.quantity,
+      image_url: item.image_url,
+    }]);
+    setOrderFormOpen(true);
+  };
+
+  const handleOrderSuccess = () => {
+    // Clear cart after successful order
+    clearCart();
     closeCart();
   };
 
@@ -76,12 +104,12 @@ const CartDrawer = () => {
                 <span className="text-gold">{getTotalPrice()} درهم</span>
               </div>
               <Button 
-                className="w-full bg-green-600 hover:bg-green-700" 
+                className="w-full bg-primary hover:bg-primary/90" 
                 size="lg"
-                onClick={handleWhatsAppCheckout}
+                onClick={handleCheckout}
               >
-                <MessageCircle className="mr-2 h-5 w-5" />
-                اشتري الآن عبر واتساب
+                <ShoppingBag className="mr-2 h-5 w-5" />
+                إتمام الطلب
               </Button>
               <Button variant="ghost" className="w-full" onClick={closeCart}>
                 استمر في التسوق
@@ -90,6 +118,15 @@ const CartDrawer = () => {
           )}
         </div>
       </SheetContent>
+
+      {/* Order Form Dialog */}
+      <OrderForm
+        open={orderFormOpen}
+        onOpenChange={setOrderFormOpen}
+        items={selectedItems}
+        totalAmount={selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)}
+        onSuccess={handleOrderSuccess}
+      />
     </Sheet>
   );
 };

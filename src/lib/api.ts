@@ -273,3 +273,62 @@ export const reviewsApi = {
     }, 'حذف التقييم');
   },
 };
+
+// Orders API
+export const ordersApi = {
+  getAll: async () => {
+    try {
+      return await apiCall(`${API_BASE_URL}/orders`, {
+        headers: withAuth(),
+      }, 'جلب جميع الطلبات');
+    } catch (error: any) {
+      if (error.isAuthError) {
+        console.error('Unauthorized: Please login to view orders');
+      }
+      return [];
+    }
+  },
+
+  getById: async (id: string | number) => {
+    return apiCall(`${API_BASE_URL}/orders/${id}`, {
+      headers: withAuth(),
+    }, 'جلب تفاصيل الطلب');
+  },
+
+  create: async (orderData: {
+    customer_name: string;
+    customer_email?: string;
+    customer_phone: string;
+    customer_address: string;
+    items: Array<{
+      product_id: string;
+      name: string;
+      price: number;
+      quantity: number;
+      image_url: string;
+    }>;
+    total_amount: number;
+    notes?: string;
+  }) => {
+    return apiCall(`${API_BASE_URL}/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData),
+    }, 'إنشاء طلب جديد');
+  },
+
+  updateStatus: async (id: string | number, status: string) => {
+    return apiCall(`${API_BASE_URL}/orders/${id}/status`, {
+      method: 'PATCH',
+      headers: withAuth({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ status }),
+    }, 'تحديث حالة الطلب');
+  },
+
+  delete: async (id: string | number) => {
+    return apiCall(`${API_BASE_URL}/orders/${id}`, {
+      method: 'DELETE',
+      headers: withAuth(),
+    }, 'حذف الطلب');
+  },
+};
