@@ -19,6 +19,8 @@ export default function AdminProfile() {
     username: '',
     email: '',
     phone: '',
+    smtp_email: '',
+    smtp_password: '',
   });
 
   // Password form state
@@ -41,6 +43,8 @@ export default function AdminProfile() {
         username: data.username || '',
         email: data.email || '',
         phone: data.phone || '',
+        smtp_email: data.smtp_email || '',
+        smtp_password: '', // Never load password from server
       });
     } catch (error: any) {
       toast({
@@ -211,6 +215,53 @@ export default function AdminProfile() {
               <p className="text-xs text-muted-foreground">
                 رقم واتساب لتلقي إشعارات الطلبات (مع رمز الدولة، بدون +)
               </p>
+            </div>
+
+            <Separator className="my-4" />
+            
+            <div className="space-y-4 rounded-lg border p-4 bg-amber-50 dark:bg-amber-950/20">
+              <h4 className="font-semibold text-sm flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                إعدادات إرسال البريد (SMTP)
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                حساب Gmail المستخدم لإرسال إشعارات الطلبات. يمكنك تحديثه دون تعديل الكود.
+              </p>
+              
+              <div className="space-y-2">
+                <Label htmlFor="smtp_email">البريد الإلكتروني للإرسال (Gmail)</Label>
+                <Input
+                  id="smtp_email"
+                  type="email"
+                  value={profile.smtp_email}
+                  onChange={(e) => setProfile({ ...profile, smtp_email: e.target.value })}
+                  placeholder="your-email@gmail.com"
+                  dir="ltr"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="smtp_password">App Password (كلمة مرور التطبيق)</Label>
+                <Input
+                  id="smtp_password"
+                  type="password"
+                  value={profile.smtp_password}
+                  onChange={(e) => setProfile({ ...profile, smtp_password: e.target.value })}
+                  placeholder="xxxx xxxx xxxx xxxx (16 حرف)"
+                  dir="ltr"
+                />
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  ⚠️ استخدم App Password وليس كلمة المرور العادية. 
+                  <a 
+                    href="https://myaccount.google.com/apppasswords" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline mr-1"
+                  >
+                    احصل عليها من هنا
+                  </a>
+                </p>
+              </div>
             </div>
 
             <Button 
