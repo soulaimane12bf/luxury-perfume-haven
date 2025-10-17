@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "bash start-banner.sh && bash setup.sh && npm run dev",
+  "start:windows": "cmd /c \"setup-windows.bat\" && npm run dev",
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "vite",
     "dev:backend": "cd backend && npm start",
