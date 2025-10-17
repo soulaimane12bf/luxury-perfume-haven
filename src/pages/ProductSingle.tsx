@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Star, Minus, Plus, ShoppingCart, ArrowLeft, ShoppingBag } from 'lucide-react';
+import { Star, Minus, Plus, ShoppingCart, ArrowLeft, ShoppingBag, MessageCircle } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import OrderForm from '@/components/OrderForm';
 import Header from '@/components/Header';
