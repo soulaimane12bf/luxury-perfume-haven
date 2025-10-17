@@ -94,13 +94,29 @@ export default function OrderForm({ open, onOpenChange, items, totalAmount, onSu
         notes: formData.notes.trim() || undefined,
       };
 
-      await ordersApi.create(orderData);
+      const response = await ordersApi.create(orderData);
 
       toast({
         title: '✅ تم إرسال الطلب بنجاح',
-        description: 'سنتواصل معك قريباً لتأكيد الطلب',
+        description: 'سنتواصل معك قريباً لتأكيد الطلب. جاري إرسال إشعار واتساب...',
         className: 'bg-green-50 border-green-200',
       });
+
+      // Automatically open WhatsApp notification in new tab
+      if (response.data?.notifications?.whatsappUrl) {
+        console.log('📱 Opening WhatsApp notification...');
+        // Open WhatsApp in new tab/window
+        window.open(response.data.notifications.whatsappUrl, '_blank');
+        
+        // Show additional toast about WhatsApp
+        setTimeout(() => {
+          toast({
+            title: '📱 إشعار واتساب',
+            description: 'تم فتح واتساب لإرسال الطلب للمسؤول',
+            className: 'bg-green-50 border-green-200',
+          });
+        }, 1000);
+      }
 
       // Reset form
       setFormData({

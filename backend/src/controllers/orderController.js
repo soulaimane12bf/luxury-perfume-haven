@@ -27,8 +27,8 @@ const getAdminContactInfo = async () => {
   }
 };
 
-// WhatsApp notification helper
-const sendWhatsAppNotification = async (order, adminPhone) => {
+// WhatsApp notification helper - generates message link
+const generateWhatsAppNotification = (order, adminPhone) => {
   const itemsList = order.items.map(item => 
     `- ${item.name} (${item.quantity}x) - ${item.price} درهم`
   ).join('\n');
@@ -40,10 +40,14 @@ const sendWhatsAppNotification = async (order, adminPhone) => {
     `📧 البريد: ${order.customer_email || 'غير متوفر'}\n` +
     `📍 العنوان: ${order.customer_address}\n\n` +
     `🛍️ *المنتجات:*\n${itemsList}\n\n` +
-    `💰 المجموع: ${order.total_amount} درهم`;
+    `💰 المجموع: ${order.total_amount} درهم\n\n` +
+    `📅 التاريخ: ${new Date(order.created_at).toLocaleString('ar-MA')}`;
   
-  const whatsappUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
-  console.log('📱 WhatsApp notification URL:', whatsappUrl);
+  // Clean phone number (remove spaces, dashes, etc.)
+  const cleanPhone = adminPhone.replace(/[\s\-\(\)]/g, '');
+  
+  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+  console.log('📱 WhatsApp notification URL generated for:', cleanPhone);
   return whatsappUrl;
 };
 
@@ -171,28 +175,33 @@ export const createOrder = async (req, res) => {
       status: 'pending',
     });
 
+    // Get admin contact info for notifications
+    const adminInfo = await getAdminContactInfo();
+    
+    // Generate WhatsApp notification URL
+    const whatsappUrl = generateWhatsAppNotification(order, adminInfo.phone);
+    
     // Send notifications in background (non-blocking)
     setImmediate(async () => {
       try {
-        const adminInfo = await getAdminContactInfo();
-        
         // Send email with dynamic SMTP credentials
         await sendEmailNotification(order, adminInfo.email, adminInfo.smtp_email, adminInfo.smtp_password);
-        
-        // Generate WhatsApp notification
-        await sendWhatsAppNotification(order, adminInfo.phone);
-        
-        console.log('✅ Notifications sent successfully for order:', order.id);
+        console.log('✅ Email notification sent successfully for order:', order.id);
       } catch (notificationError) {
-        console.error('❌ Error sending notifications for order:', order.id, notificationError);
-        // Don't fail the order creation if notifications fail
+        console.error('❌ Error sending email notification for order:', order.id, notificationError);
+        // Don't fail the order creation if email fails
       }
     });
 
-    // Return response immediately without waiting for notifications
+    // Return response immediately with WhatsApp URL
     res.status(201).json({
       message: 'Order created successfully',
       order,
+      notifications: {
+        whatsappUrl: whatsappUrl,
+        adminPhone: adminInfo.phone,
+        adminEmail: adminInfo.email
+      }
     });
   } catch (error) {
     console.error('Error creating order:', error);
