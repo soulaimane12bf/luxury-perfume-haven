@@ -5,7 +5,15 @@ export const authMiddleware = async (req, res, next) => {
   try {
     // Get token from header
     const authHeader = req.headers.authorization;
+    console.log('[AUTH MIDDLEWARE]', { 
+      path: req.path, 
+      method: req.method,
+      hasAuthHeader: !!authHeader,
+      authHeader: authHeader ? `${authHeader.substring(0, 20)}...` : 'none'
+    });
+    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('[AUTH MIDDLEWARE] No Bearer token provided');
       return res.status(401).json({ message: 'No token provided' });
     }
 
@@ -17,13 +25,16 @@ export const authMiddleware = async (req, res, next) => {
     // Get admin from database
     const admin = await Admin.findByPk(decoded.id);
     if (!admin) {
+      console.log('[AUTH MIDDLEWARE] Admin not found for token');
       return res.status(401).json({ message: 'Invalid token' });
     }
 
+    console.log('[AUTH MIDDLEWARE] Auth successful for:', admin.username);
     // Attach admin to request
     req.admin = admin;
     next();
   } catch (error) {
+    console.log('[AUTH MIDDLEWARE] Token verification failed:', error.message);
     return res.status(401).json({ message: 'Invalid token' });
   }
 };
