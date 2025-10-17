@@ -13,7 +13,7 @@ export default function BestSellers() {
     const fetchBestSellers = async () => {
       try {
         const data = await productsApi.getBestSelling(12);
-        setProducts(data);
+        setProducts(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching best sellers:', error);
       } finally {

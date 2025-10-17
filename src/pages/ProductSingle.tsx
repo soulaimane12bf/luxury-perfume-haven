@@ -30,8 +30,8 @@ export default function ProductSingle() {
           productsApi.getById(id),
           reviewsApi.getByProduct(id),
         ]);
-        setProduct(productData);
-        setReviews(reviewsData);
+        setProduct(productData as any);
+        setReviews(Array.isArray(reviewsData) ? reviewsData : []);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching product:', error);
@@ -44,7 +44,7 @@ export default function ProductSingle() {
 
   const handleReviewSubmit = async () => {
     const updatedReviews = await reviewsApi.getByProduct(id);
-    setReviews(updatedReviews);
+    setReviews(Array.isArray(updatedReviews) ? updatedReviews : []);
   };
 
   if (loading) {

@@ -22,7 +22,7 @@ export function useAuth() {
 	}, []);
 
 	const login = async (username: string, password: string) => {
-		const data = await authApi.login(username, password);
+		const data = await authApi.login(username, password) as any;
 		console.log('[AUTH] Login successful:', { 
 			hasToken: !!data.token, 
 			tokenLength: data.token?.length,

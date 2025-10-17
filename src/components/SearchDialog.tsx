@@ -39,7 +39,7 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
     setIsSearching(true);
     try {
       const products = await productsApi.search(query, 10);
-      setSearchResults(products);
+      setSearchResults(Array.isArray(products) ? products : []);
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);

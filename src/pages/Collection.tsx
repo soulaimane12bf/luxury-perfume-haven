@@ -36,12 +36,12 @@ export default function Collection() {
           productsApi.getBrands(),
         ]);
         
-        setProducts(productsData);
-        setBrands(brandsData);
+        setProducts(Array.isArray(productsData) ? productsData : []);
+        setBrands(Array.isArray(brandsData) ? brandsData : []);
 
         if (category) {
           const catData = await categoriesApi.getBySlug(category);
-          setCategoryData(catData);
+          setCategoryData(catData as any);
         }
       } catch (error) {
         console.error('Error fetching products:', error);
