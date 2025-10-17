@@ -45,7 +45,8 @@ import {
   Edit, 
   Trash2,
   Check,
-  X
+  X,
+  MessageCircle
 } from 'lucide-react';
 
 type Product = {
@@ -585,13 +586,25 @@ export default function AdminDashboard() {
                             {new Date(order.created_at).toLocaleDateString('ar-MA')}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteOrder(order.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <div className="flex gap-2">
+                              {order.whatsapp_url && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => window.open(order.whatsapp_url, '_blank')}
+                                  title="إرسال إشعار واتساب"
+                                >
+                                  <MessageCircle className="h-4 w-4 text-green-600" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteOrder(order.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -636,6 +649,16 @@ export default function AdminDashboard() {
                               <SelectItem value="cancelled">ملغي</SelectItem>
                             </SelectContent>
                           </Select>
+                          {order.whatsapp_url && (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => window.open(order.whatsapp_url, '_blank')}
+                              title="إرسال إشعار واتساب"
+                            >
+                              <MessageCircle className="h-4 w-4 text-green-600" />
+                            </Button>
+                          )}
                           <Button
                             variant="destructive"
                             size="icon"

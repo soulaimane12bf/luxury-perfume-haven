@@ -47,6 +47,12 @@ const Order = sequelize.define('Order', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  // WhatsApp notification URL
+  whatsapp_url: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'WhatsApp notification URL for admin',
+  },
 }, {
   tableName: 'orders',
   timestamps: true,
