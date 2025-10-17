@@ -86,7 +86,7 @@ type Review = {
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated, token, loading: authLoading } = useAuth();
   
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -123,6 +123,9 @@ export default function AdminDashboard() {
 
   // Check authentication
   useEffect(() => {
+    // Wait for auth to finish loading before checking
+    if (authLoading) return;
+    
     if (!isAuthenticated || !token) {
       toast({
         title: 'غير مصرح',
@@ -131,35 +134,66 @@ export default function AdminDashboard() {
       });
       navigate('/login');
     }
-  }, [isAuthenticated, token, navigate, toast]);
+  }, [isAuthenticated, token, authLoading, navigate, toast]);
 
   useEffect(() => {
     fetchAllData();
   }, []);
 
+  // Helper function to handle API errors
+  const handleApiError = (error: any, operation: string) => {
+    console.error(`Error during ${operation}:`, error);
+    
+    let errorMessage = error?.message || 'حدث خطأ غير متوقع';
+    let shouldLogout = false;
+
+    // Check if it's an auth error
+    if (error?.isAuthError || error?.status === 401 || error?.message?.includes('401')) {
+      errorMessage = 'انتهت جلستك. يرجى تسجيل الدخول مرة أخرى.';
+      shouldLogout = true;
+    } else if (error?.isNetworkError) {
+      errorMessage = 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.';
+    }
+
+    toast({
+      title: 'خطأ',
+      description: errorMessage,
+      variant: 'destructive',
+    });
+
+    if (shouldLogout) {
+      setTimeout(() => navigate('/login'), 1500);
+    }
+  };
+
   const fetchAllData = async () => {
     try {
       const [productsData, categoriesData, reviewsData] = await Promise.all([
-        productsApi.getAll({}).catch(() => []),
-        categoriesApi.getAll().catch(() => []),
-        reviewsApi.getAll().catch(() => []),
+        productsApi.getAll({}).catch((err) => {
+          console.error('Error fetching products:', err);
+          return [];
+        }),
+        categoriesApi.getAll().catch((err) => {
+          console.error('Error fetching categories:', err);
+          return [];
+        }),
+        reviewsApi.getAll().catch((err) => {
+          console.error('Error fetching reviews:', err);
+          return [];
+        }),
       ]);
       
       // Ensure we always have arrays
       setProducts(Array.isArray(productsData) ? productsData : []);
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
       setReviews(Array.isArray(reviewsData) ? reviewsData : []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching data:', error);
       // Set empty arrays as fallback
       setProducts([]);
       setCategories([]);
       setReviews([]);
-      toast({
-        title: 'خطأ',
-        description: 'فشل تحميل بعض البيانات',
-        variant: 'destructive',
-      });
+      handleApiError(error, 'تحميل البيانات');
     } finally {
       setLoading(false);
     }
@@ -217,30 +251,24 @@ export default function AdminDashboard() {
 
       if (editingProduct) {
         await productsApi.update(editingProduct.id, productData);
-        toast({ title: 'نجح', description: 'تم تحديث المنتج بنجاح' });
+        toast({ 
+          title: '✅ نجح', 
+          description: 'تم تحديث المنتج بنجاح',
+          className: 'bg-green-50 border-green-200',
+        });
       } else {
         await productsApi.create(productData);
-        toast({ title: 'نجح', description: 'تم إضافة المنتج بنجاح' });
+        toast({ 
+          title: '✅ نجح', 
+          description: 'تم إضافة المنتج بنجاح',
+          className: 'bg-green-50 border-green-200',
+        });
       }
       
       setProductDialog(false);
       fetchAllData();
     } catch (error: any) {
-      console.error('Error saving product:', error);
-      if (error.message?.includes('401')) {
-        toast({
-          title: 'غير مصرح',
-          description: 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى',
-          variant: 'destructive',
-        });
-        navigate('/login');
-        return;
-      }
-      toast({
-        title: 'خطأ',
-        description: error.message || 'فشل حفظ المنتج',
-        variant: 'destructive',
-      });
+      handleApiError(error, editingProduct ? 'تحديث المنتج' : 'إضافة المنتج');
     }
   };
 
@@ -249,44 +277,31 @@ export default function AdminDashboard() {
     
     try {
       await productsApi.delete(productId);
-      toast({ title: 'نجح', description: 'تم حذف المنتج' });
+      toast({ 
+        title: '✅ نجح', 
+        description: 'تم حذف المنتج',
+        className: 'bg-green-50 border-green-200',
+      });
       fetchAllData();
     } catch (error: any) {
-      console.error('Error deleting product:', error);
-      if (error.message?.includes('401')) {
-        toast({
-          title: 'غير مصرح',
-          description: 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى',
-          variant: 'destructive',
-        });
-        navigate('/login');
-        return;
-      }
-      toast({
-        title: 'خطأ',
-        description: error.message || 'فشل حذف المنتج',
-        variant: 'destructive',
-      });
+      handleApiError(error, 'حذف المنتج');
     }
   };
 
   const handleToggleBestSelling = async (productId: string) => {
     try {
-      const result = await productsApi.toggleBestSelling(productId);
+      const result = await productsApi.toggleBestSelling(productId) as any;
       toast({
-        title: 'نجح',
+        title: '✅ نجح',
         description: result.best_selling ? 'تمت الإضافة للأكثر مبيعاً' : 'تمت الإزالة من الأكثر مبيعاً',
+        className: 'bg-green-50 border-green-200',
       });
       // Update local state immediately
       setProducts(products.map(p => 
         p.id === productId ? { ...p, best_selling: result.best_selling } : p
       ));
-    } catch (error) {
-      toast({
-        title: 'خطأ',
-        description: 'فشل تحديث المنتج',
-        variant: 'destructive',
-      });
+    } catch (error: any) {
+      handleApiError(error, 'تحديث حالة الأكثر مبيعاً');
     }
   };
 
@@ -316,20 +331,24 @@ export default function AdminDashboard() {
     try {
       if (editingCategory) {
         await categoriesApi.update(editingCategory.id, categoryForm);
-        toast({ title: 'نجح', description: 'تم تحديث الفئة بنجاح' });
+        toast({ 
+          title: '✅ نجح', 
+          description: 'تم تحديث الفئة بنجاح',
+          className: 'bg-green-50 border-green-200',
+        });
       } else {
         await categoriesApi.create(categoryForm);
-        toast({ title: 'نجح', description: 'تم إضافة الفئة بنجاح' });
+        toast({ 
+          title: '✅ نجح', 
+          description: 'تم إضافة الفئة بنجاح',
+          className: 'bg-green-50 border-green-200',
+        });
       }
       
       setCategoryDialog(false);
       fetchAllData();
-    } catch (error) {
-      toast({
-        title: 'خطأ',
-        description: 'فشل حفظ الفئة',
-        variant: 'destructive',
-      });
+    } catch (error: any) {
+      handleApiError(error, editingCategory ? 'تحديث الفئة' : 'إضافة الفئة');
     }
   };
 
@@ -338,14 +357,14 @@ export default function AdminDashboard() {
     
     try {
       await categoriesApi.delete(categoryId);
-      toast({ title: 'نجح', description: 'تم حذف الفئة' });
-      fetchAllData();
-    } catch (error) {
-      toast({
-        title: 'خطأ',
-        description: 'فشل حذف الفئة',
-        variant: 'destructive',
+      toast({ 
+        title: '✅ نجح', 
+        description: 'تم حذف الفئة',
+        className: 'bg-green-50 border-green-200',
       });
+      fetchAllData();
+    } catch (error: any) {
+      handleApiError(error, 'حذف الفئة');
     }
   };
 
@@ -353,14 +372,14 @@ export default function AdminDashboard() {
   const handleApproveReview = async (reviewId: string) => {
     try {
       await reviewsApi.approve(reviewId);
-      toast({ title: 'نجح', description: 'تم الموافقة على التقييم' });
-      fetchAllData();
-    } catch (error) {
-      toast({
-        title: 'خطأ',
-        description: 'فشل الموافقة على التقييم',
-        variant: 'destructive',
+      toast({ 
+        title: '✅ نجح', 
+        description: 'تم الموافقة على التقييم',
+        className: 'bg-green-50 border-green-200',
       });
+      fetchAllData();
+    } catch (error: any) {
+      handleApiError(error, 'الموافقة على التقييم');
     }
   };
 
@@ -369,14 +388,14 @@ export default function AdminDashboard() {
     
     try {
       await reviewsApi.delete(reviewId);
-      toast({ title: 'نجح', description: 'تم حذف التقييم' });
-      fetchAllData();
-    } catch (error) {
-      toast({
-        title: 'خطأ',
-        description: 'فشل حذف التقييم',
-        variant: 'destructive',
+      toast({ 
+        title: '✅ نجح', 
+        description: 'تم حذف التقييم',
+        className: 'bg-green-50 border-green-200',
       });
+      fetchAllData();
+    } catch (error: any) {
+      handleApiError(error, 'حذف التقييم');
     }
   };
 

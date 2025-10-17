@@ -1,37 +1,133 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+// Error messages in Arabic and English
+const ERROR_MESSAGES = {
+  NETWORK_ERROR: {
+    ar: 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.',
+    en: 'Failed to connect to server. Please check your internet connection.',
+  },
+  UNAUTHORIZED: {
+    ar: 'غير مصرح. يرجى تسجيل الدخول مرة أخرى.',
+    en: 'Unauthorized. Please login again.',
+  },
+  FORBIDDEN: {
+    ar: 'ليس لديك صلاحية للوصول إلى هذا المورد.',
+    en: 'You do not have permission to access this resource.',
+  },
+  NOT_FOUND: {
+    ar: 'المورد المطلوب غير موجود.',
+    en: 'The requested resource was not found.',
+  },
+  SERVER_ERROR: {
+    ar: 'حدث خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقاً.',
+    en: 'Server error occurred. Please try again later.',
+  },
+  VALIDATION_ERROR: {
+    ar: 'البيانات المدخلة غير صحيحة. يرجى التحقق من المعلومات.',
+    en: 'Invalid data. Please check the information.',
+  },
+  GENERIC_ERROR: {
+    ar: 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.',
+    en: 'An unexpected error occurred. Please try again.',
+  },
+};
+
 // Auth helpers
 const getToken = () => typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
 const withAuth = (headers: Record<string, string> = {}) => {
   const token = getToken();
+  console.log('[API] withAuth called:', { hasToken: !!token, tokenLength: token?.length });
   return token ? { ...headers, Authorization: `Bearer ${token}` } : headers;
+};
+
+// Error handler helper
+const handleApiError = async (response: Response, defaultMessage: string) => {
+  let errorMessage = defaultMessage;
+  
+  try {
+    const errorData = await response.json();
+    errorMessage = errorData.message || errorData.error || defaultMessage;
+  } catch {
+    // If JSON parsing fails, use status-based messages
+    switch (response.status) {
+      case 401:
+        errorMessage = ERROR_MESSAGES.UNAUTHORIZED.ar;
+        break;
+      case 403:
+        errorMessage = ERROR_MESSAGES.FORBIDDEN.ar;
+        break;
+      case 404:
+        errorMessage = ERROR_MESSAGES.NOT_FOUND.ar;
+        break;
+      case 422:
+        errorMessage = ERROR_MESSAGES.VALIDATION_ERROR.ar;
+        break;
+      case 500:
+      case 502:
+      case 503:
+        errorMessage = ERROR_MESSAGES.SERVER_ERROR.ar;
+        break;
+      default:
+        errorMessage = defaultMessage;
+    }
+  }
+  
+  return {
+    status: response.status,
+    message: errorMessage,
+    isAuthError: response.status === 401,
+  };
+};
+
+// API wrapper with error handling
+const apiCall = async <T>(
+  url: string,
+  options: RequestInit = {},
+  errorContext: string
+): Promise<T> => {
+  try {
+    const response = await fetch(url, options);
+    
+    if (!response.ok) {
+      const error = await handleApiError(response, `فشل ${errorContext}`);
+      const errorObj = new Error(error.message) as Error & { status?: number; isAuthError?: boolean };
+      errorObj.status = error.status;
+      errorObj.isAuthError = error.isAuthError;
+      throw errorObj;
+    }
+    
+    return await response.json();
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      const networkError = new Error(ERROR_MESSAGES.NETWORK_ERROR.ar) as Error & { isNetworkError?: boolean };
+      networkError.isNetworkError = true;
+      throw networkError;
+    }
+    throw error;
+  }
 };
 
 export const authApi = {
   login: async (username: string, password: string) => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    return apiCall(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
-    });
-    if (!response.ok) throw new Error('Login failed');
-    return response.json();
+    }, 'تسجيل الدخول');
   },
+  
   verify: async () => {
-    const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+    return apiCall(`${API_BASE_URL}/auth/verify`, {
       headers: withAuth(),
-    });
-    if (!response.ok) throw new Error('Not authenticated');
-    return response.json();
+    }, 'التحقق من الصلاحيات');
   },
+  
   changePassword: async (currentPassword: string, newPassword: string) => {
-    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+    return apiCall(`${API_BASE_URL}/auth/change-password`, {
       method: 'POST',
       headers: withAuth({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ currentPassword, newPassword }),
-    });
-    if (!response.ok) throw new Error('Change password failed');
-    return response.json();
+    }, 'تغيير كلمة المرور');
   },
 };
 
@@ -44,185 +140,136 @@ export const productsApi = {
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.append(key, String(value));
     });
-    const response = await fetch(`${API_BASE_URL}/products?${params}`);
-    return response.json();
+    return apiCall(`${API_BASE_URL}/products?${params}`, {}, 'جلب المنتجات');
   },
 
   getById: async (id: string | number) => {
-    const response = await fetch(`${API_BASE_URL}/products/${id}`);
-    return response.json();
+    return apiCall(`${API_BASE_URL}/products/${id}`, {}, 'جلب تفاصيل المنتج');
   },
 
   getBestSelling: async (limit = 8) => {
-    const response = await fetch(`${API_BASE_URL}/products/best-selling?limit=${limit}`);
-    return response.json();
+    return apiCall(`${API_BASE_URL}/products/best-selling?limit=${limit}`, {}, 'جلب المنتجات الأكثر مبيعاً');
   },
 
   getBrands: async () => {
-    const response = await fetch(`${API_BASE_URL}/products/brands`);
-    return response.json();
+    return apiCall(`${API_BASE_URL}/products/brands`, {}, 'جلب العلامات التجارية');
   },
 
   search: async (query: string, limit = 10) => {
     const params = new URLSearchParams();
     params.append('q', query);
     params.append('limit', String(limit));
-    const response = await fetch(`${API_BASE_URL}/products/search?${params}`);
-    return response.json();
+    return apiCall(`${API_BASE_URL}/products/search?${params}`, {}, 'البحث عن المنتجات');
   },
 
   create: async (product: unknown) => {
-    const response = await fetch(`${API_BASE_URL}/products`, {
+    return apiCall(`${API_BASE_URL}/products`, {
       method: 'POST',
       headers: withAuth({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(product),
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to create product' }));
-      throw new Error(error.message || `HTTP ${response.status}`);
-    }
-    return response.json();
+    }, 'إنشاء منتج جديد');
   },
 
   update: async (id: string | number, product: unknown) => {
-    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+    return apiCall(`${API_BASE_URL}/products/${id}`, {
       method: 'PUT',
       headers: withAuth({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(product),
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to update product' }));
-      throw new Error(error.message || `HTTP ${response.status}`);
-    }
-    return response.json();
+    }, 'تحديث المنتج');
   },
 
   delete: async (id: string | number) => {
-    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+    return apiCall(`${API_BASE_URL}/products/${id}`, {
       method: 'DELETE',
       headers: withAuth(),
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to delete product' }));
-      throw new Error(error.message || `HTTP ${response.status}`);
-    }
-    return response.json();
+    }, 'حذف المنتج');
   },
 
   toggleBestSelling: async (id: string | number) => {
-    const response = await fetch(`${API_BASE_URL}/products/${id}/best-selling`, {
+    return apiCall(`${API_BASE_URL}/products/${id}/best-selling`, {
       method: 'PATCH',
       headers: withAuth(),
-    });
-    return response.json();
+    }, 'تحديث حالة الأكثر مبيعاً');
   },
 };
 
 // Categories API
 export const categoriesApi = {
   getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/categories`);
-    return response.json();
+    return apiCall(`${API_BASE_URL}/categories`, {}, 'جلب الفئات');
   },
 
   getBySlug: async (slug: string) => {
-    const response = await fetch(`${API_BASE_URL}/categories/${slug}`);
-    return response.json();
+    return apiCall(`${API_BASE_URL}/categories/${slug}`, {}, 'جلب تفاصيل الفئة');
   },
 
   create: async (category: unknown) => {
-    const response = await fetch(`${API_BASE_URL}/categories`, {
+    return apiCall(`${API_BASE_URL}/categories`, {
       method: 'POST',
       headers: withAuth({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(category),
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to create category' }));
-      throw new Error(error.message || `HTTP ${response.status}`);
-    }
-    return response.json();
+    }, 'إنشاء فئة جديدة');
   },
 
   update: async (id: string | number, category: unknown) => {
-    const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+    return apiCall(`${API_BASE_URL}/categories/${id}`, {
       method: 'PUT',
       headers: withAuth({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(category),
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to update category' }));
-      throw new Error(error.message || `HTTP ${response.status}`);
-    }
-    return response.json();
+    }, 'تحديث الفئة');
   },
 
   delete: async (id: string | number) => {
-    const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+    return apiCall(`${API_BASE_URL}/categories/${id}`, {
       method: 'DELETE',
       headers: withAuth(),
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to delete category' }));
-      throw new Error(error.message || `HTTP ${response.status}`);
-    }
-    return response.json();
+    }, 'حذف الفئة');
   },
 };
 
 // Reviews API
 export const reviewsApi = {
   getByProduct: async (productId: string | number) => {
-    const response = await fetch(`${API_BASE_URL}/reviews/product/${productId}`);
-    if (!response.ok) {
-      console.error(`Failed to fetch reviews for product ${productId}`);
+    try {
+      return await apiCall(`${API_BASE_URL}/reviews/product/${productId}`, {}, 'جلب التقييمات');
+    } catch (error) {
+      console.error(`Failed to fetch reviews for product ${productId}:`, error);
       return [];
     }
-    return response.json();
   },
 
   getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/reviews`, {
-      headers: withAuth(),
-    });
-    if (!response.ok) {
-      if (response.status === 401) {
+    try {
+      return await apiCall(`${API_BASE_URL}/reviews`, {
+        headers: withAuth(),
+      }, 'جلب جميع التقييمات');
+    } catch (error: any) {
+      if (error.isAuthError) {
         console.error('Unauthorized: Please login to view reviews');
       }
       return [];
     }
-    return response.json();
   },
 
   create: async (review: unknown) => {
-    const response = await fetch(`${API_BASE_URL}/reviews`, {
+    return apiCall(`${API_BASE_URL}/reviews`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(review),
-    });
-    return response.json();
+    }, 'إنشاء تقييم جديد');
   },
 
   approve: async (id: string | number) => {
-    const response = await fetch(`${API_BASE_URL}/reviews/${id}/approve`, {
+    return apiCall(`${API_BASE_URL}/reviews/${id}/approve`, {
       method: 'PATCH',
       headers: withAuth(),
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to approve review' }));
-      throw new Error(error.message || `HTTP ${response.status}`);
-    }
-    return response.json();
+    }, 'الموافقة على التقييم');
   },
 
   delete: async (id: string | number) => {
-    const response = await fetch(`${API_BASE_URL}/reviews/${id}`, {
+    return apiCall(`${API_BASE_URL}/reviews/${id}`, {
       method: 'DELETE',
       headers: withAuth(),
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to delete review' }));
-      throw new Error(error.message || `HTTP ${response.status}`);
-    }
-    return response.json();
+    }, 'حذف التقييم');
   },
 };
