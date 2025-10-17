@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 // Get admin profile
 export const getProfile = async (req, res) => {
   try {
-    const admin = await Admin.findByPk(req.adminId, {
+    const admin = await Admin.findByPk(req.admin.id, {
       attributes: { exclude: ['password'] }
     });
 
@@ -23,7 +23,7 @@ export const getProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const { username, email, phone } = req.body;
-    const admin = await Admin.findByPk(req.adminId);
+    const admin = await Admin.findByPk(req.admin.id);
 
     if (!admin) {
       return res.status(404).json({ message: 'Admin not found' });
@@ -85,7 +85,7 @@ export const updatePassword = async (req, res) => {
       });
     }
 
-    const admin = await Admin.findByPk(req.adminId);
+    const admin = await Admin.findByPk(req.admin.id);
 
     if (!admin) {
       return res.status(404).json({ message: 'Admin not found' });
