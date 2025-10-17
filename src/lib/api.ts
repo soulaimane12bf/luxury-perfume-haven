@@ -332,3 +332,32 @@ export const ordersApi = {
     }, 'حذف الطلب');
   },
 };
+
+// Profile API
+export const profileApi = {
+  getProfile: async () => {
+    return apiCall(`${API_BASE_URL}/profile`, {
+      headers: withAuth(),
+    }, 'جلب الملف الشخصي');
+  },
+
+  updateProfile: async (profileData: {
+    username?: string;
+    email?: string;
+    phone?: string;
+  }) => {
+    return apiCall(`${API_BASE_URL}/profile`, {
+      method: 'PATCH',
+      headers: withAuth({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(profileData),
+    }, 'تحديث الملف الشخصي');
+  },
+
+  updatePassword: async (currentPassword: string, newPassword: string) => {
+    return apiCall(`${API_BASE_URL}/profile/password`, {
+      method: 'PATCH',
+      headers: withAuth({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }, 'تغيير كلمة المرور');
+  },
+};

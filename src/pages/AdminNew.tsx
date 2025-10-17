@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminNavbar from '@/components/AdminNavbar';
+import AdminProfile from '@/components/AdminProfile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -505,12 +506,13 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="orders" className="space-y-4 md:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 gap-1">
             <TabsTrigger value="orders" className="text-xs md:text-sm">الطلبات</TabsTrigger>
             <TabsTrigger value="products" className="text-xs md:text-sm">المنتجات</TabsTrigger>
             <TabsTrigger value="categories" className="text-xs md:text-sm">الفئات</TabsTrigger>
             <TabsTrigger value="reviews" className="text-xs md:text-sm">التقييمات</TabsTrigger>
             <TabsTrigger value="bestsellers" className="text-xs md:text-sm">الأكثر مبيعاً</TabsTrigger>
+            <TabsTrigger value="profile" className="text-xs md:text-sm">الملف الشخصي</TabsTrigger>
           </TabsList>
 
           {/* Orders Tab */}
@@ -1065,6 +1067,11 @@ export default function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile">
+            <AdminProfile />
           </TabsContent>
         </Tabs>
 
