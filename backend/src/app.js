@@ -17,7 +17,6 @@ import Product from './models/product.js';
 import Category from './models/category.js';
 import Review from './models/review.js';
 import Admin from './models/admin.js';
-import Order from './models/order.js';
 
 dotenv.config();
 
@@ -25,79 +24,83 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+const corsOrigin = process.env.FRONTEND_ORIGIN || true;
+app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json());
 
+let databaseReady = false;
+
 // MySQL Connection and Database Setup
-async function initializeDatabase() {
+export async function initializeDatabase() {
   try {
-    // Test connection
     await sequelize.authenticate();
     console.log('✅ Connected to MySQL');
 
-    // Sync models with database (creates tables if they don't exist)
-    await sequelize.sync({ force: true }); // This will drop tables and recreate
+    await sequelize.sync();
     console.log('✅ Database tables synchronized');
 
-    // Seed database
     await seedDatabase();
+    databaseReady = true;
+    return true;
   } catch (error) {
-    console.error('❌ Database initialization error:', error);
-    process.exit(1);
+    databaseReady = false;
+    console.error('❌ Database initialization error:', error.message);
+    return false;
   }
 }
 
 // Seed database with initial data
 async function seedDatabase() {
+  if (process.env.SEED !== 'true') {
+    return;
+  }
+
   try {
-    // Check if data already exists
     const productCount = await Product.count();
     const categoryCount = await Category.count();
     const reviewCount = await Review.count();
     const adminCount = await Admin.count();
-    
+
     if (productCount === 0 || categoryCount === 0 || reviewCount === 0) {
       console.log('📦 Seeding database...');
       const seedData = JSON.parse(
         fs.readFileSync(join(__dirname, 'data', 'seed.json'), 'utf-8')
       );
-      
+
       if (productCount === 0) {
         await Product.bulkCreate(seedData.products);
         console.log(`   ✓ Inserted ${seedData.products.length} products`);
       }
-      
+
       if (categoryCount === 0) {
         await Category.bulkCreate(seedData.categories);
         console.log(`   ✓ Inserted ${seedData.categories.length} categories`);
       }
-      
+
       if (reviewCount === 0) {
         await Review.bulkCreate(seedData.reviews);
         console.log(`   ✓ Inserted ${seedData.reviews.length} reviews`);
       }
     }
-    
-    // Create default admin if none exists
+
     if (adminCount === 0) {
       await Admin.create({
-        username: 'admin',
-        email: 'marwanlachhab2002@gmail.com',
-        phone: '212600000000',
-        smtp_email: 'marwanlachhab2002@gmail.com',
-        smtp_password: 'cdrjxitfmugddqjl',
-        password: 'admin123', // Will be hashed by the model
-        role: 'super-admin'
+        username: process.env.ADMIN_USERNAME || 'admin',
+        email: process.env.ADMIN_EMAIL || 'admin@example.com',
+        phone: process.env.ADMIN_WHATSAPP || null,
+        smtp_email: null,
+        smtp_password: null,
+        password: process.env.ADMIN_PASSWORD || 'change_me_now',
+        role: 'super-admin',
       });
-      console.log('   ✓ Created default admin (username: admin, password: admin123)');
+      console.log('   ✓ Created default admin user. Update credentials immediately.');
     }
-    
+
     console.log('✅ Database ready');
   } catch (error) {
-    console.error('❌ Seeding error:', error);
+    console.error('❌ Seeding error:', error.message);
   }
 }
 
@@ -110,24 +113,21 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/profile', profileRoutes);
 
 // Health check
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'Parfumeur Walid API is running',
-    database: 'MySQL',
-    connected: sequelize.connectionManager.pool !== null
-  });
+app.get('/api/health', async (req, res) => {
+  try {
+    await sequelize.authenticate();
+    return res.json({ status: 'OK', database: 'reachable', databaseReady });
+  } catch (error) {
+    console.error('Health check error:', error.message);
+    return res.status(503).json({ status: 'ERROR', message: 'Database connection failed' });
+  }
 });
 
 // Error handling middleware
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error(err.message || err);
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// Initialize database then start server
-initializeDatabase().then(() => {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-  });
-});
+export default app;

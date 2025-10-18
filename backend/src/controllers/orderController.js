@@ -27,40 +27,6 @@ const getAdminContactInfo = async () => {
   }
 };
 
-// WhatsApp notification helper - generates message link
-const generateWhatsAppNotification = (order, adminPhone) => {
-  const itemsList = order.items.map(item => 
-    `- ${item.name} (${item.quantity}x) - ${item.price} درهم`
-  ).join('\n');
-  
-  // Use current date if created_at is not available yet
-  const orderDate = order.created_at ? new Date(order.created_at) : new Date();
-  const dateString = orderDate.toLocaleString('ar-MA', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-  
-  const message = `🔔 *طلب جديد!*\n\n` +
-    `📦 رقم الطلب: ${order.id}\n` +
-    `👤 العميل: ${order.customer_name}\n` +
-    `📱 الهاتف: ${order.customer_phone}\n` +
-    `📧 البريد: ${order.customer_email || 'غير متوفر'}\n` +
-    `📍 العنوان: ${order.customer_address}\n\n` +
-    `🛍️ *المنتجات:*\n${itemsList}\n\n` +
-    `💰 المجموع: ${order.total_amount} درهم\n\n` +
-    `📅 التاريخ: ${dateString}`;
-  
-  // Clean phone number (remove spaces, dashes, etc.)
-  const cleanPhone = adminPhone.replace(/[\s\-\(\)]/g, '');
-  
-  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-  console.log('📱 WhatsApp notification URL generated for:', cleanPhone);
-  return whatsappUrl;
-};
-
 // Send email notification (with dynamic SMTP credentials)
 const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword) => {
   try {
@@ -188,12 +154,6 @@ export const createOrder = async (req, res) => {
       status: 'pending',
     });
 
-    // Generate WhatsApp notification URL (after order is created to get order.id)
-    const whatsappUrl = generateWhatsAppNotification(order, adminInfo.phone);
-    
-    // Update order with WhatsApp URL
-    await order.update({ whatsapp_url: whatsappUrl });
-    
     // Send notifications in background (non-blocking)
     setImmediate(async () => {
       try {
@@ -206,15 +166,10 @@ export const createOrder = async (req, res) => {
       }
     });
 
-    // Return response immediately with WhatsApp URL
+    // Return response immediately after persisting order
     res.status(201).json({
       message: 'Order created successfully',
       order,
-      notifications: {
-        whatsappUrl: whatsappUrl,
-        adminPhone: adminInfo.phone,
-        adminEmail: adminInfo.email
-      }
     });
   } catch (error) {
     console.error('Error creating order:', error);
