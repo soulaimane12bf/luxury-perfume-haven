@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
+import './pg-loader.js'; // Force pg to be loaded
 
 dotenv.config();
 
