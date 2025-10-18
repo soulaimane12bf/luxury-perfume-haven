@@ -17,10 +17,15 @@ export default async function handler(req, res) {
       await initPromise;
     }
     
+    // Debug log
+    console.log('Products handler - Original URL:', req.url, 'Method:', req.method);
+    
     // Ensure /api/products prefix
     if (!req.url.startsWith('/api/products')) {
       req.url = '/api/products' + req.url;
     }
+    
+    console.log('Products handler - Final URL:', req.url);
     
     app(req, res);
   } catch (error) {
