@@ -1,0 +1,65 @@
+┌─────────────────────────────────────────────────────────────────┐
+│                  VERCEL ENVIRONMENT VARIABLES                   │
+│                    Copy & Paste These Values                    │
+└─────────────────────────────────────────────────────────────────┘
+
+Add these in: https://vercel.com/marwanelachhabs-projects/luxury-perfume-haven/settings/environment-variables
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. SEED
+   Value: true
+   Environment: Production
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2. ADMIN_USERNAME
+   Value: admin
+   Environment: Production
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3. ADMIN_EMAIL
+   Value: admin@luxury-perfume-haven.com
+   Environment: Production
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4. ADMIN_PASSWORD
+   Value: Admin@2025!Secure
+   Environment: Production
+   ⚠️  CHANGE THIS AFTER FIRST LOGIN!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5. JWT_SECRET
+   Value: rEOYZrpvUsdNDcZXsvUjE80XXHZkVp06uSm0FD04hkc=
+   Environment: Production
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+6. NODE_ENV
+   Value: production
+   Environment: Production
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+7. FRONTEND_ORIGIN
+   Value: https://luxury-perfume-haven.vercel.app
+   Environment: Production
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AFTER ADDING ALL VARIABLES, RUN:
+
+cd /workspaces/luxury-perfume-haven
+vercel --prod --yes
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LOGIN CREDENTIALS (Change after first login):
+URL: https://luxury-perfume-haven.vercel.app/admin/login
+Username: admin
+Password: Admin@2025!Secure
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
