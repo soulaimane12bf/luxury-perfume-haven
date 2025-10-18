@@ -20,11 +20,16 @@ export default async function handler(req, res) {
       await initPromise;
     }
     
+    // Debug: log the incoming URL
+    console.log('Incoming URL:', req.url, 'Method:', req.method);
+    
     // Keep the /api prefix in the URL for Express routing
     // Vercel strips /api from req.url, so we need to add it back
     if (!req.url.startsWith('/api')) {
       req.url = '/api' + req.url;
     }
+    
+    console.log('After processing:', req.url);
     
     // Call Express app directly (DB middleware will handle readiness check)
     app(req, res);
