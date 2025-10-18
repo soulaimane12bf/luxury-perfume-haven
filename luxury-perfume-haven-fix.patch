@@ -1,0 +1,94 @@
+--- a/backend/src/app.js
++++ b/backend/src/app.js
+@@
+-let databaseReady = false;
++// Track the database readiness state. This will be true if the DB initializes
++// successfully and false otherwise. The value is exported so other modules can
++// check it and handle requests appropriately.
++let databaseReady = false;
+@@
+-export async function initializeDatabase() {
+-    try {
+-        await sequelize.authenticate();
+-        await sequelize.sync();
+-        await seedDatabase();
+-        databaseReady = true;
+-        return true;
+-    } catch (error) {
+-        console.error('Database initialization error:', error.message);
+-        databaseReady = false;
+-        return false;
+-    }
+-}
++/**
++ * Initialize and seed the database if connection information is provided.
++ *
++ * This function attempts to authenticate and synchronize the Sequelize
++ * connection. If a DATABASE_URL or explicit DB_HOST/DB_USER/DB_PASSWORD/DB_NAME
++ * environment variables are not defined, the function will skip the
++ * initialization and simply return false without exiting the process.
++ *
++ * On success, it returns true. On failure, it logs the error and returns false.
++ */
++export async function initializeDatabase() {
++    // If no database connection information is provided, skip initialization.
++    if (
++        !process.env.DATABASE_URL &&
++        !(process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME)
++    ) {
++        console.warn(
++            'No database configuration found. Skipping database initialization.'
++        );
++        databaseReady = false;
++        return false;
++    }
++    try {
++        await sequelize.authenticate();
++        console.log('✓ Connected to the database');
++
++        await sequelize.sync();
++        console.log('✓ Database models synchronized');
++
++        // Attempt to seed only if SEED env var is not explicitly disabled.
++        await seedDatabase();
++
++        databaseReady = true;
++        return true;
++    } catch (error) {
++        console.error(
++            '✗ Database initialization error:',
++            error instanceof Error ? error.message : error
++        );
++        databaseReady = false;
++        return false;
++    }
++}
+--- a/backend/server.js
++++ b/backend/server.js
+@@
+-import { initializeDatabase } from './src/app.js';
++import { initializeDatabase, databaseReady } from './src/app.js';
+@@
+-const ready = await initializeDatabase();
+-if (!ready) {
+-  console.warn('⚠️  Database failed to initialize. API endpoints depending on DB will not work.');
+-}
++// Attempt to initialize the database. If it fails or no configuration is provided,
++// log a warning. The server will continue to start, allowing non‑DB routes to work.
++const ready = await initializeDatabase();
++if (!ready) {
++  console.warn(
++    '⚠️  Database failed to initialize or missing configuration. ' +
++      'API endpoints depending on the database may not function properly.'
++  );
++}
++
++// Middleware to gracefully handle requests when the database is not ready.
++app.use((req, res, next) => {
++  if (!databaseReady) {
++    return res
++      .status(503)
++      .json({ error: 'Service unavailable: database not ready.' });
++  }
++  next();
++});

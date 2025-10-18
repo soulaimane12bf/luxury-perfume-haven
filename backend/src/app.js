@@ -32,7 +32,8 @@ app.use(express.json());
 
 let databaseReady = false;
 
-// MySQL Connection and Database Setup
+// MySQL ConnTerminal: Create New Terminal
+// ection and Database Setup
 export async function initializeDatabase() {
   try {
     await sequelize.authenticate();
