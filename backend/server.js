@@ -13,16 +13,6 @@ const startServer = async () => {
     );
   }
 
-  // Middleware to gracefully handle requests when the database is not ready.
-  app.use((req, res, next) => {
-    if (!databaseReady) {
-      return res
-        .status(503)
-        .json({ error: 'Service unavailable: database not ready.' });
-    }
-    next();
-  });
-
   app.listen(port, () => {
     console.log(`🚀 Server running on port ${port}`);
   });

@@ -34,7 +34,7 @@ app.use(express.json());
 // Track the database readiness state. This will be true if the DB initializes
 // successfully and false otherwise. The value is exported so other modules can
 // check it and handle requests appropriately.
-let databaseReady = false;
+export let databaseReady = false;
 
 /**
  * Initialize and seed the database if connection information is provided.
@@ -50,6 +50,7 @@ export async function initializeDatabase() {
   // If no database connection information is provided, skip initialization.
   if (
     !process.env.DATABASE_URL &&
+    !process.env.DB_URL &&
     !(process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME)
   ) {
     console.warn(
@@ -132,6 +133,17 @@ async function seedDatabase() {
     console.error('❌ Seeding error:', error.message);
   }
 }
+
+// Middleware to check database readiness before processing API requests
+app.use('/api', (req, res, next) => {
+  if (!databaseReady) {
+    return res.status(503).json({ 
+      error: 'Service unavailable: database not ready.',
+      message: 'The database is not configured or not reachable. Please configure database environment variables and restart the server.'
+    });
+  }
+  next();
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
