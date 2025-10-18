@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminNavbar from '@/components/AdminNavbar';
 import AdminProfile from '@/components/AdminProfile';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AdminSidebar from '@/components/AdminSidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { productsApi, categoriesApi, reviewsApi, ordersApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -85,6 +95,13 @@ type Review = {
   approved: boolean;
 };
 
+type DeleteTarget = {
+  type: 'product' | 'category' | 'review' | 'order';
+  id: string;
+  name?: string;
+  meta?: string;
+};
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -95,6 +112,13 @@ export default function AdminDashboard() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('orders');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const closeSidebar = () => setIsSidebarOpen(false);
   
   // Product form state
   const [productDialog, setProductDialog] = useState(false);
@@ -282,8 +306,6 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
-    
     try {
       await productsApi.delete(productId);
       toast({ 
@@ -294,6 +316,7 @@ export default function AdminDashboard() {
       fetchAllData();
     } catch (error: any) {
       handleApiError(error, 'حذف المنتج');
+      throw error;
     }
   };
 
@@ -362,8 +385,6 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteCategory = async (categoryId: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذه الفئة؟')) return;
-    
     try {
       await categoriesApi.delete(categoryId);
       toast({ 
@@ -374,7 +395,19 @@ export default function AdminDashboard() {
       fetchAllData();
     } catch (error: any) {
       handleApiError(error, 'حذف الفئة');
+      throw error;
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setActiveTab('orders');
+    closeSidebar();
+    toast({
+      title: 'تم تسجيل الخروج',
+      description: 'إلى اللقاء!',
+    });
+    navigate('/login');
   };
 
   // Review handlers
@@ -393,8 +426,6 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteReview = async (reviewId: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذا التقييم؟')) return;
-    
     try {
       await reviewsApi.delete(reviewId);
       toast({ 
@@ -405,6 +436,7 @@ export default function AdminDashboard() {
       fetchAllData();
     } catch (error: any) {
       handleApiError(error, 'حذف التقييم');
+      throw error;
     }
   };
 
@@ -424,8 +456,6 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteOrder = async (orderId: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
-    
     try {
       await ordersApi.delete(orderId);
       toast({
@@ -436,14 +466,91 @@ export default function AdminDashboard() {
       fetchAllData();
     } catch (error: any) {
       handleApiError(error, 'حذف الطلب');
+      throw error;
+    }
+  };
+  
+  const openDeleteDialog = (target: DeleteTarget) => {
+    setDeleteTarget(target);
+    setDeleteDialogOpen(true);
+  };
+  
+  const closeDeleteDialog = () => {
+    if (isDeleting) return;
+    setDeleteDialogOpen(false);
+    setDeleteTarget(null);
+  };
+  
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      switch (deleteTarget.type) {
+        case 'product':
+          await handleDeleteProduct(deleteTarget.id);
+          break;
+        case 'category':
+          await handleDeleteCategory(deleteTarget.id);
+          break;
+        case 'review':
+          await handleDeleteReview(deleteTarget.id);
+          break;
+        case 'order':
+          await handleDeleteOrder(deleteTarget.id);
+          break;
+      }
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
+    } catch (error) {
+      // Errors are surfaced via handleApiError; keep dialog open for user review.
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <AdminNavbar />
-        <div className="container py-20 text-center">جاري التحميل...</div>
+      <div className="relative flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
+        <div className="hidden md:flex">
+          <AdminSidebar
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onLogout={handleLogout}
+            className="md:translate-x-0"
+          />
+        </div>
+
+        {isSidebarOpen && (
+          <div className="fixed inset-0 z-50 md:hidden">
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={closeSidebar}
+            />
+            <div className="absolute inset-y-0 right-0 w-72 max-w-[85%] animate-in slide-in-from-right-full duration-300">
+              <AdminSidebar
+                activeTab={activeTab}
+                onTabChange={(tab) => {
+                  setActiveTab(tab);
+                  closeSidebar();
+                }}
+                onLogout={handleLogout}
+                onClose={closeSidebar}
+                isMobile
+                className="h-full"
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 flex flex-col">
+          <AdminNavbar showMenuButton onToggleSidebar={toggleSidebar} />
+          <main className="flex-1 flex items-center justify-center px-4">
+            <div className="text-center space-y-3">
+              <div className="h-12 w-12 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-sm text-muted-foreground">جاري التحميل...</p>
+            </div>
+          </main>
+        </div>
       </div>
     );
   }
@@ -457,68 +564,127 @@ export default function AdminDashboard() {
     pendingOrders: Array.isArray(orders) ? orders.filter((o: any) => o.status === 'pending').length : 0,
   };
 
+  const navigationTabs = [
+    { id: 'orders', label: 'الطلبات' },
+    { id: 'products', label: 'المنتجات' },
+    { id: 'bestsellers', label: 'الأكثر مبيعاً' },
+    { id: 'categories', label: 'الأقسام' },
+    { id: 'reviews', label: 'التقييمات' },
+    { id: 'profile', label: 'الملف الشخصي' },
+  ];
+
+  const deleteLabels: Record<DeleteTarget['type'], string> = {
+    product: 'المنتج',
+    category: 'الفئة',
+    review: 'التقييم',
+    order: 'الطلب',
+  };
+
+  const deleteTargetLabel = deleteTarget ? deleteLabels[deleteTarget.type] : '';
+  const deleteTargetDetails = deleteTarget
+    ? [deleteTarget.name, deleteTarget.meta].filter(Boolean).join(' • ') || deleteTarget.id
+    : '';
+
   return (
-    <div className="min-h-screen bg-background">
-      <AdminNavbar />
-      
-      <div className="container py-4 md:py-8 px-4">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
-              <CardTitle className="text-xs md:text-sm font-medium">إجمالي المنتجات</CardTitle>
-              <Package className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="p-4 md:p-6 pt-0">
-              <div className="text-xl md:text-2xl font-bold">{stats.totalProducts}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
-              <CardTitle className="text-xs md:text-sm font-medium">الفئات</CardTitle>
-              <FolderTree className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="p-4 md:p-6 pt-0">
-              <div className="text-xl md:text-2xl font-bold">{stats.totalCategories}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
-              <CardTitle className="text-xs md:text-sm font-medium">الأكثر مبيعاً</CardTitle>
-              <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="p-4 md:p-6 pt-0">
-              <div className="text-xl md:text-2xl font-bold">{stats.bestSellers}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
-              <CardTitle className="text-xs md:text-sm font-medium">تقييمات معلقة</CardTitle>
-              <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="p-4 md:p-6 pt-0">
-              <div className="text-xl md:text-2xl font-bold">{stats.pendingReviews}</div>
-            </CardContent>
-          </Card>
+    <div className="relative flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
+      <div className="hidden md:flex">
+        <AdminSidebar 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+          onLogout={handleLogout}
+        />
+      </div>
+
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={closeSidebar}
+          />
+          <div className="absolute inset-y-0 right-0 w-72 max-w-[85%] animate-in slide-in-from-right-full duration-300">
+            <AdminSidebar
+              activeTab={activeTab}
+              onTabChange={(tab) => {
+                setActiveTab(tab);
+                closeSidebar();
+              }}
+              onLogout={handleLogout}
+              onClose={closeSidebar}
+              isMobile
+              className="h-full"
+            />
+          </div>
         </div>
+      )}
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+  <AdminNavbar showMenuButton onToggleSidebar={toggleSidebar} />
+        
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-black">
+          <div className="container py-4 md:py-8 px-4">
+            <div className="md:hidden mb-4">
+              <Select value={activeTab} onValueChange={setActiveTab}>
+                <SelectTrigger className="justify-between bg-white/80 dark:bg-gray-900/60">
+                  <SelectValue placeholder="اختر القسم" />
+                </SelectTrigger>
+                <SelectContent>
+                  {navigationTabs.map((tab) => (
+                    <SelectItem key={tab.id} value={tab.id}>
+                      {tab.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="orders" className="space-y-4 md:space-y-6">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 gap-1">
-            <TabsTrigger value="orders" className="text-xs md:text-sm">الطلبات</TabsTrigger>
-            <TabsTrigger value="products" className="text-xs md:text-sm">المنتجات</TabsTrigger>
-            <TabsTrigger value="categories" className="text-xs md:text-sm">الفئات</TabsTrigger>
-            <TabsTrigger value="reviews" className="text-xs md:text-sm">التقييمات</TabsTrigger>
-            <TabsTrigger value="bestsellers" className="text-xs md:text-sm">الأكثر مبيعاً</TabsTrigger>
-            <TabsTrigger value="profile" className="text-xs md:text-sm">الملف الشخصي</TabsTrigger>
-          </TabsList>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
+              <Card className="border-l-4 border-l-amber-500 bg-white/80 dark:bg-gray-900/60 backdrop-blur hover:shadow-xl transition-all">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+                  <CardTitle className="text-xs md:text-sm font-medium text-gray-700 dark:text-amber-100">إجمالي المنتجات</CardTitle>
+                  <Package className="h-3 w-3 md:h-4 md:w-4 text-amber-500" />
+                </CardHeader>
+                <CardContent className="p-4 md:p-6 pt-0">
+                  <div className="text-xl md:text-2xl font-bold text-amber-900 dark:text-amber-400">{stats.totalProducts}</div>
+                </CardContent>
+              </Card>
 
-          {/* Orders Tab */}
-          <TabsContent value="orders">
-            <Card>
+              <Card className="border-l-4 border-l-blue-500 bg-white/80 dark:bg-gray-900/60 backdrop-blur hover:shadow-xl transition-all">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+                  <CardTitle className="text-xs md:text-sm font-medium text-gray-700 dark:text-amber-100">الفئات</CardTitle>
+                  <FolderTree className="h-3 w-3 md:h-4 md:w-4 text-blue-500" />
+                </CardHeader>
+                <CardContent className="p-4 md:p-6 pt-0">
+                  <div className="text-xl md:text-2xl font-bold text-blue-900 dark:text-blue-400">{stats.totalCategories}</div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-green-500 bg-white/80 dark:bg-gray-900/60 backdrop-blur hover:shadow-xl transition-all">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+                  <CardTitle className="text-xs md:text-sm font-medium text-gray-700 dark:text-amber-100">الأكثر مبيعاً</CardTitle>
+                  <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-green-500" />
+                </CardHeader>
+                <CardContent className="p-4 md:p-6 pt-0">
+                  <div className="text-xl md:text-2xl font-bold text-green-900 dark:text-green-400">{stats.bestSellers}</div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-yellow-500 bg-white/80 dark:bg-gray-900/60 backdrop-blur hover:shadow-xl transition-all">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+                  <CardTitle className="text-xs md:text-sm font-medium text-gray-700 dark:text-amber-100">تقييمات معلقة</CardTitle>
+                  <Star className="h-3 w-3 md:h-4 md:w-4 text-yellow-500" />
+                </CardHeader>
+                <CardContent className="p-4 md:p-6 pt-0">
+                  <div className="text-xl md:text-2xl font-bold text-yellow-900 dark:text-yellow-400">{stats.pendingReviews}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Content based on active tab */}
+            <div className="space-y-6">
+              {activeTab === 'orders' && (
+                <Card>
               <CardHeader className="p-4 md:p-6">
                 <div>
                   <CardTitle className="text-lg md:text-xl">إدارة الطلبات</CardTitle>
@@ -600,7 +766,7 @@ export default function AdminDashboard() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleDeleteOrder(order.id)}
+                                onClick={() => openDeleteDialog({ type: 'order', id: order.id, name: order.customer_name, meta: order.customer_phone })}
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
@@ -662,7 +828,7 @@ export default function AdminDashboard() {
                           <Button
                             variant="destructive"
                             size="icon"
-                            onClick={() => handleDeleteOrder(order.id)}
+                            onClick={() => openDeleteDialog({ type: 'order', id: order.id, name: order.customer_name, meta: order.customer_phone })}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -673,12 +839,12 @@ export default function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+              )}
 
-          {/* Products Tab */}
-          <TabsContent value="products">
-            <Card>
-              <CardHeader className="p-4 md:p-6">
+              {/* Products Tab */}
+              {activeTab === 'products' && (
+                <Card>
+                  <CardHeader className="p-4 md:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <CardTitle className="text-lg md:text-xl">إدارة المنتجات</CardTitle>
@@ -721,7 +887,7 @@ export default function AdminDashboard() {
                             <Button
                               size="sm"
                               variant="destructive"
-                              onClick={() => handleDeleteProduct(product.id)}
+                              onClick={() => openDeleteDialog({ type: 'product', id: product.id, name: product.name })}
                               className="flex-1"
                             >
                               <Trash2 className="h-3 w-3 mr-1" />
@@ -777,7 +943,7 @@ export default function AdminDashboard() {
                               <Button 
                                 variant="ghost" 
                                 size="icon"
-                                onClick={() => handleDeleteProduct(product.id)}
+                                onClick={() => openDeleteDialog({ type: 'product', id: product.id, name: product.name })}
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
@@ -788,14 +954,14 @@ export default function AdminDashboard() {
                     </TableBody>
                   </Table>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </CardContent>
+                </Card>
+              )}
 
-          {/* Categories Tab */}
-          <TabsContent value="categories">
-            <Card>
-              <CardHeader className="p-4 md:p-6">
+              {/* Categories Tab */}
+              {activeTab === 'categories' && (
+                <Card>
+                  <CardHeader className="p-4 md:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <CardTitle className="text-lg md:text-xl">إدارة الفئات</CardTitle>
@@ -833,7 +999,7 @@ export default function AdminDashboard() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteCategory(category.id)}
+                            onClick={() => openDeleteDialog({ type: 'category', id: category.id, name: category.name })}
                             className="flex-1"
                           >
                             <Trash2 className="h-3 w-3 text-destructive mr-1" />
@@ -874,7 +1040,7 @@ export default function AdminDashboard() {
                               <Button 
                                 variant="ghost" 
                                 size="icon"
-                                onClick={() => handleDeleteCategory(category.id)}
+                                onClick={() => openDeleteDialog({ type: 'category', id: category.id, name: category.name })}
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
@@ -885,14 +1051,14 @@ export default function AdminDashboard() {
                     </TableBody>
                   </Table>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </CardContent>
+                </Card>
+              )}
 
-          {/* Reviews Tab */}
-          <TabsContent value="reviews">
-            <Card>
-              <CardHeader className="p-4 md:p-6">
+              {/* Reviews Tab */}
+              {activeTab === 'reviews' && (
+                <Card>
+                  <CardHeader className="p-4 md:p-6">
                 <div>
                   <CardTitle className="text-lg md:text-xl">إدارة التقييمات</CardTitle>
                   <CardDescription className="text-xs md:text-sm">الموافقة على التقييمات أو حذفها</CardDescription>
@@ -945,7 +1111,7 @@ export default function AdminDashboard() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteReview(review.id)}
+                              onClick={() => openDeleteDialog({ type: 'review', id: review.id, name: review.name, meta: product?.name })}
                               className={!review.approved ? 'flex-1' : 'w-full'}
                             >
                               <Trash2 className="h-3 w-3 text-destructive mr-1" />
@@ -1012,7 +1178,7 @@ export default function AdminDashboard() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => handleDeleteReview(review.id)}
+                                  onClick={() => openDeleteDialog({ type: 'review', id: review.id, name: review.name, meta: product?.name })}
                                 >
                                   <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
@@ -1024,14 +1190,14 @@ export default function AdminDashboard() {
                     </TableBody>
                   </Table>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </CardContent>
+                </Card>
+              )}
 
-          {/* Best Sellers Tab */}
-          <TabsContent value="bestsellers">
-            <Card>
-              <CardHeader className="p-4 md:p-6">
+              {/* Best Sellers Tab */}
+              {activeTab === 'bestsellers' && (
+                <Card>
+                  <CardHeader className="p-4 md:p-6">
                 <div>
                   <CardTitle className="text-lg md:text-xl">إدارة الأكثر مبيعاً</CardTitle>
                   <CardDescription className="text-xs md:text-sm">تبديل حالة "الأكثر مبيعاً" للمنتجات</CardDescription>
@@ -1088,15 +1254,65 @@ export default function AdminDashboard() {
                     </TableBody>
                   </Table>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </CardContent>
+                </Card>
+              )}
 
-          {/* Profile Tab */}
-          <TabsContent value="profile">
-            <AdminProfile />
-          </TabsContent>
-        </Tabs>
+              {/* Profile Tab */}
+              {activeTab === 'profile' && (
+                <AdminProfile />
+              )}
+            </div>
+          </div>
+        </main>
+
+        <AlertDialog
+          open={deleteDialogOpen}
+          onOpenChange={(open) => {
+            if (open) {
+              setDeleteDialogOpen(true);
+            } else {
+              closeDeleteDialog();
+            }
+          }}
+        >
+          <AlertDialogContent className="bg-gradient-to-br from-black via-gray-900 to-black border border-amber-500/40 text-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-amber-300">
+                {deleteTarget ? `حذف ${deleteTargetLabel}` : 'تأكيد الحذف'}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-gray-300 leading-relaxed">
+                {deleteTarget ? (
+                  <span>
+                    سيتم حذف {deleteTargetLabel}
+                    {deleteTargetDetails && (
+                      <span className="font-semibold text-amber-200"> {deleteTargetDetails}</span>
+                    )}
+                    . هذا الإجراء لا يمكن التراجع عنه وسيتم إزالة البيانات نهائياً.
+                  </span>
+                ) : (
+                  'هذا الإجراء لا يمكن التراجع عنه وسيتم إزالة البيانات نهائياً.'
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="gap-2">
+              <AlertDialogCancel
+                disabled={isDeleting}
+                onClick={closeDeleteDialog}
+                className="bg-gray-800/80 text-gray-200 border-gray-700 hover:bg-gray-700/80"
+              >
+                تراجع
+              </AlertDialogCancel>
+              <AlertDialogAction
+                disabled={isDeleting}
+                onClick={confirmDelete}
+                className="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 text-black font-semibold hover:from-amber-400 hover:via-amber-500 hover:to-amber-400"
+              >
+                {isDeleting ? 'جارٍ الحذف...' : 'تأكيد الحذف'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Product Dialog */}
         <Dialog open={productDialog} onOpenChange={setProductDialog}>
