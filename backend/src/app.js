@@ -30,24 +30,52 @@ const corsOrigin = process.env.FRONTEND_ORIGIN || true;
 app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json());
 
+
+// Track the database readiness state. This will be true if the DB initializes
+// successfully and false otherwise. The value is exported so other modules can
+// check it and handle requests appropriately.
 let databaseReady = false;
 
-// MySQL ConnTerminal: Create New Terminal
-// ection and Database Setup
+/**
+ * Initialize and seed the database if connection information is provided.
+ *
+ * This function attempts to authenticate and synchronize the Sequelize
+ * connection. If a DATABASE_URL or explicit DB_HOST/DB_USER/DB_PASSWORD/DB_NAME
+ * environment variables are not defined, the function will skip the
+ * initialization and simply return false without exiting the process.
+ *
+ * On success, it returns true. On failure, it logs the error and returns false.
+ */
 export async function initializeDatabase() {
+  // If no database connection information is provided, skip initialization.
+  if (
+    !process.env.DATABASE_URL &&
+    !(process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME)
+  ) {
+    console.warn(
+      'No database configuration found. Skipping database initialization.'
+    );
+    databaseReady = false;
+    return false;
+  }
   try {
     await sequelize.authenticate();
-    console.log('✅ Connected to MySQL');
+    console.log('✓ Connected to the database');
 
     await sequelize.sync();
-    console.log('✅ Database tables synchronized');
+    console.log('✓ Database models synchronized');
 
+    // Attempt to seed only if SEED env var is not explicitly disabled.
     await seedDatabase();
+
     databaseReady = true;
     return true;
   } catch (error) {
+    console.error(
+      '✗ Database initialization error:',
+      error instanceof Error ? error.message : error
+    );
     databaseReady = false;
-    console.error('❌ Database initialization error:', error.message);
     return false;
   }
 }
