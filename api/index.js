@@ -1,3 +1,14 @@
-import app from '../backend/src/app.js';
+import app, { initializeDatabase } from '../backend/src/app.js';
 
-export default app;
+// Initialize database on cold start
+let initialized = false;
+
+async function handler(req, res) {
+  if (!initialized) {
+    await initializeDatabase();
+    initialized = true;
+  }
+  return app(req, res);
+}
+
+export default handler;
