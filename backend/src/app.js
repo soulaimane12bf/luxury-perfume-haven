@@ -25,15 +25,35 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// Middleware
-const corsOrigin = process.env.FRONTEND_ORIGIN || true;
-app.use(cors({ 
-  origin: corsOrigin, 
+// Middleware - CORS configuration for Vercel deployments
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    
+    // Allow all Vercel preview and production URLs
+    if (
+      origin.includes('.vercel.app') || 
+      origin.includes('localhost') ||
+      origin === process.env.FRONTEND_ORIGIN
+    ) {
+      return callback(null, true);
+    }
+    
+    // Allow the specific origin if FRONTEND_ORIGIN is set
+    if (process.env.FRONTEND_ORIGIN && origin === process.env.FRONTEND_ORIGIN) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Range', 'X-Content-Range']
-}));
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 
