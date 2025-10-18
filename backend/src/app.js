@@ -56,6 +56,7 @@ export async function initializeDatabase() {
   // If no database connection information is provided, skip initialization.
   if (
     !process.env.DATABASE_URL &&
+    !process.env.POSTGRES_URL &&
     !process.env.DB_URL &&
     !(process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME)
   ) {
