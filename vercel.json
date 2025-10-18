@@ -8,10 +8,12 @@
     {
       "src": "/api/(.*)",
       "dest": "/api/index.js"
-    },
+    }
+  ],
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/((?!api|assets|.*\\.).*)",
+      "destination": "/index.html"
     }
   ],
   "functions": {
