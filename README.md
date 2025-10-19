@@ -123,11 +123,11 @@ The backend automatically seeds with 8 products (Creed, Dior, YSL, Tom Ford, etc
 
 Built with ❤️ for Parfumeur Walid Clone
 
+
+
 ---
 
-## Original Lovable Project
-
-**URL**: https://lovable.dev/projects/7e12eb57-02ed-4a81-8fac-cf989c3664ab
+## Installation
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -142,7 +142,7 @@ cd <YOUR_PROJECT_NAME>
 
 # Step 3: Install the necessary dependencies.
 npm i
-n
+
 # Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
@@ -170,15 +170,17 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Node.js / Express.js
+- PostgreSQL (Neon)
+- Vercel (Deployment)
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/7e12eb57-02ed-4a81-8fac-cf989c3664ab) and click on Share -> Publish.
+This project is deployed on Vercel. To deploy:
 
-## Can I connect a custom domain to my Lovable project?
+```sh
+vercel --prod
+```
 
-Yes, you can!
+For detailed deployment instructions, see [DEPLOYMENT_COMPLETE.md](./DEPLOYMENT_COMPLETE.md)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
