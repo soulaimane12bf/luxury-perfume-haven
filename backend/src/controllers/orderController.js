@@ -161,24 +161,29 @@ export const createOrder = async (req, res) => {
       status: 'pending',
     });
 
-    // Send notifications in background (non-blocking)
-    setImmediate(async () => {
+    // Send email with short timeout (don't block too long, but ensure it's sent)
+    // Vercel serverless functions need to await async operations
+    const emailSendPromise = (async () => {
       try {
-        // Send email with timeout (max 15 seconds)
         const emailPromise = sendEmailNotification(order, adminInfo.email, adminInfo.smtp_email, adminInfo.smtp_password);
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Email sending timeout')), 15000)
+          setTimeout(() => reject(new Error('Email timeout')), 8000) // 8 second timeout
         );
         
         await Promise.race([emailPromise, timeoutPromise]);
-        console.log('✅ Email notification sent successfully for order:', order.id);
-      } catch (notificationError) {
-        console.error('❌ Error sending email notification for order:', order.id, notificationError.message);
-        // Don't fail the order creation if email fails
+        console.log('✅ Email sent for order:', order.id);
+      } catch (error) {
+        console.error('❌ Email failed for order:', order.id, '-', error.message);
       }
-    });
+    })();
 
-    // Return response immediately after persisting order
+    // Wait for email with timeout, but don't fail the order
+    await Promise.race([
+      emailSendPromise,
+      new Promise(resolve => setTimeout(resolve, 8000)) // Max 8 seconds wait
+    ]);
+
+    // Return response after email attempt
     res.status(201).json({
       message: 'Order created successfully',
       order,
