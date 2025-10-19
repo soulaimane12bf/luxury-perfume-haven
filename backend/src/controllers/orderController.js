@@ -30,7 +30,7 @@ const getAdminContactInfo = async () => {
 // Send email notification (with dynamic SMTP credentials)
 const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword) => {
   try {
-    // Create transporter with admin's SMTP credentials
+    // Create transporter with admin's SMTP credentials and optimized settings
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
       port: process.env.EMAIL_PORT || 587,
@@ -39,6 +39,13 @@ const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword)
         user: smtpEmail,
         pass: smtpPassword,
       },
+      connectionTimeout: 10000, // 10 seconds timeout
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+      pool: true, // Use connection pooling
+      maxConnections: 5,
+      rateDelta: 20000,
+      rateLimit: 5,
     });
 
     const itemsHTML = order.items.map(item => `
@@ -97,8 +104,8 @@ const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword)
     await transporter.sendMail(mailOptions);
     console.log('✅ Email notification sent successfully to:', adminEmail);
   } catch (error) {
-    console.error('❌ Error sending email:', error);
-    throw error;
+    console.error('❌ Error sending email:', error.message || error);
+    // Don't throw - let caller handle the error
   }
 };
 
@@ -157,11 +164,16 @@ export const createOrder = async (req, res) => {
     // Send notifications in background (non-blocking)
     setImmediate(async () => {
       try {
-        // Send email with dynamic SMTP credentials
-        await sendEmailNotification(order, adminInfo.email, adminInfo.smtp_email, adminInfo.smtp_password);
+        // Send email with timeout (max 15 seconds)
+        const emailPromise = sendEmailNotification(order, adminInfo.email, adminInfo.smtp_email, adminInfo.smtp_password);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email sending timeout')), 15000)
+        );
+        
+        await Promise.race([emailPromise, timeoutPromise]);
         console.log('✅ Email notification sent successfully for order:', order.id);
       } catch (notificationError) {
-        console.error('❌ Error sending email notification for order:', order.id, notificationError);
+        console.error('❌ Error sending email notification for order:', order.id, notificationError.message);
         // Don't fail the order creation if email fails
       }
     });
