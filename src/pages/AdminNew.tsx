@@ -56,7 +56,9 @@ import {
   Trash2,
   Check,
   X,
-  MessageCircle
+  MessageCircle,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 type Product = {
@@ -117,8 +119,21 @@ export default function AdminDashboard() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const closeSidebar = () => setIsSidebarOpen(false);
+  
+  const toggleOrderDetails = (orderId: string) => {
+    setExpandedOrders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId);
+      } else {
+        newSet.add(orderId);
+      }
+      return newSet;
+    });
+  };
   
   // Product form state
   const [productDialog, setProductDialog] = useState(false);
@@ -132,11 +147,10 @@ export default function AdminDashboard() {
     type: 'PRODUIT',
     size: '100ml',
     description: '',
-    main_notes: '',
-    top_notes: '',
-    image_urls: '',
     stock: 0,
   });
+  const [productImages, setProductImages] = useState<File[]>([]);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
 
   // Category form state
   const [categoryDialog, setCategoryDialog] = useState(false);
@@ -245,11 +259,10 @@ export default function AdminDashboard() {
         type: product.type,
         size: product.size || '100ml',
         description: product.description || '',
-        main_notes: product.notes?.main_notes?.join(', ') || '',
-        top_notes: product.notes?.top_notes?.join(', ') || '',
-        image_urls: product.image_urls?.join('\n') || '',
         stock: product.stock,
       });
+      setExistingImageUrls(product.image_urls || []);
+      setProductImages([]);
     } else {
       setEditingProduct(null);
       setProductForm({
@@ -261,25 +274,39 @@ export default function AdminDashboard() {
         type: 'PRODUIT',
         size: '100ml',
         description: '',
-        main_notes: '',
-        top_notes: '',
-        image_urls: '',
         stock: 0,
       });
+      setExistingImageUrls([]);
+      setProductImages([]);
     }
     setProductDialog(true);
   };
 
   const handleSaveProduct = async () => {
     try {
+      // Convert images to base64 or upload them
+      let imageUrls = [...existingImageUrls];
+      
+      // Convert new images to base64 data URLs for now
+      // In production, you'd upload to a CDN or cloud storage
+      if (productImages.length > 0) {
+        const newImageUrls = await Promise.all(
+          productImages.map(file => {
+            return new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(file);
+            });
+          })
+        );
+        imageUrls = [...imageUrls, ...newImageUrls];
+      }
+
       const productData = {
         ...productForm,
         price: parseFloat(productForm.price),
-        notes: {
-          main_notes: productForm.main_notes.split(',').map(n => n.trim()).filter(Boolean),
-          top_notes: productForm.top_notes.split(',').map(n => n.trim()).filter(Boolean),
-        },
-        image_urls: productForm.image_urls.split('\n').map(url => url.trim()).filter(Boolean),
+        notes: null, // Remove notes
+        image_urls: imageUrls,
       };
 
       if (editingProduct) {
@@ -701,8 +728,6 @@ export default function AdminDashboard() {
                       <TableRow>
                         <TableHead className="text-right">رقم الطلب</TableHead>
                         <TableHead className="text-right">العميل</TableHead>
-                        <TableHead className="text-right">الهاتف</TableHead>
-                        <TableHead className="text-right">المنتجات</TableHead>
                         <TableHead className="text-right">المبلغ</TableHead>
                         <TableHead className="text-right">الحالة</TableHead>
                         <TableHead className="text-right">التاريخ</TableHead>
@@ -711,68 +736,120 @@ export default function AdminDashboard() {
                     </TableHeader>
                     <TableBody>
                       {orders.map((order: any) => (
-                        <TableRow key={order.id}>
-                          <TableCell className="font-mono text-xs">{order.id}</TableCell>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{order.customer_name}</div>
-                              {order.customer_email && (
-                                <div className="text-xs text-muted-foreground">{order.customer_email}</div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{order.customer_phone}</TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              {order.items.map((item: any, idx: number) => (
-                                <div key={idx}>{item.name} (x{item.quantity})</div>
-                              ))}
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-bold text-primary">{order.total_amount} درهم</TableCell>
-                          <TableCell>
-                            <Select 
-                              value={order.status}
-                              onValueChange={(value) => handleUpdateOrderStatus(order.id, value)}
-                            >
-                              <SelectTrigger className="w-[130px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="pending">قيد الانتظار</SelectItem>
-                                <SelectItem value="confirmed">مؤكد</SelectItem>
-                                <SelectItem value="processing">قيد التجهيز</SelectItem>
-                                <SelectItem value="shipped">تم الشحن</SelectItem>
-                                <SelectItem value="delivered">تم التسليم</SelectItem>
-                                <SelectItem value="cancelled">ملغي</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="text-xs">
-                            {new Date(order.created_at).toLocaleDateString('ar-MA')}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              {order.whatsapp_url && (
+                        <>
+                          <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50" onClick={() => toggleOrderDetails(order.id)}>
+                            <TableCell className="font-mono text-xs">
+                              <div className="flex items-center gap-2">
+                                {expandedOrders.has(order.id) ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )}
+                                {order.id}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">{order.customer_name}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-bold text-primary">{order.total_amount} درهم</TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <Select 
+                                value={order.status}
+                                onValueChange={(value) => handleUpdateOrderStatus(order.id, value)}
+                              >
+                                <SelectTrigger className="w-[130px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">قيد الانتظار</SelectItem>
+                                  <SelectItem value="confirmed">مؤكد</SelectItem>
+                                  <SelectItem value="processing">قيد التجهيز</SelectItem>
+                                  <SelectItem value="shipped">تم الشحن</SelectItem>
+                                  <SelectItem value="delivered">تم التسليم</SelectItem>
+                                  <SelectItem value="cancelled">ملغي</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {new Date(order.created_at).toLocaleDateString('ar-MA')}
+                            </TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <div className="flex gap-2">
+                                {order.whatsapp_url && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => window.open(order.whatsapp_url, '_blank')}
+                                    title="إرسال إشعار واتساب"
+                                  >
+                                    <MessageCircle className="h-4 w-4 text-green-600" />
+                                  </Button>
+                                )}
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => window.open(order.whatsapp_url, '_blank')}
-                                  title="إرسال إشعار واتساب"
+                                  onClick={() => openDeleteDialog({ type: 'order', id: order.id, name: order.customer_name, meta: order.customer_phone })}
                                 >
-                                  <MessageCircle className="h-4 w-4 text-green-600" />
+                                  <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => openDeleteDialog({ type: 'order', id: order.id, name: order.customer_name, meta: order.customer_phone })}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                          {expandedOrders.has(order.id) && (
+                            <TableRow>
+                              <TableCell colSpan={6} className="bg-muted/30">
+                                <div className="p-4 space-y-4">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <h4 className="font-semibold mb-2">معلومات العميل</h4>
+                                      <div className="space-y-1 text-sm">
+                                        <div><span className="font-medium">الاسم:</span> {order.customer_name}</div>
+                                        <div><span className="font-medium">الهاتف:</span> {order.customer_phone}</div>
+                                        {order.customer_email && (
+                                          <div><span className="font-medium">البريد الإلكتروني:</span> {order.customer_email}</div>
+                                        )}
+                                        {order.customer_address && (
+                                          <div><span className="font-medium">العنوان:</span> {order.customer_address}</div>
+                                        )}
+                                        {order.shipping_address && (
+                                          <div><span className="font-medium">عنوان الشحن:</span> {order.shipping_address}</div>
+                                        )}
+                                        {order.city && (
+                                          <div><span className="font-medium">المدينة:</span> {order.city}</div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <h4 className="font-semibold mb-2">المنتجات</h4>
+                                      <div className="space-y-2">
+                                        {order.items.map((item: any, idx: number) => (
+                                          <div key={idx} className="text-sm flex justify-between">
+                                            <span>{item.name} (x{item.quantity})</span>
+                                            <span className="font-medium">{item.price * item.quantity} درهم</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <div className="mt-2 pt-2 border-t">
+                                        <div className="flex justify-between font-bold">
+                                          <span>المجموع:</span>
+                                          <span>{order.total_amount} درهم</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {order.notes && (
+                                    <div>
+                                      <h4 className="font-semibold mb-1">ملاحظات:</h4>
+                                      <p className="text-sm text-muted-foreground">{order.notes}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
                       ))}
                     </TableBody>
                   </Table>
@@ -783,21 +860,81 @@ export default function AdminDashboard() {
                   {orders.map((order: any) => (
                     <Card key={order.id} className="p-4">
                       <div className="space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-bold">{order.customer_name}</div>
-                            <div className="text-xs text-muted-foreground font-mono">{order.id}</div>
+                        <div className="flex justify-between items-start" onClick={() => toggleOrderDetails(order.id)}>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              {expandedOrders.has(order.id) ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4" />
+                              )}
+                              <div className="font-bold">{order.customer_name}</div>
+                            </div>
+                            <div className="text-xs text-muted-foreground font-mono mr-6">{order.id}</div>
                           </div>
                           <Badge variant={order.status === 'pending' ? 'secondary' : 'default'}>
                             {order.status === 'pending' ? 'قيد الانتظار' : order.status}
                           </Badge>
                         </div>
-                        <div className="text-sm space-y-1">
-                          <div>📱 {order.customer_phone}</div>
-                          {order.customer_email && <div>📧 {order.customer_email}</div>}
-                          <div>📦 {order.items.length} منتج</div>
-                          <div className="font-bold text-primary">💰 {order.total_amount} درهم</div>
-                        </div>
+                        
+                        {!expandedOrders.has(order.id) && (
+                          <div className="text-sm space-y-1">
+                            <div>📱 {order.customer_phone}</div>
+                            <div>📦 {order.items.length} منتج</div>
+                            <div className="font-bold text-primary">💰 {order.total_amount} درهم</div>
+                          </div>
+                        )}
+                        
+                        {expandedOrders.has(order.id) && (
+                          <div className="space-y-3 bg-muted/30 p-3 rounded-lg">
+                            <div>
+                              <h4 className="font-semibold text-sm mb-2">معلومات العميل</h4>
+                              <div className="space-y-1 text-sm">
+                                <div><span className="font-medium">الاسم:</span> {order.customer_name}</div>
+                                <div><span className="font-medium">الهاتف:</span> {order.customer_phone}</div>
+                                {order.customer_email && (
+                                  <div><span className="font-medium">البريد:</span> {order.customer_email}</div>
+                                )}
+                                {order.customer_address && (
+                                  <div><span className="font-medium">العنوان:</span> {order.customer_address}</div>
+                                )}
+                                {order.shipping_address && (
+                                  <div><span className="font-medium">عنوان الشحن:</span> {order.shipping_address}</div>
+                                )}
+                                {order.city && (
+                                  <div><span className="font-medium">المدينة:</span> {order.city}</div>
+                                )}
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-sm mb-2">المنتجات</h4>
+                              <div className="space-y-1">
+                                {order.items.map((item: any, idx: number) => (
+                                  <div key={idx} className="text-sm flex justify-between">
+                                    <span>{item.name} (x{item.quantity})</span>
+                                    <span className="font-medium">{item.price * item.quantity} درهم</span>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="mt-2 pt-2 border-t">
+                                <div className="flex justify-between font-bold text-sm">
+                                  <span>المجموع:</span>
+                                  <span>{order.total_amount} درهم</span>
+                                </div>
+                              </div>
+                            </div>
+                            {order.notes && (
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">ملاحظات:</h4>
+                                <p className="text-xs text-muted-foreground">{order.notes}</p>
+                              </div>
+                            )}
+                            <div className="text-xs text-muted-foreground">
+                              التاريخ: {new Date(order.created_at).toLocaleDateString('ar-MA')}
+                            </div>
+                          </div>
+                        )}
+                        
                         <div className="flex gap-2">
                           <Select 
                             value={order.status}
@@ -1214,12 +1351,17 @@ export default function AdminDashboard() {
                           <p className="text-xs text-muted-foreground">{product.brand}</p>
                           <p className="text-sm font-bold text-gold mt-1">{product.price} درهم</p>
                         </div>
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="text-xs text-muted-foreground">الأكثر مبيعاً</span>
-                          <Switch
-                            checked={product.best_selling}
-                            onCheckedChange={() => handleToggleBestSelling(product.id)}
-                          />
+                        <div className="flex flex-col items-center gap-2">
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">الأكثر مبيعاً</span>
+                          <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                            product.best_selling ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                          }`}>
+                            <Switch
+                              checked={product.best_selling}
+                              onCheckedChange={() => handleToggleBestSelling(product.id)}
+                              className="data-[state=checked]:bg-green-500"
+                            />
+                          </div>
                         </div>
                       </div>
                     </Card>
@@ -1234,7 +1376,7 @@ export default function AdminDashboard() {
                         <TableHead>المنتج</TableHead>
                         <TableHead>العلامة</TableHead>
                         <TableHead>السعر</TableHead>
-                        <TableHead>الأكثر مبيعاً</TableHead>
+                        <TableHead className="text-center">الأكثر مبيعاً</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1243,11 +1385,14 @@ export default function AdminDashboard() {
                           <TableCell className="font-medium">{product.name}</TableCell>
                           <TableCell>{product.brand}</TableCell>
                           <TableCell>{product.price} درهم</TableCell>
-                          <TableCell>
-                            <Switch
-                              checked={product.best_selling}
-                              onCheckedChange={() => handleToggleBestSelling(product.id)}
-                            />
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center">
+                              <Switch
+                                checked={product.best_selling}
+                                onCheckedChange={() => handleToggleBestSelling(product.id)}
+                                className="data-[state=checked]:bg-green-500"
+                              />
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1421,36 +1566,66 @@ export default function AdminDashboard() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="main-notes">النفحات الرئيسية (مفصولة بفواصل)</Label>
-                  <Input
-                    id="main-notes"
-                    value={productForm.main_notes}
-                    onChange={(e) => setProductForm({ ...productForm, main_notes: e.target.value })}
-                    placeholder="woody, spicy, floral"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="top-notes">النفحات العليا (مفصولة بفواصل)</Label>
-                  <Input
-                    id="top-notes"
-                    value={productForm.top_notes}
-                    onChange={(e) => setProductForm({ ...productForm, top_notes: e.target.value })}
-                    placeholder="Bergamot, Lavender, Rose"
-                  />
-                </div>
-              </div>
-
               <div className="space-y-2">
-                <Label htmlFor="image-urls">روابط الصور (كل رابط في سطر)</Label>
-                <Textarea
-                  id="image-urls"
-                  value={productForm.image_urls}
-                  onChange={(e) => setProductForm({ ...productForm, image_urls: e.target.value })}
-                  placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
-                  rows={3}
+                <Label htmlFor="product-images">صور المنتج</Label>
+                <Input
+                  id="product-images"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    setProductImages(files);
+                  }}
+                  className="cursor-pointer"
                 />
+                <p className="text-xs text-muted-foreground">يمكنك اختيار صور متعددة</p>
+                
+                {existingImageUrls.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium mb-2">الصور الحالية:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {existingImageUrls.map((url, idx) => (
+                        <div key={idx} className="relative">
+                          <img src={url} alt={`Product ${idx + 1}`} className="h-20 w-20 object-cover rounded border" />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-6 w-6"
+                            onClick={() => setExistingImageUrls(existingImageUrls.filter((_, i) => i !== idx))}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {productImages.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium mb-2">الصور الجديدة:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {productImages.map((file, idx) => (
+                        <div key={idx} className="relative">
+                          <img 
+                            src={URL.createObjectURL(file)} 
+                            alt={`New ${idx + 1}`} 
+                            className="h-20 w-20 object-cover rounded border" 
+                          />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-6 w-6"
+                            onClick={() => setProductImages(productImages.filter((_, i) => i !== idx))}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

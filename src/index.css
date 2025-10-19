@@ -70,7 +70,7 @@ All colors MUST be HSL.
     --gold-foreground: 0 0% 10%;
 
     --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 60%;
+    --muted-foreground: 0 0% 70%;
 
     --accent: 0 84% 60%;
     --accent-foreground: 0 0% 98%;
@@ -78,8 +78,8 @@ All colors MUST be HSL.
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
+    --border: 0 0% 25%;
+    --input: 0 0% 25%;
     --ring: 43 45% 57%;
 
     --shadow-elegant: 0 4px 20px hsl(0 0% 0% / 0.5);
@@ -90,14 +90,25 @@ All colors MUST be HSL.
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
     @apply bg-background text-foreground font-cairo;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  input, textarea, select, button {
+    font-size: 16px !important;
   }
 }
 

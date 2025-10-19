@@ -25,11 +25,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <Card 
-      className="overflow-hidden hover-scale shadow-elegant hover:shadow-gold transition-smooth border-0 cursor-pointer"
+      className="overflow-hidden hover-scale shadow-elegant hover:shadow-gold transition-smooth border-0 cursor-pointer bg-white dark:bg-gray-900"
       onClick={() => navigate(`/product/${product.id}`)}
     >
       <CardContent className="p-0 relative">
-        <div className="aspect-square relative overflow-hidden bg-secondary">
+        <div className="aspect-square relative overflow-hidden bg-gray-100 dark:bg-gray-800">
           <img
             src={product.image_urls[0]}
             alt={product.name}
@@ -48,19 +48,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </Badge>
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start gap-3 p-6">
+      <CardFooter className="flex flex-col items-start gap-3 p-4 md:p-6 bg-white dark:bg-gray-900">
         <div className="w-full">
-          <p className="text-sm text-muted-foreground mb-1">{product.brand}</p>
-          <h3 className="text-lg font-semibold line-clamp-2 mb-2">{product.name}</h3>
+          <p className="text-xs md:text-sm text-muted-foreground mb-1">{product.brand}</p>
+          <h3 className="text-sm md:text-lg font-semibold line-clamp-2 mb-2">{product.name}</h3>
           
           {product.rating > 0 && (
             <div className="flex items-center gap-1 mb-2">
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm text-muted-foreground">{product.rating}</span>
+              <Star className="h-3 w-3 md:h-4 md:w-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs md:text-sm text-muted-foreground">{product.rating}</span>
             </div>
           )}
           
-          <p className="text-2xl font-bold text-gold">{product.price} درهم</p>
+          <p className="text-lg md:text-2xl font-bold text-gold">{product.price} درهم</p>
           
           {product.stock < 10 && product.stock > 0 && (
             <p className="text-xs text-red-500 mt-1">بقي {product.stock} فقط!</p>
@@ -68,8 +68,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </div>
         
         <Button
-          variant="cta"
-          className="w-full"
+          className="w-full bg-black hover:bg-gray-800 text-gold font-semibold"
           onClick={(e) => {
             e.stopPropagation();
             addToCart(product, 1);
