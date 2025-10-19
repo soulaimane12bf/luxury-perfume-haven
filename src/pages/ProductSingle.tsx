@@ -203,41 +203,6 @@ export default function ProductSingle() {
           </div>
         </div>
 
-        {/* Perfume Notes Section */}
-        {(product.notes?.main_notes || product.notes?.top_notes) && (
-          <Card className="mt-12 p-8">
-            <h2 className="text-2xl font-bold mb-6">نفحات العطر</h2>
-            
-            <div className="space-y-6">
-              {product.notes?.main_notes && (
-                <div>
-                  <h3 className="font-semibold mb-3">النفحات الرئيسية (Main Accords)</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {product.notes.main_notes.map((note, index) => (
-                      <div key={index} className="bg-muted rounded-lg p-3 text-center">
-                        <div className="text-sm capitalize">{note}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {product.notes?.top_notes && (
-                <div>
-                  <h3 className="font-semibold mb-3">النفحات العليا (Top Notes)</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {product.notes.top_notes.map((note, index) => (
-                      <div key={index} className="bg-primary/10 rounded-lg p-3 text-center">
-                        <div className="text-sm capitalize font-medium">{note}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </Card>
-        )}
-
         {/* Description */}
         <Card className="mt-8 p-8">
           <h2 className="text-2xl font-bold mb-4">وصف العطر</h2>
