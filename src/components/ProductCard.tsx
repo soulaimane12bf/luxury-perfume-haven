@@ -33,6 +33,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <img
             src={product.image_urls[0]}
             alt={product.name}
+            loading="lazy"
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
           {product.best_selling && (
