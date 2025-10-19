@@ -1,21 +1,17 @@
-import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { productsApi, categoriesApi } from '@/lib/api';
 import ProductCard from '@/components/ProductCard';
+import { ProductGridSkeleton } from '@/components/ProductCardSkeleton';
 import FilterBar from '@/components/FilterBar';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Filter } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useProducts, useBrands, useCategory } from '@/lib/hooks/useApi';
 
 export default function Collection() {
   const { category } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState([]);
-  const [categoryData, setCategoryData] = useState(null);
-  const [brands, setBrands] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   const filters = {
     category: category || searchParams.get('category'),
@@ -27,31 +23,15 @@ export default function Collection() {
     sort: searchParams.get('sort') || 'newest',
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [productsData, brandsData] = await Promise.all([
-          productsApi.getAll(filters),
-          productsApi.getBrands(),
-        ]);
-        
-        setProducts(Array.isArray(productsData) ? productsData : []);
-        setBrands(Array.isArray(brandsData) ? brandsData : []);
-
-        if (category) {
-          const catData = await categoriesApi.getBySlug(category);
-          setCategoryData(catData as any);
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [category, searchParams]);
+  // Use React Query hooks
+  const { data: productsData, isLoading: productsLoading } = useProducts(filters);
+  const { data: brandsData, isLoading: brandsLoading } = useBrands();
+  const { data: catData } = useCategory(category!);
+  
+  const products = Array.isArray(productsData) ? productsData : [];
+  const brands = Array.isArray(brandsData) ? brandsData : [];
+  const categoryData = catData as any;
+  const loading = productsLoading || brandsLoading;
 
   const handleFilterChange = (key, value) => {
     const newParams = new URLSearchParams(searchParams);
@@ -114,7 +94,9 @@ export default function Collection() {
           {/* Products Grid */}
           <div className="lg:col-span-3">
             {loading ? (
-              <div className="text-center py-20">جاري التحميل...</div>
+              <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+                <ProductGridSkeleton count={9} />
+              </div>
             ) : products.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-xl text-muted-foreground">لا توجد منتجات تطابق معايير البحث</p>

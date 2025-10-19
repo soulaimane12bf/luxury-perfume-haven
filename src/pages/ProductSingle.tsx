@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { productsApi, reviewsApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,40 +11,32 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ReviewForm from '../components/ReviewForm';
 import ReviewList from '../components/ReviewList';
+import { useProduct, useProductReviews } from '@/lib/hooks/useApi';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from '@/lib/hooks/useApi';
 
 export default function ProductSingle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const [product, setProduct] = useState(null);
-  const [reviews, setReviews] = useState([]);
+  const queryClient = useQueryClient();
+  
+  // Use React Query hooks
+  const { data: productData, isLoading: productLoading } = useProduct(id!);
+  const { data: reviewsData, isLoading: reviewsLoading } = useProductReviews(id!);
+  
+  const product = productData as any;
+  const reviews = Array.isArray(reviewsData) ? reviewsData : [];
+  
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [orderFormOpen, setOrderFormOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [productData, reviewsData] = await Promise.all([
-          productsApi.getById(id),
-          reviewsApi.getByProduct(id),
-        ]);
-        setProduct(productData as any);
-        setReviews(Array.isArray(reviewsData) ? reviewsData : []);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching product:', error);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [id]);
+  
+  const loading = productLoading || reviewsLoading;
 
   const handleReviewSubmit = async () => {
-    const updatedReviews = await reviewsApi.getByProduct(id);
-    setReviews(Array.isArray(updatedReviews) ? updatedReviews : []);
+    // Invalidate reviews query to refetch
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.reviews.byProduct(id!) });
   };
 
   if (loading) {

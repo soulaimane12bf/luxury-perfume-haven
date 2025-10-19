@@ -1,34 +1,25 @@
-import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
+import { ProductGridSkeleton } from "@/components/ProductCardSkeleton";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { productsApi } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
+import { useProducts } from "@/lib/hooks/useApi";
 
 import heroImage from "@/assets/hero-perfume.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: allProducts, isLoading, error } = useProducts({ category: 'men' });
+  
+  // Get first 6 products for homepage
+  const products = Array.isArray(allProducts) ? allProducts.slice(0, 6) : [];
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const data = await productsApi.getAll({ category: 'men'}) as any;
-        setProducts(Array.isArray(data) ? data.slice(0, 6) : []); // Get first 6 products
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        toast.error('فشل تحميل المنتجات');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
+  // Show error toast if fetch fails
+  if (error) {
+    toast.error('فشل تحميل المنتجات');
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,8 +62,10 @@ const Index = () => {
           <p className="text-xl text-muted-foreground font-medium">العطور الأصلية الأكثر شهرة</p>
         </div>
 
-        {loading ? (
-          <div className="text-center py-20">جاري التحميل...</div>
+        {isLoading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+            <ProductGridSkeleton count={6} />
+          </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             {products.map((product) => (
