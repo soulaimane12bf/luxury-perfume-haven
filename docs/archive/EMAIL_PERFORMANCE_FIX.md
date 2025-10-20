@@ -97,8 +97,8 @@ time curl -X POST https://luxury-perfume-haven.vercel.app/api/orders \
 ## 📧 Email Configuration
 
 - **SMTP Server:** smtp.gmail.com:587
-- **Sender:** marwanlachhab2002@gmail.com
-- **Receiver:** marwanlachhab2002@gmail.com (configurable in admin panel)
+- **Sender:** your-email@gmail.com
+- **Receiver:** your-email@gmail.com (configurable in admin panel)
 - **Connection Timeout:** 10 seconds
 - **Total Timeout:** 15 seconds
 - **Pooling:** Enabled (reuses connections)

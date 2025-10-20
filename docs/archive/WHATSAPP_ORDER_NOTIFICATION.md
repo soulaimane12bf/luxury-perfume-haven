@@ -120,12 +120,12 @@ If admin hasn't configured dashboard settings, system uses `.env`:
 
 ```env
 # Admin contact (fallback if not set in dashboard)
-ADMIN_EMAIL=marwanlachhab2002@gmail.com
+ADMIN_EMAIL=your-email@gmail.com
 ADMIN_WHATSAPP=212600000000
 
 # SMTP settings (fallback)
-EMAIL_USER=marwanlachhab2002@gmail.com
-EMAIL_PASS=xeww hpas nlzx zzrf
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 ```

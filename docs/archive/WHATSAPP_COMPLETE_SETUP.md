@@ -215,7 +215,7 @@ All notifications use these settings from **Admin Profile**:
 | **Email** | Where order emails go | your-email@gmail.com |
 | **Phone** | Where WhatsApp messages go | 212612345678 |
 | **SMTP Email** | Account that sends emails | your-email@gmail.com |
-| **SMTP Password** | Email sending password | xeww hpas nlzx zzrf |
+| **SMTP Password** | Email sending password | your-app-password |
 
 ## 🚀 You're All Set!
 
