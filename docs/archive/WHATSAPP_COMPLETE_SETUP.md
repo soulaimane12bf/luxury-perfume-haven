@@ -212,9 +212,9 @@ All notifications use these settings from **Admin Profile**:
 
 | Setting | Purpose | Example |
 |---------|---------|---------|
-| **Email** | Where order emails go | marwanlachhab2002@gmail.com |
+| **Email** | Where order emails go | your-email@gmail.com |
 | **Phone** | Where WhatsApp messages go | 212612345678 |
-| **SMTP Email** | Account that sends emails | marwanlachhab2002@gmail.com |
+| **SMTP Email** | Account that sends emails | your-email@gmail.com |
 | **SMTP Password** | Email sending password | xeww hpas nlzx zzrf |
 
 ## 🚀 You're All Set!

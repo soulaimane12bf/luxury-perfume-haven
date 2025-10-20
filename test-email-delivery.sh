@@ -51,7 +51,7 @@ echo ""
 if [ "$HTTP_CODE" = "201" ]; then
     echo "✅ Order created successfully!"
     echo ""
-    echo "📧 CHECK YOUR EMAIL: marwanlachhab2002@gmail.com"
+    echo "📧 CHECK YOUR EMAIL: Check your configured admin email"
     echo "   You should receive an email within 1-2 minutes"
     echo ""
     

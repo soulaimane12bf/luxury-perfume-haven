@@ -24,7 +24,7 @@ The system has **TWO** email settings you can control:
 ### 1. **Notification Receiver Email** (البريد الإلكتروني)
 - **What**: Where order notifications are sent TO
 - **Update from**: Admin Dashboard → Profile Tab → "البريد الإلكتروني"
-- **Example**: `marwanlachhab2002@gmail.com`
+- **Example**: `your-email@gmail.com`
 
 ### 2. **Email Sender (SMTP)** (البريد الإلكتروني للإرسال)
 - **What**: Gmail account used to SEND notifications
@@ -51,10 +51,10 @@ You'll see a new section called **"إعدادات إرسال البريد (SMTP)
 
 **Fill in**:
 1. **البريد الإلكتروني للإرسال** (SMTP Email):
-   - Your Gmail address: `marwanlachhab2002@gmail.com`
+   - Your Gmail address: `your-email@gmail.com`
 
 2. **App Password**:
-   - Your 16-character app password: `xewwhpasnlzxzzrf`
+   - Your 16-character app password: `your-app-password-here`
    - Click the link "احصل عليها من هنا" to get a new one if needed
 
 ### Step 4: Save Changes
@@ -121,17 +121,17 @@ If admin hasn't configured SMTP settings:
 ## 📧 Complete Email Flow
 
 1. **Admin configures in dashboard**:
-   - Receiver email: `marwanlachhab2002@gmail.com`
-   - SMTP email: `marwanlachhab2002@gmail.com`
-   - SMTP password: `xewwhpasnlzxzzrf`
+   - Receiver email: `your-email@gmail.com`
+   - SMTP email: `your-email@gmail.com`
+   - SMTP password: `your-app-password`
 
 2. **Customer places order**
 
 3. **System automatically**:
    - Fetches admin profile from database
    - Creates SMTP connection with admin's credentials
-   - Sends email FROM `marwanlachhab2002@gmail.com`
-   - Sends email TO `marwanlachhab2002@gmail.com`
+   - Sends email FROM `your-email@gmail.com`
+   - Sends email TO `your-email@gmail.com`
 
 4. **Admin receives email** with order details!
 
@@ -174,9 +174,9 @@ If admin hasn't configured SMTP settings:
 
 ### 2. **Current Configuration**
 Your current settings (already configured):
-- ✅ Receiver Email: `marwanlachhab2002@gmail.com`
-- ✅ SMTP Email: `marwanlachhab2002@gmail.com` (in .env)
-- ✅ SMTP Password: `xewwhpasnlzxzzrf` (in .env)
+- ✅ Receiver Email: `your-email@gmail.com`
+- ✅ SMTP Email: `your-email@gmail.com` (in .env)
+- ✅ SMTP Password: `your-app-password` (in .env)
 
 **To make it fully dynamic**:
 1. Go to Profile tab
@@ -196,8 +196,8 @@ Your current settings (already configured):
 ```
 1. Login to admin
 2. Go to Profile
-3. Update SMTP Email to: marwanlachhab2002@gmail.com
-4. Update SMTP Password to: xewwhpasnlzxzzrf
+3. Update SMTP Email to: your-email@gmail.com
+4. Update SMTP Password to: your-app-password
 5. Save
 6. Place test order
 7. Check email → Should receive notification
@@ -259,8 +259,8 @@ Your current settings (already configured):
 
 **Your current setup**:
 - ✅ Email notifications working
-- ✅ Sending from: `marwanlachhab2002@gmail.com`
-- ✅ Receiving at: `marwanlachhab2002@gmail.com`
+- ✅ Sending from: `your-email@gmail.com`
+- ✅ Receiving at: `your-email@gmail.com`
 - ⚠️ Still using .env file (works fine!)
 
 **To go fully dynamic**:
