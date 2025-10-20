@@ -37,8 +37,8 @@ I successfully placed **2 test orders** to verify the email functionality:
 ## 📧 Email Configuration Status
 
 ### Database Configuration (ACTIVE):
-- ✅ **Admin Email**: marwanlachhab2002@gmail.com
-- ✅ **SMTP Email**: marwanlachhab2002@gmail.com  
+- ✅ **Admin Email**: your-email@gmail.com
+- ✅ **SMTP Email**: your-email@gmail.com  
 - ✅ **SMTP Password**: Configured in database
 - ✅ **SMTP Host**: smtp.gmail.com
 - ✅ **SMTP Port**: 587
@@ -47,7 +47,7 @@ I successfully placed **2 test orders** to verify the email functionality:
 1. Customer places order on website
 2. Order saved to database (PostgreSQL)
 3. Email notification sent **asynchronously** (non-blocking)
-4. Email sent to: `marwanlachhab2002@gmail.com`
+4. Email sent to: `your-email@gmail.com`
 5. Order confirmation returned to customer immediately
 
 ---
@@ -122,7 +122,7 @@ curl -X POST https://luxury-perfume-haven.vercel.app/api/orders \
 ```
 
 ### Check Admin Inbox:
-Go to: **marwanlachhab2002@gmail.com**  
+Go to: **your-email@gmail.com**  
 Look for emails with subject: **"طلب جديد - order-..."**
 
 ---
@@ -200,7 +200,7 @@ The system also supports WhatsApp notifications! Check these files:
 ### To Verify Emails Are Being Sent:
 
 1. **Check Email Inbox**:
-   - Go to marwanlachhab2002@gmail.com
+   - Go to your-email@gmail.com
    - Look for emails with subject "طلب جديد"
    - Check spam folder if not in inbox
 
@@ -237,7 +237,7 @@ The system also supports WhatsApp notifications! Check these files:
 - ✅ Product images included
 
 **Action Required**:
-1. Check inbox at **marwanlachhab2002@gmail.com**
+1. Check inbox at **your-email@gmail.com**
 2. Verify test emails received
 3. If no emails, check:
    - Gmail App Password is correct

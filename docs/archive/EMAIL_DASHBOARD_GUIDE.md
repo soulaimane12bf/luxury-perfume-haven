@@ -10,13 +10,13 @@ You can now change **ALL email settings** directly from the Admin Dashboard with
 - **What it is:** The email address that RECEIVES order notifications
 - **Label:** "البريد الإلكتروني المستقبل" (Recipient Email)
 - **Purpose:** Where YOU get order notifications sent to
-- **Example:** If you set `marwanlachhab2002@gmail.com`, all order emails will arrive in THIS inbox
+- **Example:** If you set `your-email@gmail.com`, all order emails will arrive in THIS inbox
 
 ### 2️⃣ **Sender Email (البريد المرسل)** 📤
 - **What it is:** The email address that SENDS order notifications
 - **Label:** "البريد الإلكتروني المرسل (Gmail)" (Sender Email)
 - **Purpose:** Which Gmail account is used to send the emails
-- **Example:** If you set `marwanlachhab2002@gmail.com`, emails will be sent FROM this Gmail account
+- **Example:** If you set `your-email@gmail.com`, emails will be sent FROM this Gmail account
 
 ## 🖥️ How to Update from Dashboard
 
@@ -35,7 +35,7 @@ You can now change **ALL email settings** directly from the Admin Dashboard with
 3. **Update Receiver Email** (Where you receive orders)
    ```
    Field: البريد الإلكتروني المستقبل
-   Enter: marwanlachhab2002@gmail.com
+   Enter: your-email@gmail.com
    Note: 📬 سيتم إرسال إشعارات الطلبات الجديدة إلى هذا البريد الإلكتروني
    ```
 
@@ -49,14 +49,14 @@ You can now change **ALL email settings** directly from the Admin Dashboard with
    **a) SMTP Email:**
    ```
    Field: البريد الإلكتروني المرسل (Gmail)
-   Enter: marwanlachhab2002@gmail.com
+   Enter: your-email@gmail.com
    Note: 📤 هذا البريد سيظهر كمُرسل في رسائل الطلبات
    ```
    
    **b) SMTP Password:**
    ```
    Field: App Password (كلمة مرور التطبيق)
-   Enter: cdrjxitfmugddqjl
+   Enter: your-app-password
    Note: Leave empty if you don't want to change it
    ```
 
@@ -79,11 +79,11 @@ You can now change **ALL email settings** directly from the Admin Dashboard with
 │ اسم المستخدم:  [admin                         ]           │
 │                                                             │
 │ البريد الإلكتروني المستقبل: (إلى أين تصل الطلبات)        │
-│ [marwanlachhab2002@gmail.com        ]                      │
+│ [your-email@gmail.com        ]                      │
 │ 📬 سيتم إرسال إشعارات الطلبات الجديدة إلى هذا البريد     │
 │                                                             │
 │ رقم الهاتف (واتساب):                                       │
-│ [212620575576                       ]                      │
+│ [212XXXXXXXXX                       ]                      │
 │                                                             │
 ├─────────────────────────────────────────────────────────────┤
 │ ✉️ إعدادات إرسال البريد (SMTP) (من أين تُرسل الرسائل)    │
@@ -91,7 +91,7 @@ You can now change **ALL email settings** directly from the Admin Dashboard with
 │ 🟧 Orange/Amber Background                                 │
 │                                                             │
 │ البريد الإلكتروني المرسل (Gmail): (الذي يرسل الرسائل)    │
-│ [marwanlachhab2002@gmail.com        ]                      │
+│ [your-email@gmail.com        ]                      │
 │ 📤 هذا البريد سيظهر كمُرسل في رسائل الطلبات               │
 │                                                             │
 │ App Password (كلمة مرور التطبيق):                          │
@@ -130,9 +130,9 @@ Solution:
 ```
 Scenario: One email for everything
 Solution:
-1. Set "البريد المستقبل" to: marwanlachhab2002@gmail.com
-2. Set "البريد المرسل" to: marwanlachhab2002@gmail.com
-3. Enter App Password: cdrjxitfmugddqjl
+1. Set "البريد المستقبل" to: your-email@gmail.com
+2. Set "البريد المرسل" to: your-email@gmail.com
+3. Enter App Password: your-app-password
 4. Click Save
 ✅ All emails sent from and to the same Gmail
 ```
@@ -200,22 +200,22 @@ curl -X POST http://localhost:5000/api/orders \
 3. **Get App Password**
    - Click the link: https://myaccount.google.com/apppasswords
    - Generate new 16-character password
-   - Enter without spaces: `cdrjxitfmugddqjl`
+   - Enter without spaces: `your-app-password`
 
 ## 📊 Current Configuration
 
 **Your Current Setup:**
 ```
-Receiver Email:  marwanlachhab2002@gmail.com
-Sender Email:    marwanlachhab2002@gmail.com
-SMTP Password:   cdrjxitfmugddqjl
-WhatsApp:        212620575576
+Receiver Email:  your-email@gmail.com
+Sender Email:    your-email@gmail.com
+SMTP Password:   your-app-password
+WhatsApp:        212XXXXXXXXX
 ```
 
 **What This Means:**
-- ✅ Orders will be sent TO: marwanlachhab2002@gmail.com
-- ✅ Orders will be sent FROM: marwanlachhab2002@gmail.com
-- ✅ WhatsApp notifications go to: 212620575576
+- ✅ Orders will be sent TO: your-email@gmail.com
+- ✅ Orders will be sent FROM: your-email@gmail.com
+- ✅ WhatsApp notifications go to: 212XXXXXXXXX
 - ✅ No code changes needed to update any of these!
 
 ## ✅ Benefits

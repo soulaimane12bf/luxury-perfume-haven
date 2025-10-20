@@ -5,7 +5,7 @@
 Your email notifications are now configured and working!
 
 ### Configuration Details:
-- **Email Address**: marwanlachhab2002@gmail.com
+- **Email Address**: your-email@gmail.com
 - **Email Host**: smtp.gmail.com (Gmail)
 - **Status**: ✅ Active
 
@@ -13,12 +13,12 @@ Your email notifications are now configured and working!
 
 When a customer places an order:
 1. ✅ Order is created in database
-2. ✅ Email notification sent to: **marwanlachhab2002@gmail.com**
+2. ✅ Email notification sent to: **your-email@gmail.com**
 3. ✅ WhatsApp URL generated (check backend logs)
 
 ## 📧 Check Your Email
 
-**Check your inbox at: marwanlachhab2002@gmail.com**
+**Check your inbox at: your-email@gmail.com**
 
 The email will have:
 - Subject: `طلب جديد - [Order ID]`
@@ -82,7 +82,7 @@ I already created a test order for you:
 ## ✅ What's Working
 
 - ✅ Email sending configured (Gmail SMTP)
-- ✅ Your email added: marwanlachhab2002@gmail.com
+- ✅ Your email added: your-email@gmail.com
 - ✅ Backend server running
 - ✅ Order system functional
 - ✅ Notifications sent automatically in background
@@ -105,7 +105,7 @@ cd /workspaces/luxury-perfume-haven/backend && node src/app.js &
 
 ## 📝 Next Steps
 
-1. ✅ **Check your email** (marwanlachhab2002@gmail.com)
+1. ✅ **Check your email** (your-email@gmail.com)
 2. ✅ **Test from website** - Place a real order
 3. ✅ **Update WhatsApp number** in Admin Profile
 4. ✅ **Check backend logs** for WhatsApp URLs
@@ -114,7 +114,7 @@ cd /workspaces/luxury-perfume-haven/backend && node src/app.js &
 
 **Email not received?**
 1. Check spam folder
-2. Check Gmail app password is correct: `xewwhpasnlzxzzrf`
+2. Check Gmail app password is correct: `your-app-password`
 3. Restart backend and try again
 4. Check backend logs for errors:
    ```bash
@@ -137,5 +137,5 @@ Everything is configured and working!
 ---
 
 **Configured on**: October 17, 2025  
-**Email**: marwanlachhab2002@gmail.com  
+**Email**: your-email@gmail.com  
 **Status**: ✅ Active & Ready
