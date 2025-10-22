@@ -37,7 +37,6 @@ export function HeroSlider() {
             subtitle: slider.subtitle || '',
             button_text: slider.button_text || 'تسوق الآن',
             button_link: slider.button_link || '/collection',
-            order: slider.order ?? 0,
           }))
           .sort((a, b) => a.order - b.order);
 
@@ -147,7 +146,7 @@ export function HeroSlider() {
               alt={slider.title}
               className="absolute inset-0 w-full h-full object-cover"
               loading={index === 0 ? 'eager' : 'lazy'}
-              onLoad={() => console.log(`✅ Image loaded: ${slider.id} (order: ${slider.order})`)}
+              onLoad={() => console.log(`✅ Image loaded: ${slider.id}`)}
               onError={(e) => {
                 console.error(`❌ Image failed: ${slider.id}`);
                 e.currentTarget.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20600%22%3E%3Crect%20fill%3D%22%23f1c27d%22%20width%3D%221200%22%20height%3D%22600%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-size%3D%2248%22%3EImage%20Not%20Found%3C%2Ftext%3E%3C%2Fsvg%3E';
@@ -182,7 +181,7 @@ export function HeroSlider() {
 
             {/* Debug Info */}
             <div className="absolute top-4 left-4 bg-black/70 text-white text-xs px-3 py-1 rounded font-mono z-30">
-              Slide {index + 1} | Order: {slider.order}
+              Slide {index + 1} 
             </div>
           </div>
         ))}
