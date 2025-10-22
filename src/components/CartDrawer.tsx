@@ -44,9 +44,9 @@ const CartDrawer = () => {
     <Sheet open={isOpen} onOpenChange={closeCart}>
       <SheetContent
         side="right"
-        className="w-full sm:w-[420px] bg-background/95 backdrop-blur-xl border-l-2 border-gold/20 [&>button:last-of-type]:hidden"
+        className="w-full sm:w-[420px] bg-background/95 backdrop-blur-xl border-l-2 border-gold/20 [&>button:last-of-type]:hidden flex flex-col p-0"
       >
-        <SheetHeader className="flex flex-row items-center justify-between space-y-0 text-left">
+        <SheetHeader className="flex flex-row items-center justify-between space-y-0 text-left px-6 py-4 border-b">
           <SheetTitle className="text-2xl font-bold flex items-center gap-2">
             <ShoppingBag className="h-6 w-6 text-gold" />
             سلة مشترياتي
@@ -63,9 +63,8 @@ const CartDrawer = () => {
           </SheetClose>
         </SheetHeader>
 
-        <div className="flex flex-col h-full mt-6">
-          {/* Cart Items */}
-          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+        {/* Cart Items - Scrollable */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             {items.length === 0 ? (
               <div className="text-center mt-20">
                 <ShoppingBag className="h-20 w-20 mx-auto text-muted-foreground/30 mb-4" />
@@ -115,9 +114,9 @@ const CartDrawer = () => {
             )}
           </div>
 
-          {/* Cart Footer */}
+          {/* Cart Footer - Fixed at bottom */}
           {items.length > 0 && (
-            <div className="border-t border-border pt-4 space-y-4 bg-card/50 backdrop-blur-sm p-4 rounded-t-xl mt-4">
+            <div className="border-t border-border bg-card px-6 py-4 space-y-3">
               <div className="flex justify-between items-center text-xl font-bold">
                 <span>مجموع سلة التسوق</span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 to-yellow-500">
@@ -141,7 +140,6 @@ const CartDrawer = () => {
               </Button>
             </div>
           )}
-        </div>
       </SheetContent>
 
       {/* Order Form Dialog */}
