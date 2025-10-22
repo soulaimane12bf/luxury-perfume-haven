@@ -286,15 +286,11 @@ export function HeroSlider() {
                   decoding="async"
                   onLoad={() => handleImageLoad(slider.id)}
                   onError={(e) => handleImageError(e, slider.id)}
-                  style={{
-                    opacity: imagesLoaded.has(slider.id) ? 1 : 0,
-                    transition: 'opacity 0.3s ease-in-out',
-                  }}
                 />
                 
                 {/* Loading indicator for image */}
                 {!imagesLoaded.has(slider.id) && (
-                  <div className="absolute inset-0 bg-amber-100 animate-pulse flex items-center justify-center">
+                  <div className="absolute inset-0 bg-amber-100 flex items-center justify-center">
                     <div className="w-12 h-12 border-4 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 )}
