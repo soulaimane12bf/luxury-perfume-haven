@@ -1,4 +1,3 @@
-import { useProducts } from "@/lib/hooks/useApi";
 import ProductCard from "./ProductCard";
 import { ProductGridSkeleton } from "./ProductCardSkeleton";
 import { Link } from "react-router-dom";
@@ -11,6 +10,8 @@ interface CategorySectionProps {
   categoryDescription?: string;
   gradientFrom: string;
   gradientTo: string;
+  products?: any[];
+  isLoading?: boolean;
 }
 
 export function CategorySection({ 
@@ -19,14 +20,14 @@ export function CategorySection({
   categoryName, 
   categoryDescription,
   gradientFrom,
-  gradientTo
+  gradientTo,
+  products = [],
+  isLoading = false
 }: CategorySectionProps) {
-  const { data: allProducts, isLoading } = useProducts({ category: categorySlug });
-
   // Get first 4 products from category
-  const products = Array.isArray(allProducts) ? allProducts.slice(0, 4) : [];
+  const categoryProducts = Array.isArray(products) ? products.slice(0, 4) : [];
 
-  if (!isLoading && products.length === 0) {
+  if (!isLoading && categoryProducts.length === 0) {
     return null; // Don't show section if no products
   }
 
@@ -67,7 +68,7 @@ export function CategorySection({
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
-            {products.map((product, index) => (
+            {categoryProducts.map((product, index) => (
               <div
                 key={product.id}
                 className="animate-fade-in-up opacity-0 hover:scale-105 transition-transform duration-300"

@@ -22,10 +22,11 @@ const commonOptions = {
   dialect,
   logging: false,
   pool: {
-    max: 10,
+    max: 2, // Reduce max connections for serverless (was 10)
     min: 0,
-    acquire: 30000,
-    idle: 10000,
+    acquire: 10000, // Reduce timeout (was 30000)
+    idle: 5000, // Reduce idle time (was 10000)
+    evict: 5000, // Add eviction timeout
   },
   dialectOptions: {},
 };
@@ -43,8 +44,17 @@ if (isPostgres) {
 // Use DATABASE_URL, POSTGRES_URL, or DB_URL if available, otherwise use individual vars
 const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.DB_URL;
 
+// Create sequelize instance with connection reuse for serverless
 const sequelize = useUrl
-  ? new Sequelize(databaseUrl, commonOptions)
+  ? new Sequelize(databaseUrl, {
+      ...commonOptions,
+      // Optimize for serverless - reuse connections
+      pool: {
+        ...commonOptions.pool,
+        // Allow connection reuse across function invocations
+        evict: 60000, // Keep connections alive for 1 minute
+      }
+    })
   : new Sequelize(
       process.env.DB_NAME || 'perfume_haven',
       process.env.DB_USER || 'root',
@@ -55,5 +65,10 @@ const sequelize = useUrl
         port: process.env.DB_PORT || (isPostgres ? 5432 : 3306),
       }
     );
+
+// Handle connection errors gracefully
+sequelize.authenticate().catch(err => {
+  console.error('Database connection error:', err.message);
+});
 
 export default sequelize;
