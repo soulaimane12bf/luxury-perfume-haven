@@ -49,48 +49,44 @@ const ProductCard = ({ product }: ProductCardProps) => {
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start gap-3 p-4 md:p-6 bg-white flex-grow">
-        <div className="w-full flex-grow flex flex-col">
-          <p className="text-xs md:text-sm text-muted-foreground mb-1 uppercase tracking-wide">{product.brand}</p>
-          <h3 className="text-sm md:text-base font-bold line-clamp-2 mb-2 h-[2.5rem]">{product.name}</h3>
+      <CardFooter className="flex flex-col items-start gap-2 p-3 md:p-4 bg-white flex-grow">
+        <div className="w-full flex-grow flex flex-col justify-between">
+          <div>
+            <p className="text-xs text-gray-500 mb-0.5 uppercase tracking-wide">{product.brand}</p>
+            <h3 className="text-sm md:text-base font-semibold line-clamp-2 mb-2 h-[2.5rem]">{product.name}</h3>
+          </div>
           
           {product.rating > 0 && (
             <div className="flex items-center gap-1 mb-2">
-              <Star className="h-3 w-3 md:h-4 md:w-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-xs md:text-sm text-muted-foreground font-medium">{product.rating}</span>
+              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs text-gray-600 font-medium">{product.rating}</span>
             </div>
           )}
           
-          <div className="space-y-2 mb-3">
+          <div className="flex items-center gap-2 flex-wrap">
             {product.old_price && product.old_price > product.price ? (
               <>
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs text-muted-foreground">كان:</p>
-                  <p className="text-base md:text-lg font-semibold text-gray-400 line-through decoration-red-500 decoration-2">
-                    {product.old_price} درهم
-                  </p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs font-semibold text-green-600">الآن:</p>
-                  <p className="text-2xl md:text-3xl font-black bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
-                    {product.price} درهم
-                  </p>
-                </div>
+                <span className="text-lg md:text-xl font-bold text-black">
+                  {product.price} د.م
+                </span>
+                <span className="text-sm text-gray-400 line-through">
+                  {product.old_price}
+                </span>
               </>
             ) : (
-              <p className="text-xl md:text-2xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-500 bg-clip-text text-transparent">
-                {product.price} درهم
-              </p>
+              <span className="text-lg md:text-xl font-bold text-black">
+                {product.price} د.م
+              </span>
             )}
           </div>
           
           {product.stock < 10 && product.stock > 0 && (
-            <p className="text-xs text-red-500 font-semibold">بقي {product.stock} فقط!</p>
+            <p className="text-xs text-red-600 font-medium mt-1">بقي {product.stock} فقط</p>
           )}
         </div>
         
         <Button
-          className="w-full bg-black hover:bg-gray-900 text-gold font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 mt-auto"
+          className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-2 text-sm transition-all duration-300"
           onClick={(e) => {
             e.stopPropagation();
             addToCart(product, 1);

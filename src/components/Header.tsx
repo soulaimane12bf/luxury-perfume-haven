@@ -33,27 +33,27 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm shadow-lg border-b border-border/50">
+    <header className="sticky top-0 z-50 bg-black shadow-xl border-b-2 border-gold/30">
       {/* Top Bar */}
-      <div className="bg-gradient-to-r from-black via-gray-900 to-black py-2.5">
-        <p className="text-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600">
+      <div className="bg-gradient-to-r from-gray-900 via-black to-gray-900 py-2 border-b border-gold/20">
+        <p className="text-center text-xs md:text-sm font-semibold text-gold">
           التوصيل السريع لجميع المدن
         </p>
       </div>
 
       {/* Main Header */}
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between py-3">
           {/* Left: Cart */}
           <Button
             variant="ghost"
             size="icon"
-            className="relative hover:bg-gold/10 transition-all duration-300"
+            className="relative hover:bg-gold/20 text-white transition-all duration-300"
             onClick={openCart}
           >
-            <ShoppingCart className="h-6 w-6" />
+            <ShoppingCart className="h-5 w-5 md:h-6 md:w-6" />
             {getTotalItems() > 0 && (
-              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs text-white flex items-center justify-center font-bold animate-bounce">
+              <span className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 rounded-full bg-gold text-xs text-black flex items-center justify-center font-bold">
                 {getTotalItems()}
               </span>
             )}
@@ -65,50 +65,50 @@ const Header = () => {
               <img 
                 src={cosmedLogo} 
                 alt="COSMED" 
-                className="h-12 md:h-14 w-auto object-contain transition-all duration-300 group-hover:scale-110"
+                className="h-8 md:h-12 w-auto object-contain transition-all duration-300 group-hover:scale-105"
                 style={{
-                  filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))'
+                  filter: 'drop-shadow(0 2px 8px rgba(234, 179, 8, 0.3))'
                 }}
               />
               {/* Gradient overlay effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-yellow-500/20 to-amber-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg blur-sm" />
+              <div className="absolute inset-0 bg-gradient-to-r from-gold/0 via-gold/20 to-gold/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg blur-sm" />
             </div>
-            <p className="text-xs text-muted-foreground font-medium tracking-wider mt-1">
+            <p className="text-xs text-gold/80 font-medium tracking-wider mt-1 hidden md:block">
               منتجات عالية الجودة
             </p>
           </Link>
 
           {/* Right: Search & Menu */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)} className="hover:bg-gold/10 transition-all duration-300">
-              <Search className="h-5 w-5" />
+            <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)} className="hover:bg-gold/20 text-white transition-all duration-300">
+              <Search className="h-5 w-5 md:h-5 md:w-5" />
             </Button>
 
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="hover:bg-gold/10 transition-all duration-300">
-                  <Menu className="h-6 w-6" />
+                <Button variant="ghost" size="icon" className="hover:bg-gold/20 text-white transition-all duration-300">
+                  <Menu className="h-5 w-5 md:h-6 md:w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] bg-background/95 backdrop-blur-xl border-r-2 border-gold/20">
-                <nav className="flex flex-col gap-4 mt-8">
+              <SheetContent side="left" className="w-[280px] sm:w-[320px] bg-white border-r-2 border-gold/30">
+                <nav className="flex flex-col gap-2 mt-6">
                   <Link
                     to="/"
-                    className="text-lg font-medium hover:text-gold transition-all duration-300 py-3 px-4 rounded-lg hover:bg-gold/10 border-b border-border"
+                    className="text-base font-medium text-black hover:text-gold transition-all duration-300 py-2 px-4 rounded-lg hover:bg-gold/10 border-b border-gray-200"
                   >
-                    🏠 الصفحة الرئيسية
+                    الصفحة الرئيسية
                   </Link>
                   <Link
                     to="/best-sellers"
-                    className="text-lg font-medium hover:text-gold transition-all duration-300 py-3 px-4 rounded-lg hover:bg-gold/10 border-b border-border"
+                    className="text-base font-medium text-black hover:text-gold transition-all duration-300 py-2 px-4 rounded-lg hover:bg-gold/10 border-b border-gray-200"
                   >
-                    🔥 الأكثر مبيعاً
+                    الأكثر مبيعاً
                   </Link>
                   {categories.map((category) => (
                     <Link
                       key={category.id}
                       to={`/collection/${category.slug}`}
-                      className="text-lg font-medium hover:text-gold transition-all duration-300 py-3 px-4 rounded-lg hover:bg-gold/10 border-b border-border"
+                      className="text-base font-medium text-black hover:text-gold transition-all duration-300 py-2 px-4 rounded-lg hover:bg-gold/10 border-b border-gray-200"
                     >
                       {category.name}
                     </Link>
