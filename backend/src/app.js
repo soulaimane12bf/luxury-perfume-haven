@@ -13,6 +13,7 @@ import authRoutes from './routes/auth.js';
 import orderRoutes from './routes/orders.js';
 import profileRoutes from './routes/profile.js';
 import sliderRoutes from './routes/sliderRoutes.js';
+import seedRoutes from './routes/seedRoutes.js';
 
 import Product from './models/product.js';
 import Category from './models/category.js';
@@ -183,6 +184,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/sliders', sliderRoutes);
+app.use('/api/seed', seedRoutes);
 
 // Health check
 app.get('/api/health', async (req, res) => {
