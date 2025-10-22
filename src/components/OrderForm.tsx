@@ -128,38 +128,47 @@ export default function OrderForm({ open, onOpenChange, items, totalAmount, onSu
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <ShoppingBag className="h-6 w-6 text-primary" />
+      <DialogContent className="sm:max-w-[500px] max-w-[95vw] max-h-[95vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="space-y-2">
+          <DialogTitle className="text-lg sm:text-xl flex items-center gap-2">
+            <ShoppingBag className="h-5 w-5 text-gold" />
             إتمام الطلب
           </DialogTitle>
-          <DialogDescription>
-            يرجى ملء المعلومات التالية لإتمام طلبك
-          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Order Summary */}
-          <div className="bg-muted p-4 rounded-lg">
-            <h4 className="font-semibold mb-2">ملخص الطلب</h4>
-            <div className="space-y-2 text-sm">
-              {items.map((item, index) => (
-                <div key={index} className="flex justify-between">
-                  <span>{item.name} × {item.quantity}</span>
-                  <span className="font-medium">{item.price * item.quantity} درهم</span>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {/* Product Images - Mobile Optimized */}
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            {items.slice(0, 3).map((item, index) => (
+              <div key={index} className="relative rounded-lg overflow-hidden border border-gray-200">
+                <img 
+                  src={item.image_url} 
+                  alt={item.name}
+                  className="w-full h-20 sm:h-24 object-cover"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-1 text-center">
+                  ×{item.quantity}
                 </div>
-              ))}
-              <div className="border-t pt-2 flex justify-between font-bold text-base">
-                <span>المجموع:</span>
-                <span className="text-primary">{totalAmount} درهم</span>
               </div>
+            ))}
+            {items.length > 3 && (
+              <div className="flex items-center justify-center bg-gray-100 rounded-lg text-sm font-semibold text-gray-600">
+                +{items.length - 3}
+              </div>
+            )}
+          </div>
+
+          {/* Total - Compact */}
+          <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-semibold">المجموع:</span>
+              <span className="text-lg font-bold text-gold">{totalAmount} د.م</span>
             </div>
           </div>
 
-          {/* Customer Name */}
-          <div className="space-y-2">
-            <Label htmlFor="customer_name">
+          {/* Customer Name - Compact */}
+          <div className="space-y-1">
+            <Label htmlFor="customer_name" className="text-sm">
               الاسم الكامل <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -167,76 +176,82 @@ export default function OrderForm({ open, onOpenChange, items, totalAmount, onSu
               placeholder="أدخل اسمك الكامل"
               value={formData.customer_name}
               onChange={(e) => handleInputChange('customer_name', e.target.value)}
-              className={errors.customer_name ? 'border-red-500' : ''}
+              className={`h-9 text-sm ${errors.customer_name ? 'border-red-500' : ''}`}
             />
             {errors.customer_name && (
-              <p className="text-sm text-red-500">{errors.customer_name}</p>
+              <p className="text-xs text-red-500">{errors.customer_name}</p>
             )}
           </div>
 
-          {/* Phone */}
-          <div className="space-y-2">
-            <Label htmlFor="customer_phone">
+          {/* Phone - Compact */}
+          <div className="space-y-1">
+            <Label htmlFor="customer_phone" className="text-sm">
               رقم الهاتف <span className="text-red-500">*</span>
             </Label>
             <Input
               id="customer_phone"
               type="tel"
-              placeholder="06XXXXXXXX أو +212XXXXXXXXX"
+              placeholder="06XXXXXXXX"
               value={formData.customer_phone}
               onChange={(e) => handleInputChange('customer_phone', e.target.value)}
-              className={errors.customer_phone ? 'border-red-500' : ''}
+              className={`h-9 text-sm ${errors.customer_phone ? 'border-red-500' : ''}`}
             />
             {errors.customer_phone && (
-              <p className="text-sm text-red-500">{errors.customer_phone}</p>
+              <p className="text-xs text-red-500">{errors.customer_phone}</p>
             )}
           </div>
 
-          {/* Address */}
-          <div className="space-y-2">
-            <Label htmlFor="customer_address">
+          {/* Address - Compact */}
+          <div className="space-y-1">
+            <Label htmlFor="customer_address" className="text-sm">
               العنوان الكامل <span className="text-red-500">*</span>
             </Label>
             <Textarea
               id="customer_address"
-              placeholder="المدينة، الحي، الشارع، رقم المنزل..."
+              placeholder="المدينة، الحي..."
               value={formData.customer_address}
               onChange={(e) => handleInputChange('customer_address', e.target.value)}
-              className={errors.customer_address ? 'border-red-500' : ''}
-              rows={3}
+              className={`text-sm ${errors.customer_address ? 'border-red-500' : ''}`}
+              rows={2}
             />
             {errors.customer_address && (
-              <p className="text-sm text-red-500">{errors.customer_address}</p>
+              <p className="text-xs text-red-500">{errors.customer_address}</p>
             )}
           </div>
 
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">
-              ملاحظات إضافية <span className="text-muted-foreground text-xs">(اختياري)</span>
+          {/* Notes - Compact */}
+          <div className="space-y-1">
+            <Label htmlFor="notes" className="text-sm">
+              ملاحظات <span className="text-gray-400 text-xs">(اختياري)</span>
             </Label>
             <Textarea
               id="notes"
-              placeholder="أي ملاحظات أو طلبات خاصة..."
+              placeholder="ملاحظات إضافية..."
               value={formData.notes}
               onChange={(e) => handleInputChange('notes', e.target.value)}
+              className="text-sm"
               rows={2}
             />
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 flex-row sm:flex-row justify-end">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
+              className="flex-1 sm:flex-none h-9 text-sm"
             >
               إلغاء
             </Button>
-            <Button type="submit" disabled={loading} className="min-w-[120px]">
+            <Button 
+              type="submit" 
+              disabled={loading} 
+              className="flex-1 sm:flex-none min-w-[120px] h-9 text-sm bg-black hover:bg-gray-800"
+            >
               {loading ? (
                 <>
-                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="ml-2 h-3 w-3 animate-spin" />
                   جاري الإرسال...
                 </>
               ) : (
