@@ -31,10 +31,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <Card 
-      className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 cursor-pointer bg-white dark:bg-gray-900 group"
+      className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 cursor-pointer bg-white dark:bg-gray-900 group h-full flex flex-col"
       onClick={() => navigate(`/product/${product.id}`)}
     >
-      <CardContent className="p-0 relative">
+      <CardContent className="p-0 relative flex-shrink-0">
         <div className="aspect-square relative overflow-hidden bg-gray-50 dark:bg-gray-800">
           <img
             src={product.image_urls[0]}
@@ -60,10 +60,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </Badge>
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start gap-3 p-4 md:p-6 bg-white dark:bg-gray-900">
-        <div className="w-full">
+      <CardFooter className="flex flex-col items-start gap-3 p-4 md:p-6 bg-white dark:bg-gray-900 flex-grow">
+        <div className="w-full flex-grow flex flex-col">
           <p className="text-xs md:text-sm text-muted-foreground mb-1 uppercase tracking-wide">{product.brand}</p>
-          <h3 className="text-sm md:text-base font-bold line-clamp-2 mb-2 min-h-[2.5rem]">{product.name}</h3>
+          <h3 className="text-sm md:text-base font-bold line-clamp-2 mb-2 h-[2.5rem]">{product.name}</h3>
           
           {product.rating > 0 && (
             <div className="flex items-center gap-1 mb-2">
@@ -72,7 +72,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
             </div>
           )}
           
-          <div className="space-y-2">
+          <div className="space-y-2 mb-3">
             {product.old_price && product.old_price > product.price ? (
               <>
                 <div className="flex flex-col gap-1">
@@ -96,12 +96,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </div>
           
           {product.stock < 10 && product.stock > 0 && (
-            <p className="text-xs text-red-500 mt-2 font-semibold">⚠️ بقي {product.stock} فقط!</p>
+            <p className="text-xs text-red-500 font-semibold">⚠️ بقي {product.stock} فقط!</p>
           )}
         </div>
         
         <Button
-          className="w-full bg-black hover:bg-gray-900 text-gold font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
+          className="w-full bg-black hover:bg-gray-900 text-gold font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 mt-auto"
           onClick={(e) => {
             e.stopPropagation();
             addToCart(product, 1);
