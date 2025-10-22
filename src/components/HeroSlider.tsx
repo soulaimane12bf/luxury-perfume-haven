@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { SyntheticEvent } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -42,50 +41,6 @@ export function HeroSlider() {
     [autoplayRef.current]
   );
 
-  // Normalize image URL to handle different formats
-  const normalizeImageUrl = useCallback((url: string | null | undefined): string => {
-    console.log('🔍 normalizeImageUrl input:', url);
-    
-    if (!url || url.trim() === '') {
-      console.warn('⚠️ Empty or null image URL provided');
-      return FALLBACK_IMAGE_DATA_URI;
-    }
-
-    const trimmedUrl = url.trim();
-    console.log('🔍 trimmed URL:', trimmedUrl);
-
-    // Already a data URI (base64 image)
-    if (trimmedUrl.startsWith('data:image/')) {
-      console.log('✅ Detected data URI');
-      return trimmedUrl;
-    }
-
-    // Full HTTP/HTTPS URL
-    if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
-      console.log('✅ Detected full HTTP/HTTPS URL, returning as-is:', trimmedUrl);
-      return trimmedUrl;
-    }
-
-    // Protocol-relative URL
-    if (trimmedUrl.startsWith('//')) {
-      const result = `https:${trimmedUrl}`;
-      console.log('✅ Detected protocol-relative URL, converted to:', result);
-      return result;
-    }
-
-    // Relative URL - convert to absolute
-    if (typeof window !== 'undefined') {
-      const origin = window.location.origin;
-      const path = trimmedUrl.startsWith('/') ? trimmedUrl : `/${trimmedUrl}`;
-      const result = `${origin}${path}`;
-      console.log('⚠️ Detected relative URL, converted to:', result);
-      return result;
-    }
-
-    console.warn(`⚠️ Could not normalize URL: ${trimmedUrl}`);
-    return FALLBACK_IMAGE_DATA_URI;
-  }, []);
-
   // Fetch active sliders from API
   useEffect(() => {
     let isMounted = true;
@@ -106,27 +61,21 @@ export function HeroSlider() {
             }
             return isValid;
           })
-          .map((slider: Slider) => {
-            const normalizedUrl = normalizeImageUrl(slider.image_url);
-            console.log(`📸 Slider ${slider.id}: original="${slider.image_url}" -> normalized="${normalizedUrl}"`);
-            return {
-              ...slider,
-              image_url: normalizedUrl,
-              title: slider.title || 'عنوان الشريحة',
-              subtitle: slider.subtitle || '',
-              button_text: slider.button_text || 'تسوق الآن',
-              button_link: slider.button_link || '/collection',
-              order: slider.order ?? 0,
-              active: slider.active ?? true,
-            };
-          })
+          .map((slider: Slider) => ({
+            ...slider,
+            title: slider.title || 'عنوان الشريحة',
+            subtitle: slider.subtitle || '',
+            button_text: slider.button_text || 'تسوق الآن',
+            button_link: slider.button_link || '/collection',
+            order: slider.order ?? 0,
+            active: slider.active ?? true,
+          }))
           .sort((a, b) => a.order - b.order);
 
         console.log(`✅ Loaded ${validSliders.length} valid sliders`, validSliders);
         setSliders(validSliders);
       } catch (error) {
         console.error('❌ Failed to fetch sliders:', error);
-        // Set empty array on error
         if (isMounted) {
           setSliders([]);
         }
@@ -142,7 +91,7 @@ export function HeroSlider() {
     return () => {
       isMounted = false;
     };
-  }, []); // Empty dependency array - normalizeImageUrl is stable
+  }, []);
 
   // Handle carousel selection changes
   const onSelect = useCallback(() => {
@@ -156,7 +105,7 @@ export function HeroSlider() {
   useEffect(() => {
     if (!emblaApi) return;
 
-    onSelect(); // Set initial selection
+    onSelect();
     emblaApi.on('select', onSelect);
     emblaApi.on('reInit', onSelect);
 
@@ -172,10 +121,9 @@ export function HeroSlider() {
 
     console.log('🔄 Re-initializing carousel with', sliders.length, 'slides');
     
-    // Use setTimeout to ensure DOM has updated
     const timeoutId = setTimeout(() => {
       emblaApi.reInit();
-      emblaApi.scrollTo(0, true); // true = instant, no animation
+      emblaApi.scrollTo(0, true);
       setSelectedIndex(0);
     }, 100);
 
@@ -249,7 +197,7 @@ export function HeroSlider() {
   }
 
   return (
-    <div className="relative w-full h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden bg-gray-900">
+    <div className="relative w-full h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden">
       {/* Embla Carousel Container */}
       <div className="embla h-full w-full" ref={emblaRef}>
         <div className="embla__container flex h-full">
@@ -262,53 +210,51 @@ export function HeroSlider() {
             });
             
             return (
-            <div
-              key={slider.id}
-              className="embla__slide relative min-w-full h-full flex-shrink-0"
-              style={{ flex: '0 0 100%' }}
-            >
-              {/* Background Image */}
-              <div className="absolute inset-0 bg-gray-800">
+              <div
+                key={slider.id}
+                className="embla__slide relative min-w-full h-full flex-shrink-0"
+                style={{ flex: '0 0 100%' }}
+              >
+                {/* Background Image - No overlay background */}
                 <img
                   src={slider.image_url}
                   alt={slider.title}
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                   loading={index === 0 ? 'eager' : 'lazy'}
                   decoding="async"
                   onLoad={() => console.log(`✅ Loaded image ${index}: ${slider.image_url}`)}
                   onError={(e) => {
                     console.error(`❌ Failed to load image ${index} for slider ${slider.id}: ${slider.image_url}`);
-                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.src = FALLBACK_IMAGE_DATA_URI;
                   }}
                 />
-              </div>
 
-              {/* Content Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/50 to-black/30 flex items-center justify-center z-10">
-                <div className="text-center text-white px-6 md:px-8 max-w-6xl">
-                  {/* Title */}
-                  <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold mb-4 md:mb-6 drop-shadow-2xl leading-tight animate-fade-in">
-                    {slider.title}
-                  </h1>
-                  
-                  {/* Subtitle */}
-                  {slider.subtitle && (
-                    <p className="text-xl md:text-2xl lg:text-4xl mb-6 md:mb-8 drop-shadow-lg font-medium animate-fade-in-delayed opacity-95">
-                      {slider.subtitle}
-                    </p>
-                  )}
-                  
-                  {/* CTA Button */}
-                  <Button
-                    size="lg"
-                    onClick={() => handleButtonClick(slider.button_link)}
-                    className="bg-amber-600 hover:bg-amber-700 text-white px-8 md:px-12 py-6 md:py-8 text-lg md:text-2xl shadow-2xl hover:scale-110 transition-all duration-300 animate-fade-in-delayed-more font-semibold"
-                  >
-                    {slider.button_text}
-                  </Button>
+                {/* Content Overlay with gradient only for text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex items-center justify-center z-10">
+                  <div className="text-center text-white px-6 md:px-8 max-w-6xl">
+                    {/* Title */}
+                    <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold mb-4 md:mb-6 drop-shadow-2xl leading-tight">
+                      {slider.title}
+                    </h1>
+                    
+                    {/* Subtitle */}
+                    {slider.subtitle && (
+                      <p className="text-xl md:text-2xl lg:text-4xl mb-6 md:mb-8 drop-shadow-lg font-medium opacity-95">
+                        {slider.subtitle}
+                      </p>
+                    )}
+                    
+                    {/* CTA Button */}
+                    <Button
+                      size="lg"
+                      onClick={() => handleButtonClick(slider.button_link)}
+                      className="bg-amber-600 hover:bg-amber-700 text-white px-8 md:px-12 py-6 md:py-8 text-lg md:text-2xl shadow-2xl hover:scale-110 transition-all duration-300 font-semibold"
+                    >
+                      {slider.button_text}
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
             );
           })}
         </div>
