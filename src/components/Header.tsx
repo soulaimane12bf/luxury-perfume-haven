@@ -97,7 +97,7 @@ const Header = () => {
                   <div className="flex justify-center py-6 border-b-2 border-gold/30 bg-gradient-to-b from-gold/5 to-transparent">
                     <img 
                       src={cosmedLogo} 
-                      alt="COSMED" 
+                      alt="COSMED Logo" 
                       className="h-24 w-auto object-contain"
                     />
                   </div>
