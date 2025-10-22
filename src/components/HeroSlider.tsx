@@ -26,6 +26,7 @@ export function HeroSlider() {
   const [sliders, setSliders] = useState<Slider[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState<Record<string, boolean>>({});
   
   const autoplayRef = useRef(
     Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true })
@@ -52,6 +53,8 @@ export function HeroSlider() {
         
         if (!isMounted) return;
 
+        console.log('📦 Raw API response:', data);
+
         // Validate and normalize slider data
         const validSliders = (Array.isArray(data) ? data : [])
           .filter((slider: Slider) => {
@@ -70,9 +73,9 @@ export function HeroSlider() {
             order: slider.order ?? 0,
             active: slider.active ?? true,
           }))
-          .sort((a, b) => a.order - b.order);
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-        console.log(`✅ Loaded ${validSliders.length} valid sliders`, validSliders);
+        console.log(`✅ Loaded ${validSliders.length} valid sliders:`, validSliders);
         setSliders(validSliders);
       } catch (error) {
         console.error('❌ Failed to fetch sliders:', error);
@@ -98,7 +101,7 @@ export function HeroSlider() {
     if (!emblaApi) return;
     const index = emblaApi.selectedScrollSnap();
     setSelectedIndex(index);
-    console.log(`📍 Carousel moved to slide ${index + 1}/${sliders.length}`);
+    console.log(`📍 Carousel at slide ${index + 1}/${sliders.length}`);
   }, [emblaApi, sliders.length]);
 
   // Setup carousel event listeners
@@ -125,10 +128,10 @@ export function HeroSlider() {
       emblaApi.reInit();
       emblaApi.scrollTo(0, true);
       setSelectedIndex(0);
-    }, 100);
+    }, 150);
 
     return () => clearTimeout(timeoutId);
-  }, [emblaApi, sliders.length]);
+  }, [emblaApi, sliders]);
 
   // Carousel navigation functions
   const scrollPrev = useCallback(() => {
@@ -156,6 +159,19 @@ export function HeroSlider() {
   const handleButtonClick = useCallback((link?: string) => {
     const targetLink = link || '/collection';
     window.location.href = targetLink;
+  }, []);
+
+  // Handle image load
+  const handleImageLoad = useCallback((sliderId: string, url: string) => {
+    console.log(`✅ Image loaded for slider ${sliderId}: ${url}`);
+    setImagesLoaded(prev => ({ ...prev, [sliderId]: true }));
+  }, []);
+
+  // Handle image error
+  const handleImageError = useCallback((sliderId: string, url: string, e: React.SyntheticEvent<HTMLImageElement>) => {
+    console.error(`❌ Image failed for slider ${sliderId}: ${url}`);
+    setImagesLoaded(prev => ({ ...prev, [sliderId]: false }));
+    e.currentTarget.src = FALLBACK_IMAGE_DATA_URI;
   }, []);
 
   // Loading state
@@ -197,66 +213,59 @@ export function HeroSlider() {
   }
 
   return (
-    <div className="relative w-full h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden">
+    <div className="relative w-full h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden bg-black">
       {/* Embla Carousel Container */}
-      <div className="embla h-full w-full" ref={emblaRef}>
-        <div className="embla__container flex h-full">
-          {sliders.map((slider, index) => {
-            console.log(`🖼️ Rendering slider ${index}:`, {
-              id: slider.id,
-              title: slider.title,
-              image_url: slider.image_url,
-              order: slider.order
-            });
-            
-            return (
-              <div
-                key={slider.id}
-                className="embla__slide relative min-w-full h-full flex-shrink-0"
-                style={{ flex: '0 0 100%' }}
-              >
-                {/* Background Image - No overlay background */}
+      <div className="h-full w-full" ref={emblaRef}>
+        <div className="flex h-full">
+          {sliders.map((slider, index) => (
+            <div
+              key={`${slider.id}-${slider.order}`}
+              className="relative flex-[0_0_100%] min-w-0 h-full"
+            >
+              {/* Background Image */}
+              <div className="absolute inset-0 w-full h-full">
                 <img
                   src={slider.image_url}
                   alt={slider.title}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="w-full h-full object-cover"
                   loading={index === 0 ? 'eager' : 'lazy'}
-                  decoding="async"
-                  onLoad={() => console.log(`✅ Loaded image ${index}: ${slider.image_url}`)}
-                  onError={(e) => {
-                    console.error(`❌ Failed to load image ${index} for slider ${slider.id}: ${slider.image_url}`);
-                    e.currentTarget.src = FALLBACK_IMAGE_DATA_URI;
-                  }}
+                  onLoad={() => handleImageLoad(slider.id, slider.image_url)}
+                  onError={(e) => handleImageError(slider.id, slider.image_url, e)}
                 />
+              </div>
 
-                {/* Content Overlay with gradient only for text readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex items-center justify-center z-10">
-                  <div className="text-center text-white px-6 md:px-8 max-w-6xl">
-                    {/* Title */}
-                    <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold mb-4 md:mb-6 drop-shadow-2xl leading-tight">
-                      {slider.title}
-                    </h1>
-                    
-                    {/* Subtitle */}
-                    {slider.subtitle && (
-                      <p className="text-xl md:text-2xl lg:text-4xl mb-6 md:mb-8 drop-shadow-lg font-medium opacity-95">
-                        {slider.subtitle}
-                      </p>
-                    )}
-                    
-                    {/* CTA Button */}
-                    <Button
-                      size="lg"
-                      onClick={() => handleButtonClick(slider.button_link)}
-                      className="bg-amber-600 hover:bg-amber-700 text-white px-8 md:px-12 py-6 md:py-8 text-lg md:text-2xl shadow-2xl hover:scale-110 transition-all duration-300 font-semibold"
-                    >
-                      {slider.button_text}
-                    </Button>
-                  </div>
+              {/* Content Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex items-center justify-center">
+                <div className="text-center text-white px-6 md:px-8 max-w-6xl">
+                  {/* Title */}
+                  <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold mb-4 md:mb-6 drop-shadow-2xl leading-tight">
+                    {slider.title}
+                  </h1>
+                  
+                  {/* Subtitle */}
+                  {slider.subtitle && (
+                    <p className="text-xl md:text-2xl lg:text-4xl mb-6 md:mb-8 drop-shadow-lg font-medium opacity-95">
+                      {slider.subtitle}
+                    </p>
+                  )}
+                  
+                  {/* CTA Button */}
+                  <Button
+                    size="lg"
+                    onClick={() => handleButtonClick(slider.button_link)}
+                    className="bg-amber-600 hover:bg-amber-700 text-white px-8 md:px-12 py-6 md:py-8 text-lg md:text-2xl shadow-2xl hover:scale-110 transition-all duration-300 font-semibold"
+                  >
+                    {slider.button_text}
+                  </Button>
                 </div>
               </div>
-            );
-          })}
+
+              {/* Debug Info (remove in production) */}
+              <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded font-mono z-30">
+                Order: {slider.order} | ID: {slider.id.slice(0, 8)}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
