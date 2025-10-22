@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { HeroSlider } from "@/components/HeroSlider";
 import { BestSellers } from "@/components/BestSellers";
 import { CategorySection } from "@/components/CategorySection";
-import { categoriesApi } from "@/lib/api";
+import { categoriesApi, productsApi } from "@/lib/api";
 
 type Category = {
   id: string;
@@ -14,23 +14,38 @@ type Category = {
   description?: string;
 };
 
+type Product = {
+  id: string;
+  name: string;
+  category: string;
+  best_selling?: boolean;
+  [key: string]: any;
+};
+
 const Index = () => {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const data = await categoriesApi.getAll();
-        setCategories(Array.isArray(data) ? data : []);
+        // Fetch categories and all products in parallel
+        const [categoriesData, productsData] = await Promise.all([
+          categoriesApi.getAll(),
+          productsApi.getAll()
+        ]);
+        
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        setProducts(Array.isArray(productsData) ? productsData : []);
       } catch (error) {
-        console.error('Failed to fetch categories:', error);
-        toast.error('فشل تحميل الفئات');
+        console.error('Failed to fetch data:', error);
+        toast.error('فشل تحميل البيانات');
       } finally {
         setLoading(false);
       }
     };
-    fetchCategories();
+    fetchData();
   }, []);
 
   // Gradient color combinations for each category
@@ -50,28 +65,34 @@ const Index = () => {
       {/* Hero Slider Section */}
       <HeroSlider />
 
-      {/* Best Sellers Section */}
-      <BestSellers />
+      {/* Best Sellers Section - Pass products as prop */}
+      <BestSellers products={products} isLoading={loading} />
 
-      {/* Dynamic Category Sections */}
-      {!loading && categories.length > 0 && categories.map((category, index) => (
-        <div key={category.id}>
-          {/* Separator Line */}
-          <div className="container mx-auto px-4">
-            <div className="h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
+      {/* Dynamic Category Sections - Pass filtered products */}
+      {!loading && categories.length > 0 && categories.map((category, index) => {
+        const categoryProducts = products.filter(p => p.category === category.slug);
+        
+        return (
+          <div key={category.id}>
+            {/* Separator Line */}
+            <div className="container mx-auto px-4">
+              <div className="h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
+            </div>
+
+            {/* Category Section */}
+            <CategorySection
+              categoryId={category.id}
+              categorySlug={category.slug}
+              categoryName={category.name}
+              categoryDescription={category.description}
+              gradientFrom={gradients[index % gradients.length].from}
+              gradientTo={gradients[index % gradients.length].to}
+              products={categoryProducts}
+              isLoading={false}
+            />
           </div>
-
-          {/* Category Section */}
-          <CategorySection
-            categoryId={category.id}
-            categorySlug={category.slug}
-            categoryName={category.name}
-            categoryDescription={category.description}
-            gradientFrom={gradients[index % gradients.length].from}
-            gradientTo={gradients[index % gradients.length].to}
-          />
-        </div>
-      ))}
+        );
+      })}
 
       {/* Loading State */}
       {loading && (

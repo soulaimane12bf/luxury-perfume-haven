@@ -3,7 +3,14 @@ import Category from '../models/category.js';
 // Get all categories
 export const getAllCategories = async (req, res) => {
   try {
-    const categories = await Category.findAll({ order: [['name', 'ASC']] });
+    // Categories change rarely - cache for 15 minutes
+    res.set('Cache-Control', 'public, max-age=900, s-maxage=900, stale-while-revalidate=180');
+    
+    const categories = await Category.findAll({ 
+      order: [['name', 'ASC']],
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
+      raw: true
+    });
     res.json(categories);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -13,7 +20,14 @@ export const getAllCategories = async (req, res) => {
 // Get category by ID
 export const getCategoryById = async (req, res) => {
   try {
-    const category = await Category.findOne({ where: { id: req.params.id } });
+    // Cache for 15 minutes
+    res.set('Cache-Control', 'public, max-age=900, s-maxage=900, stale-while-revalidate=180');
+    
+    const category = await Category.findOne({ 
+      where: { id: req.params.id },
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
+      raw: true
+    });
     if (!category) {
       return res.status(404).json({ message: 'Category not found' });
     }
@@ -26,7 +40,14 @@ export const getCategoryById = async (req, res) => {
 // Get category by slug
 export const getCategoryBySlug = async (req, res) => {
   try {
-    const category = await Category.findOne({ where: { slug: req.params.slug } });
+    // Cache for 15 minutes
+    res.set('Cache-Control', 'public, max-age=900, s-maxage=900, stale-while-revalidate=180');
+    
+    const category = await Category.findOne({ 
+      where: { slug: req.params.slug },
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
+      raw: true
+    });
     if (!category) {
       return res.status(404).json({ message: 'Category not found' });
     }

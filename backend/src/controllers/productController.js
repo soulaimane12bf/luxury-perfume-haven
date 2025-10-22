@@ -5,6 +5,9 @@ import { Op } from 'sequelize';
 // Get all products with filters
 export const getAllProducts = async (req, res) => {
   try {
+    // Add cache headers for public product data (5 minutes)
+    res.set('Cache-Control', 'public, max-age=300, s-maxage=300, stale-while-revalidate=60');
+    
     const { category, brand, minPrice, maxPrice, type, best_selling, sort } = req.query;
     
     let where = {};
@@ -32,7 +35,13 @@ export const getAllProducts = async (req, res) => {
     else if (sort === 'oldest') order = [['created_at', 'ASC']];
     else order = [['created_at', 'DESC']]; // default
     
-    const products = await Product.findAll({ where, order });
+    const products = await Product.findAll({ 
+      where, 
+      order,
+      attributes: { exclude: ['createdAt', 'updatedAt'] }, // Reduce payload size
+      raw: true // Faster serialization
+    });
+    
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -42,7 +51,15 @@ export const getAllProducts = async (req, res) => {
 // Get single product by ID
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findOne({ where: { id: req.params.id } });
+    // Add cache headers (10 minutes - individual products change less often)
+    res.set('Cache-Control', 'public, max-age=600, s-maxage=600, stale-while-revalidate=120');
+    
+    const product = await Product.findOne({ 
+      where: { id: req.params.id },
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
+      raw: true
+    });
+    
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }

@@ -1,15 +1,17 @@
-import { useProducts } from "@/lib/hooks/useApi";
 import ProductCard from "./ProductCard";
 import { ProductGridSkeleton } from "./ProductCardSkeleton";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
-export function BestSellers() {
-  const { data: allProducts, isLoading } = useProducts();
+interface BestSellersProps {
+  products?: any[];
+  isLoading?: boolean;
+}
 
+export function BestSellers({ products = [], isLoading = false }: BestSellersProps) {
   // Filter best-selling products
-  const bestSellers = Array.isArray(allProducts) 
-    ? allProducts.filter(product => product.best_selling).slice(0, 4)
+  const bestSellers = Array.isArray(products) 
+    ? products.filter(product => product.best_selling).slice(0, 4)
     : [];
 
   if (!isLoading && bestSellers.length === 0) {
