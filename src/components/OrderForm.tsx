@@ -36,7 +36,6 @@ export default function OrderForm({ open, onOpenChange, items, totalAmount, onSu
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     customer_name: '',
-    customer_email: '',
     customer_phone: '',
     customer_address: '',
     notes: '',
@@ -61,10 +60,6 @@ export default function OrderForm({ open, onOpenChange, items, totalAmount, onSu
       newErrors.customer_address = 'العنوان مطلوب';
     }
 
-    if (formData.customer_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customer_email)) {
-      newErrors.customer_email = 'البريد الإلكتروني غير صحيح';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -86,7 +81,6 @@ export default function OrderForm({ open, onOpenChange, items, totalAmount, onSu
     try {
       const orderData = {
         customer_name: formData.customer_name.trim(),
-        customer_email: formData.customer_email.trim() || undefined,
         customer_phone: formData.customer_phone.trim(),
         customer_address: formData.customer_address.trim(),
         items,
@@ -98,14 +92,13 @@ export default function OrderForm({ open, onOpenChange, items, totalAmount, onSu
 
       toast({
         title: '✅ تم إرسال الطلب بنجاح',
-        description: 'سنتواصل معك قريباً لتأكيد الطلب عبر البريد الإلكتروني أو الهاتف.',
+        description: 'سنتواصل معك قريباً لتأكيد الطلب عبر الهاتف.',
         className: 'bg-green-50 border-green-200',
       });
 
       // Reset form
       setFormData({
         customer_name: '',
-        customer_email: '',
         customer_phone: '',
         customer_address: '',
         notes: '',
@@ -196,24 +189,6 @@ export default function OrderForm({ open, onOpenChange, items, totalAmount, onSu
             />
             {errors.customer_phone && (
               <p className="text-sm text-red-500">{errors.customer_phone}</p>
-            )}
-          </div>
-
-          {/* Email (Optional) */}
-          <div className="space-y-2">
-            <Label htmlFor="customer_email">
-              البريد الإلكتروني <span className="text-muted-foreground text-xs">(اختياري)</span>
-            </Label>
-            <Input
-              id="customer_email"
-              type="email"
-              placeholder="example@email.com"
-              value={formData.customer_email}
-              onChange={(e) => handleInputChange('customer_email', e.target.value)}
-              className={errors.customer_email ? 'border-red-500' : ''}
-            />
-            {errors.customer_email && (
-              <p className="text-sm text-red-500">{errors.customer_email}</p>
             )}
           </div>
 
