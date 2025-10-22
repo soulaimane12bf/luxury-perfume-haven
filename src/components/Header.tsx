@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingCart, Search, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { categoriesApi } from "@/lib/api";
 import { useCart } from "@/contexts/CartContext";
@@ -33,7 +34,7 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 bg-black shadow-xl border-b-2 border-gold/30">
+    <header className="fixed top-0 left-0 right-0 z-[100] bg-black shadow-xl border-b-2 border-gold/30">
       {/* Top Bar */}
       <div className="bg-gradient-to-r from-gray-900 via-black to-gray-900 py-2 border-b border-gold/20">
         <p className="text-center text-xs md:text-sm font-semibold text-gold">
@@ -90,30 +91,62 @@ const Header = () => {
                   <Menu className="h-5 w-5 md:h-6 md:w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[280px] sm:w-[320px] bg-white border-r-2 border-gold/30">
-                <nav className="flex flex-col gap-2 mt-6">
-                  <Link
-                    to="/"
-                    className="text-base font-medium text-black hover:text-gold transition-all duration-300 py-2 px-4 rounded-lg hover:bg-gold/10 border-b border-gray-200"
-                  >
-                    الصفحة الرئيسية
-                  </Link>
-                  <Link
-                    to="/best-sellers"
-                    className="text-base font-medium text-black hover:text-gold transition-all duration-300 py-2 px-4 rounded-lg hover:bg-gold/10 border-b border-gray-200"
-                  >
-                    الأكثر مبيعاً
-                  </Link>
-                  {categories.map((category) => (
+              <SheetContent side="left" className="w-[280px] sm:w-[320px] bg-white border-r-2 border-gold/30 p-0">
+                <div className="flex flex-col h-full">
+                  {/* Logo at top */}
+                  <div className="flex justify-center py-6 border-b-2 border-gold/30 bg-gradient-to-b from-gold/5 to-transparent">
+                    <img 
+                      src={cosmedLogo} 
+                      alt="COSMED" 
+                      className="h-16 w-auto object-contain"
+                      style={{
+                        filter: 'drop-shadow(0 2px 8px rgba(234, 179, 8, 0.3))'
+                      }}
+                    />
+                  </div>
+
+                  {/* Search Input */}
+                  <div className="px-4 py-4 border-b border-gray-200">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        type="search"
+                        placeholder="ابحث عن المنتجات..."
+                        className="pl-10 pr-4 h-10 border-gray-300 focus:border-gold focus:ring-gold"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSearchOpen(true);
+                        }}
+                        readOnly
+                      />
+                    </div>
+                  </div>
+
+                  {/* Navigation Links */}
+                  <nav className="flex flex-col gap-2 p-4 overflow-y-auto flex-1">
                     <Link
-                      key={category.id}
-                      to={`/collection/${category.slug}`}
+                      to="/"
                       className="text-base font-medium text-black hover:text-gold transition-all duration-300 py-2 px-4 rounded-lg hover:bg-gold/10 border-b border-gray-200"
                     >
-                      {category.name}
+                      الصفحة الرئيسية
                     </Link>
-                  ))}
-                </nav>
+                    <Link
+                      to="/best-sellers"
+                      className="text-base font-medium text-black hover:text-gold transition-all duration-300 py-2 px-4 rounded-lg hover:bg-gold/10 border-b border-gray-200"
+                    >
+                      الأكثر مبيعاً
+                    </Link>
+                    {categories.map((category) => (
+                      <Link
+                        key={category.id}
+                        to={`/collection/${category.slug}`}
+                        className="text-base font-medium text-black hover:text-gold transition-all duration-300 py-2 px-4 rounded-lg hover:bg-gold/10 border-b border-gray-200"
+                      >
+                        {category.name}
+                      </Link>
+                    ))}
+                  </nav>
+                </div>
               </SheetContent>
             </Sheet>
           </div>
