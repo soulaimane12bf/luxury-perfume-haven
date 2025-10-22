@@ -14,11 +14,12 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Configure multer
+// Configure multer with lower limit for Vercel serverless functions
+// Vercel has a 4.5MB payload limit, so we set 4MB to be safe
 export const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max file size
+    fileSize: 4 * 1024 * 1024, // 4MB max file size (Vercel serverless limit)
   },
 });
