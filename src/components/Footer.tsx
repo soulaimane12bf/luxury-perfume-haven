@@ -19,7 +19,34 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-background text-foreground border-t border-border/50 mt-20">
+    <footer className="bg-background text-foreground mt-20">
+      {/* Decorative Separator */}
+      <div className="container mx-auto px-4 mb-8">
+        <div className="relative py-8">
+          {/* Main gradient line */}
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t-2 border-gradient-to-r from-transparent via-amber-500 to-transparent"></div>
+          </div>
+          {/* Center decorative element */}
+          <div className="relative flex justify-center">
+            <div className="bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 px-8 py-2 rounded-full shadow-lg">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse delay-100"></div>
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse delay-200"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Double line separator */}
+        <div className="space-y-2">
+          <div className="h-px bg-gradient-to-r from-transparent via-amber-500/60 to-transparent"></div>
+          <div className="h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
+        </div>
+      </div>
+
+      {/* Footer Content */}
+      <div className="border-t border-border/50">
       {/* Social Section */}
       <div className="border-b border-amber-500/20 py-12">
         <div className="container mx-auto px-4 text-center">
@@ -110,6 +137,7 @@ const Footer = () => {
           </p>
         </div>
       </div>
+      </div> {/* Close Footer Content wrapper */}
     </footer>
   );
 };
