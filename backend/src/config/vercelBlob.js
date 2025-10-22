@@ -1,6 +1,21 @@
 import { put, del, list } from '@vercel/blob';
 
 /**
+ * Generate a short, clean filename
+ * @param {string} originalName - Original file name
+ * @returns {string} - Short clean filename (e.g., 'abc123.jpg')
+ */
+function generateShortFilename(originalName) {
+  // Get file extension
+  const ext = originalName.split('.').pop().toLowerCase();
+  
+  // Generate short random ID (6 characters)
+  const randomId = Math.random().toString(36).substring(2, 8);
+  
+  return `${randomId}.${ext}`;
+}
+
+/**
  * Upload an image file to Vercel Blob Storage
  * @param {File} file - The file object to upload
  * @param {string} folder - Folder name (e.g., 'sliders', 'products')
@@ -12,7 +27,9 @@ export async function uploadImageToVercel(file, folder = 'sliders') {
       throw new Error('BLOB_READ_WRITE_TOKEN is not configured in environment variables');
     }
 
-    const filename = `${folder}/${Date.now()}-${file.originalname}`;
+    // Generate short filename: sliders/abc123.jpg
+    const shortFilename = generateShortFilename(file.originalname);
+    const filename = `${folder}/${shortFilename}`;
     
     console.log(`📤 Uploading image to Vercel Blob: ${filename}`);
     
