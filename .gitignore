@@ -35,3 +35,4 @@ backend/.env.production
 backend/backend.log
 *.log
 test-gmail-code.js
+.env*.local
