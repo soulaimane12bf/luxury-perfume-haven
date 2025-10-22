@@ -62,8 +62,10 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* Hero Slider Section */}
-      <HeroSlider />
+      {/* Main content with padding for fixed header */}
+      <div className="pt-[88px] md:pt-[92px]">
+        {/* Hero Slider Section */}
+        <HeroSlider />
 
       {/* Best Sellers Section - Pass products as prop */}
       <BestSellers products={products} isLoading={loading} />
@@ -111,6 +113,7 @@ const Index = () => {
           </div>
         </div>
       )}
+      </div> {/* Close main content wrapper */}
 
       <Footer />
     </div>
