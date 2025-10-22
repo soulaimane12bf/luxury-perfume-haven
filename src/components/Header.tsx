@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingCart, Search, Menu, Moon, Sun } from "lucide-react";
+import { ShoppingCart, Search, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { categoriesApi } from "@/lib/api";
 import { useCart } from "@/contexts/CartContext";
-import { useTheme } from "@/contexts/ThemeContext";
 import SearchDialog from "@/components/SearchDialog";
 import cosmedLogo from "@/assets/images/cosmed-logo.png";
 
@@ -20,7 +19,6 @@ const Header = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const { getTotalItems, openCart } = useCart();
-  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -69,25 +67,19 @@ const Header = () => {
                 alt="COSMED" 
                 className="h-12 md:h-14 w-auto object-contain transition-all duration-300 group-hover:scale-110"
                 style={{
-                  filter: isDark 
-                    ? 'drop-shadow(0 0 8px rgba(234, 179, 8, 0.4))' 
-                    : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))'
+                  filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))'
                 }}
               />
               {/* Gradient overlay effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-yellow-500/20 to-amber-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg blur-sm" />
             </div>
-            <p className="text-xs text-muted-foreground dark:text-foreground/70 font-medium tracking-wider mt-1">
+            <p className="text-xs text-muted-foreground font-medium tracking-wider mt-1">
               منتجات عالية الجودة
             </p>
           </Link>
 
-          {/* Right: Dark Mode, Search & Menu */}
+          {/* Right: Search & Menu */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="hover:bg-gold/10 transition-all duration-300">
-              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
-            
             <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)} className="hover:bg-gold/10 transition-all duration-300">
               <Search className="h-5 w-5" />
             </Button>

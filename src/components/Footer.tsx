@@ -86,11 +86,11 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-right">
           {/* About */}
           <div>
-            <h4 className="text-amber-600 dark:text-amber-500 font-bold text-lg mb-4">عن متجرنا</h4>
+            <h4 className="text-amber-600 font-bold text-lg mb-4">عن متجرنا</h4>
             <ul className="space-y-2">
               {footerLinks.about.map((link, index) => (
                 <li key={index}>
-                  <a href={link.href} className="text-foreground/70 dark:text-foreground/60 hover:text-amber-600 dark:hover:text-amber-500 transition-colors duration-300">
+                  <a href={link.href} className="text-foreground/70 hover:text-amber-600 transition-colors duration-300">
                     {link.name}
                   </a>
                 </li>
@@ -100,11 +100,11 @@ const Footer = () => {
 
           {/* Policies */}
           <div>
-            <h4 className="text-amber-600 dark:text-amber-500 font-bold text-lg mb-4">الشروط والسياسات</h4>
+            <h4 className="text-amber-600 font-bold text-lg mb-4">الشروط والسياسات</h4>
             <ul className="space-y-2">
               {footerLinks.policies.map((link, index) => (
                 <li key={index}>
-                  <a href={link.href} className="text-foreground/70 dark:text-foreground/60 hover:text-amber-600 dark:hover:text-amber-500 transition-colors duration-300">
+                  <a href={link.href} className="text-foreground/70 hover:text-amber-600 transition-colors duration-300">
                     {link.name}
                   </a>
                 </li>
@@ -114,11 +114,11 @@ const Footer = () => {
 
           {/* Contact */}
           <div>
-            <h4 className="text-amber-600 dark:text-amber-500 font-bold text-lg mb-4">اتصل بنا</h4>
+            <h4 className="text-amber-600 font-bold text-lg mb-4">اتصل بنا</h4>
             <ul className="space-y-2">
               {footerLinks.contact.map((link, index) => (
                 <li key={index}>
-                  <a href={link.href} className="text-foreground/70 dark:text-foreground/60 hover:text-amber-600 dark:hover:text-amber-500 transition-colors duration-300">
+                  <a href={link.href} className="text-foreground/70 hover:text-amber-600 transition-colors duration-300">
                     {link.name}
                   </a>
                 </li>
@@ -132,7 +132,7 @@ const Footer = () => {
           <div className="text-4xl font-bold bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2">
             و
           </div>
-          <p className="text-sm text-foreground/70 dark:text-foreground/60">
+          <p className="text-sm text-foreground/70">
             © 2024 متجر العطور الفاخرة. جميع الحقوق محفوظة.
           </p>
         </div>

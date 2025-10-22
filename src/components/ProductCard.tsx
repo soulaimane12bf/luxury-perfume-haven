@@ -31,36 +31,25 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <Card 
-      className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 cursor-pointer bg-white dark:bg-gray-900 group h-full flex flex-col"
+      className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 cursor-pointer bg-white group h-full flex flex-col"
       onClick={() => navigate(`/product/${product.id}`)}
     >
       <CardContent className="p-0 relative flex-shrink-0">
-        <div className="aspect-square relative overflow-hidden bg-gray-50 dark:bg-gray-800">
+        <div className="aspect-square relative overflow-hidden bg-gray-50">
           <img
             src={product.image_urls[0]}
             alt={product.name}
             loading="lazy"
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
-          {product.best_selling && (
-            <Badge className="absolute top-2 right-2 bg-red-500 text-white shadow-lg">
-              🔥 الأكثر مبيعاً
-            </Badge>
-          )}
           {discountPercentage && (
-            <Badge className="absolute top-2 left-2 bg-gradient-to-r from-green-600 to-green-500 text-white shadow-xl font-bold text-sm px-3 py-1 border-2 border-white">
-              🔥 خصم {discountPercentage}%
+            <Badge className="absolute top-2 left-2 bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg font-bold text-xs sm:text-sm px-2 sm:px-3 py-0.5 sm:py-1">
+              خصم {discountPercentage}%
             </Badge>
           )}
-          <Badge 
-            variant={product.type === 'PRODUIT' ? 'default' : 'secondary'} 
-            className="absolute bottom-2 left-2 shadow-md"
-          >
-            {product.type}
-          </Badge>
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start gap-3 p-4 md:p-6 bg-white dark:bg-gray-900 flex-grow">
+      <CardFooter className="flex flex-col items-start gap-3 p-4 md:p-6 bg-white flex-grow">
         <div className="w-full flex-grow flex flex-col">
           <p className="text-xs md:text-sm text-muted-foreground mb-1 uppercase tracking-wide">{product.brand}</p>
           <h3 className="text-sm md:text-base font-bold line-clamp-2 mb-2 h-[2.5rem]">{product.name}</h3>
@@ -96,7 +85,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </div>
           
           {product.stock < 10 && product.stock > 0 && (
-            <p className="text-xs text-red-500 font-semibold">⚠️ بقي {product.stock} فقط!</p>
+            <p className="text-xs text-red-500 font-semibold">بقي {product.stock} فقط!</p>
           )}
         </div>
         
