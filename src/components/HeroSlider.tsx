@@ -142,7 +142,7 @@ export function HeroSlider() {
     return () => {
       isMounted = false;
     };
-  }, [normalizeImageUrl]);
+  }, []); // Empty dependency array - normalizeImageUrl is stable
 
   // Handle carousel selection changes
   const onSelect = useCallback(() => {
