@@ -24,75 +24,82 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  // Calculate discount percentage if old_price exists
   const discountPercentage = product.old_price && product.old_price > product.price
     ? Math.round(((product.old_price - product.price) / product.old_price) * 100)
     : null;
 
   return (
     <Card 
-      className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 cursor-pointer bg-white group h-full flex flex-col"
+      className="relative overflow-hidden cursor-pointer bg-white group h-full flex flex-col border border-gray-100 transition-all duration-500 hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:-translate-y-1"
       onClick={() => navigate(`/product/${product.id}`)}
     >
+      {/* Golden accent line */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-600 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      
       <CardContent className="p-0 relative flex-shrink-0">
         <div className="aspect-square relative overflow-hidden bg-gray-50">
           <img
             src={product.image_urls[0]}
             alt={product.name}
             loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
           />
+          
+          {/* Overlay gradient on hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
           {discountPercentage && (
-            <Badge className="absolute top-2 left-2 bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg font-bold text-xs sm:text-sm px-2 sm:px-3 py-0.5 sm:py-1">
-              خصم {discountPercentage}%
+            <Badge className="absolute top-3 left-3 bg-black text-yellow-500 font-bold text-xs px-3 py-1 shadow-lg">
+              {discountPercentage}%-
             </Badge>
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start gap-2 p-3 md:p-4 bg-white flex-grow">
+
+      <CardFooter className="flex flex-col items-start gap-3 p-4 md:p-5 bg-white flex-grow">
         <div className="w-full flex-grow flex flex-col justify-between">
           <div>
-            <p className="text-xs text-gray-500 mb-0.5 uppercase tracking-wide">{product.brand}</p>
-            <h3 className="text-sm md:text-base font-semibold line-clamp-2 mb-2 h-[2.5rem]">{product.name}</h3>
+            <p className="text-xs text-gray-400 mb-1 uppercase tracking-widest font-medium">
+              {product.brand}
+            </p>
+            <h3 className="text-sm md:text-base font-semibold line-clamp-2 mb-3 text-gray-800 group-hover:text-black transition-colors duration-300">
+              {product.name}
+            </h3>
           </div>
           
           {product.rating > 0 && (
-            <div className="flex items-center gap-1 mb-2">
-              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-              <span className="text-xs text-gray-600 font-medium">{product.rating}</span>
+            <div className="flex items-center gap-1 mb-3">
+              <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500" />
+              <span className="text-xs text-gray-600 font-semibold">{product.rating}</span>
             </div>
           )}
           
-          <div className="flex items-center gap-2 flex-wrap">
-            {product.old_price && product.old_price > product.price ? (
-              <>
-                <span className="text-lg md:text-xl font-bold text-black">
-                  {product.price} د.م
-                </span>
-                <span className="text-sm text-gray-400 line-through">
-                  {product.old_price}
-                </span>
-              </>
-            ) : (
-              <span className="text-lg md:text-xl font-bold text-black">
-                {product.price} د.م
+          <div className="flex items-baseline gap-2 flex-wrap mb-1">
+            <span className="text-xl md:text-2xl font-bold text-black">
+              {product.price} د.م
+            </span>
+            {product.old_price && product.old_price > product.price && (
+              <span className="text-sm text-gray-400 line-through font-medium">
+                {product.old_price}
               </span>
             )}
           </div>
           
           {product.stock < 10 && product.stock > 0 && (
-            <p className="text-xs text-red-600 font-medium mt-1">بقي {product.stock} فقط</p>
+            <p className="text-xs text-red-600 font-medium">بقي {product.stock} فقط</p>
           )}
         </div>
         
         <Button
-          className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-2 text-sm transition-all duration-300"
+          className="w-full bg-black hover:bg-gray-900 text-yellow-500 font-bold py-5 transition-all duration-300 transform group-hover:shadow-[0_10px_30px_rgba(0,0,0,0.3)] relative overflow-hidden"
           onClick={(e) => {
             e.stopPropagation();
             addToCart(product, 1);
           }}
         >
-          اضغط هنا للطلب
+          <span className="relative z-10">اضغط هنا للطلب</span>
+          {/* Golden shine effect */}
+          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
         </Button>
       </CardFooter>
     </Card>
