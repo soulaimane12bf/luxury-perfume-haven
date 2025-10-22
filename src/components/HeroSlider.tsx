@@ -172,8 +172,7 @@ export function HeroSlider() {
             مرحباً بك في متجرنا
           </h2>
           <p className="text-xl md:text-2xl text-amber-700">
-            اكتشف عالم العطور الفاخرة
-          </p>
+            اكتشف عالم العطور الفاخرة          </p>
         </div>
       </div>
     );
