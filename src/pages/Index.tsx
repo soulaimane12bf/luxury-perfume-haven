@@ -1,21 +1,47 @@
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
-import ProductCard from "@/components/ProductCard";
-import { ProductGridSkeleton } from "@/components/ProductCardSkeleton";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { useProducts } from "@/lib/hooks/useApi";
 import { HeroSlider } from "@/components/HeroSlider";
+import { BestSellers } from "@/components/BestSellers";
+import { CategorySection } from "@/components/CategorySection";
+import { categoriesApi } from "@/lib/api";
+
+type Category = {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+};
 
 const Index = () => {
-  const { data: allProducts, isLoading, error } = useProducts({ category: 'men' });
-  
-  // Get first 6 products for homepage
-  const products = Array.isArray(allProducts) ? allProducts.slice(0, 6) : [];
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Show error toast if fetch fails
-  if (error) {
-    toast.error('فشل تحميل المنتجات');
-  }
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await categoriesApi.getAll();
+        setCategories(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        toast.error('فشل تحميل الفئات');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Gradient color combinations for each category
+  const gradients = [
+    { from: 'from-blue-500', to: 'to-indigo-600' },
+    { from: 'from-pink-500', to: 'to-rose-600' },
+    { from: 'from-purple-500', to: 'to-violet-600' },
+    { from: 'from-green-500', to: 'to-emerald-600' },
+    { from: 'from-orange-500', to: 'to-red-600' },
+    { from: 'from-cyan-500', to: 'to-blue-600' },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -24,30 +50,46 @@ const Index = () => {
       {/* Hero Slider Section */}
       <HeroSlider />
 
-      {/* Products Section */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12 space-y-3">
-          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-500 bg-clip-text text-transparent">
-            عطور الرجال
-          </h2>
-          <p className="text-xl text-muted-foreground font-medium">العطور الأصلية الأكثر شهرة</p>
-        </div>
+      {/* Best Sellers Section */}
+      <BestSellers />
 
-        {isLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-            <ProductGridSkeleton count={6} />
+      {/* Dynamic Category Sections */}
+      {!loading && categories.length > 0 && categories.map((category, index) => (
+        <div key={category.id}>
+          {/* Separator Line */}
+          <div className="container mx-auto px-4">
+            <div className="h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
           </div>
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-              />
-            ))}
+
+          {/* Category Section */}
+          <CategorySection
+            categoryId={category.id}
+            categorySlug={category.slug}
+            categoryName={category.name}
+            categoryDescription={category.description}
+            gradientFrom={gradients[index % gradients.length].from}
+            gradientTo={gradients[index % gradients.length].to}
+          />
+        </div>
+      ))}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="container mx-auto px-4 py-20">
+          <div className="flex justify-center items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
           </div>
-        )}
-      </section>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && categories.length === 0 && (
+        <div className="container mx-auto px-4 py-20">
+          <div className="text-center text-foreground/70 dark:text-foreground/60">
+            <p className="text-lg">لا توجد فئات متاحة حالياً</p>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

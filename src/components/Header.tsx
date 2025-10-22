@@ -7,6 +7,7 @@ import { categoriesApi } from "@/lib/api";
 import { useCart } from "@/contexts/CartContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import SearchDialog from "@/components/SearchDialog";
+import cosmedLogo from "@/assets/images/cosmed-logo.png";
 
 type Category = {
   id: string;
@@ -37,8 +38,8 @@ const Header = () => {
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm shadow-lg border-b border-border/50">
       {/* Top Bar */}
       <div className="bg-gradient-to-r from-black via-gray-900 to-black py-2.5">
-        <p className="text-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 animate-pulse">
-          🚚 التوصيل لجميع المدن ابتداء من 25 درهم فقط
+        <p className="text-center text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600">
+          التوصيل السريع لجميع المدن
         </p>
       </div>
 
@@ -61,12 +62,25 @@ const Header = () => {
           </Button>
 
           {/* Center: Logo */}
-          <div className="text-center">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 bg-clip-text text-transparent drop-shadow-lg">
-              و
-            </h1>
-            <p className="text-xs text-muted-foreground font-medium tracking-wider">عطور فاخرة</p>
-          </div>
+          <Link to="/" className="flex flex-col items-center group">
+            <div className="relative">
+              <img 
+                src={cosmedLogo} 
+                alt="COSMED" 
+                className="h-12 md:h-14 w-auto object-contain transition-all duration-300 group-hover:scale-110"
+                style={{
+                  filter: isDark 
+                    ? 'drop-shadow(0 0 8px rgba(234, 179, 8, 0.4))' 
+                    : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))'
+                }}
+              />
+              {/* Gradient overlay effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-yellow-500/20 to-amber-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg blur-sm" />
+            </div>
+            <p className="text-xs text-muted-foreground dark:text-foreground/70 font-medium tracking-wider mt-1">
+              منتجات عالية الجودة
+            </p>
+          </Link>
 
           {/* Right: Dark Mode, Search & Menu */}
           <div className="flex items-center gap-2">
