@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { BestSellingToggle } from '@/components/BestSellingToggle';
 import { Badge } from '@/components/ui/badge';
+import { compressImage } from '@/lib/imageCompression';
 import { 
   Table, 
   TableBody, 
@@ -246,8 +247,10 @@ export default function AdminDashboard() {
     let errorMessage = error?.message || 'حدث خطأ غير متوقع';
     let shouldLogout = false;
 
-    // Check if it's an auth error
-    if (error?.isAuthError || error?.status === 401 || error?.message?.includes('401')) {
+    // Check for specific error types
+    if (error?.status === 413 || error?.message?.includes('413')) {
+      errorMessage = 'حجم الصورة كبير جداً. يرجى اختيار صورة أصغر (أقل من 10MB).';
+    } else if (error?.isAuthError || error?.status === 401 || error?.message?.includes('401')) {
       errorMessage = 'انتهت جلستك. يرجى تسجيل الدخول مرة أخرى.';
       shouldLogout = true;
     } else if (error?.isNetworkError) {
@@ -590,9 +593,12 @@ export default function AdminDashboard() {
       // Create FormData for file upload
       const formData = new FormData();
       
-      // Add image file if selected
+      // Add image file if selected (with compression)
       if (sliderImage) {
-        formData.append('image', sliderImage);
+        console.log(`📸 Original image size: ${(sliderImage.size / 1024 / 1024).toFixed(2)}MB`);
+        const compressedImage = await compressImage(sliderImage, 3, 1920); // Max 3MB, max 1920px
+        console.log(`✅ Compressed image size: ${(compressedImage.size / 1024 / 1024).toFixed(2)}MB`);
+        formData.append('image', compressedImage);
       }
       
       // Add other fields
@@ -2016,6 +2022,9 @@ export default function AdminDashboard() {
                   accept="image/*"
                   onChange={(e) => setSliderImage(e.target.files?.[0] || null)}
                 />
+                <p className="text-xs text-muted-foreground">
+                  سيتم ضغط الصور الكبيرة تلقائياً. الحد الأقصى: 10MB
+                </p>
                 {(sliderForm.image_url || sliderImage) && (
                   <img 
                     src={sliderImage ? URL.createObjectURL(sliderImage) : sliderForm.image_url} 
