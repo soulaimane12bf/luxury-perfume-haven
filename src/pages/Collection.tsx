@@ -48,7 +48,7 @@ export default function Collection() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pt-[88px] md:pt-[92px]">
         {/* Header */}
         <div className="border-b">
           <div className="container py-8">
