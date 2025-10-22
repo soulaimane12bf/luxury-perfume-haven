@@ -27,7 +27,6 @@ export function HeroSlider() {
   const [sliders, setSliders] = useState<Slider[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [imagesLoaded, setImagesLoaded] = useState<Set<string>>(new Set());
   
   const autoplayRef = useRef(
     Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true })
@@ -77,33 +76,6 @@ export function HeroSlider() {
     console.warn(`⚠️ Could not normalize URL: ${trimmedUrl}`);
     return FALLBACK_IMAGE_DATA_URI;
   }, []);
-
-  // Handle image loading errors with retry logic
-  const handleImageError = useCallback(
-    (event: SyntheticEvent<HTMLImageElement>, sliderId: string) => {
-      const img = event.currentTarget;
-      const currentAttempt = parseInt(img.dataset.attempt || '0', 10);
-
-      console.error(`❌ Image load failed for slider ${sliderId}, attempt ${currentAttempt + 1}`);
-
-      // Try fallback after first failure
-      if (currentAttempt === 0) {
-        img.dataset.attempt = '1';
-        // Force browser to re-evaluate the image
-        img.src = FALLBACK_IMAGE_DATA_URI;
-      }
-    },
-    []
-  );
-
-  // Handle successful image load
-  const handleImageLoad = useCallback(
-    (sliderId: string) => {
-      console.log(`✅ Image loaded successfully for slider: ${sliderId}`);
-      setImagesLoaded((prev) => new Set(prev).add(sliderId));
-    },
-    []
-  );
 
   // Fetch active sliders from API
   useEffect(() => {
@@ -275,25 +247,18 @@ export function HeroSlider() {
               style={{ flex: '0 0 100%' }}
             >
               {/* Background Image */}
-              <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gray-800">
                 <img
                   src={slider.image_url}
                   alt={slider.title}
-                  data-attempt="0"
-                  data-slider-id={slider.id}
                   className="w-full h-full object-cover"
                   loading={index === 0 ? 'eager' : 'lazy'}
                   decoding="async"
-                  onLoad={() => handleImageLoad(slider.id)}
-                  onError={(e) => handleImageError(e, slider.id)}
+                  onError={(e) => {
+                    console.error(`Failed to load image for slider ${slider.id}`);
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
-                
-                {/* Loading indicator for image */}
-                {!imagesLoaded.has(slider.id) && (
-                  <div className="absolute inset-0 bg-amber-100 flex items-center justify-center">
-                    <div className="w-12 h-12 border-4 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                )}
               </div>
 
               {/* Content Overlay */}
