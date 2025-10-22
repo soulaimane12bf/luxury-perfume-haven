@@ -44,33 +44,42 @@ export function HeroSlider() {
 
   // Normalize image URL to handle different formats
   const normalizeImageUrl = useCallback((url: string | null | undefined): string => {
+    console.log('🔍 normalizeImageUrl input:', url);
+    
     if (!url || url.trim() === '') {
       console.warn('⚠️ Empty or null image URL provided');
       return FALLBACK_IMAGE_DATA_URI;
     }
 
     const trimmedUrl = url.trim();
+    console.log('🔍 trimmed URL:', trimmedUrl);
 
     // Already a data URI (base64 image)
     if (trimmedUrl.startsWith('data:image/')) {
+      console.log('✅ Detected data URI');
       return trimmedUrl;
     }
 
     // Full HTTP/HTTPS URL
     if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
+      console.log('✅ Detected full HTTP/HTTPS URL, returning as-is:', trimmedUrl);
       return trimmedUrl;
     }
 
     // Protocol-relative URL
     if (trimmedUrl.startsWith('//')) {
-      return `https:${trimmedUrl}`;
+      const result = `https:${trimmedUrl}`;
+      console.log('✅ Detected protocol-relative URL, converted to:', result);
+      return result;
     }
 
     // Relative URL - convert to absolute
     if (typeof window !== 'undefined') {
       const origin = window.location.origin;
       const path = trimmedUrl.startsWith('/') ? trimmedUrl : `/${trimmedUrl}`;
-      return `${origin}${path}`;
+      const result = `${origin}${path}`;
+      console.log('⚠️ Detected relative URL, converted to:', result);
+      return result;
     }
 
     console.warn(`⚠️ Could not normalize URL: ${trimmedUrl}`);
@@ -97,19 +106,23 @@ export function HeroSlider() {
             }
             return isValid;
           })
-          .map((slider: Slider) => ({
-            ...slider,
-            image_url: normalizeImageUrl(slider.image_url),
-            title: slider.title || 'عنوان الشريحة',
-            subtitle: slider.subtitle || '',
-            button_text: slider.button_text || 'تسوق الآن',
-            button_link: slider.button_link || '/collection',
-            order: slider.order ?? 0,
-            active: slider.active ?? true,
-          }))
+          .map((slider: Slider) => {
+            const normalizedUrl = normalizeImageUrl(slider.image_url);
+            console.log(`📸 Slider ${slider.id}: original="${slider.image_url}" -> normalized="${normalizedUrl}"`);
+            return {
+              ...slider,
+              image_url: normalizedUrl,
+              title: slider.title || 'عنوان الشريحة',
+              subtitle: slider.subtitle || '',
+              button_text: slider.button_text || 'تسوق الآن',
+              button_link: slider.button_link || '/collection',
+              order: slider.order ?? 0,
+              active: slider.active ?? true,
+            };
+          })
           .sort((a, b) => a.order - b.order);
 
-        console.log(`✅ Loaded ${validSliders.length} valid sliders`);
+        console.log(`✅ Loaded ${validSliders.length} valid sliders`, validSliders);
         setSliders(validSliders);
       } catch (error) {
         console.error('❌ Failed to fetch sliders:', error);
