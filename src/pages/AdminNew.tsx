@@ -568,31 +568,50 @@ export default function AdminDashboard() {
 
   const handleSaveSlider = async () => {
     try {
-      let imageUrl = sliderForm.image_url;
-      
-      // Convert new image to base64 if uploaded
-      if (sliderImage) {
-        const reader = new FileReader();
-        imageUrl = await new Promise<string>((resolve) => {
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(sliderImage);
+      // Validate required fields
+      if (!sliderImage && !editingSlider) {
+        toast({ 
+          title: '❌ خطأ', 
+          description: 'يرجى اختيار صورة للسلايدر',
+          variant: 'destructive',
         });
+        return;
       }
 
-      const sliderData = {
-        ...sliderForm,
-        image_url: imageUrl,
-      };
+      if (!sliderForm.title) {
+        toast({ 
+          title: '❌ خطأ', 
+          description: 'يرجى إدخال عنوان السلايدر',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Create FormData for file upload
+      const formData = new FormData();
+      
+      // Add image file if selected
+      if (sliderImage) {
+        formData.append('image', sliderImage);
+      }
+      
+      // Add other fields
+      formData.append('title', sliderForm.title);
+      formData.append('subtitle', sliderForm.subtitle);
+      formData.append('button_text', sliderForm.button_text);
+      formData.append('button_link', sliderForm.button_link);
+      formData.append('order', sliderForm.order.toString());
+      formData.append('active', sliderForm.active.toString());
 
       if (editingSlider) {
-        await slidersApi.update(editingSlider.id, sliderData);
+        await slidersApi.update(editingSlider.id, formData);
         toast({ 
           title: '✅ نجح', 
           description: 'تم تحديث السلايدر بنجاح',
           className: 'bg-green-50 border-green-200',
         });
       } else {
-        await slidersApi.create(sliderData);
+        await slidersApi.create(formData);
         toast({ 
           title: '✅ نجح', 
           description: 'تم إضافة السلايدر بنجاح',
@@ -601,6 +620,7 @@ export default function AdminDashboard() {
       }
       
       setSliderDialog(false);
+      setSliderImage(null);
       fetchAllData();
     } catch (error: any) {
       handleApiError(error, editingSlider ? 'تحديث السلايدر' : 'إضافة السلايدر');
