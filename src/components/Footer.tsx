@@ -19,17 +19,17 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-primary text-primary-foreground mt-20">
+    <footer className="bg-background text-foreground border-t border-border/50 mt-20">
       {/* Social Section */}
-      <div className="border-b border-gold/20 py-12">
+      <div className="border-b border-amber-500/20 py-12">
         <div className="container mx-auto px-4 text-center">
-          <h3 className="text-2xl font-bold mb-6 gradient-gold bg-clip-text text-transparent">
+          <h3 className="text-2xl font-bold mb-6 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 bg-clip-text text-transparent">
             تابعنا على مواقع التواصل
           </h3>
           <div className="flex justify-center gap-6">
             <a
               href="#"
-              className="flex items-center justify-center w-12 h-12 bg-gold rounded-full hover-scale transition-smooth"
+              className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-amber-600 to-yellow-600 text-white rounded-full hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl"
               aria-label="WhatsApp"
             >
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -38,14 +38,14 @@ const Footer = () => {
             </a>
             <a
               href="#"
-              className="flex items-center justify-center w-12 h-12 bg-gold rounded-full hover-scale transition-smooth"
+              className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-amber-600 to-yellow-600 text-white rounded-full hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl"
               aria-label="Instagram"
             >
               <Instagram className="w-6 h-6" />
             </a>
             <a
               href="#"
-              className="flex items-center justify-center w-12 h-12 bg-gold rounded-full hover-scale transition-smooth"
+              className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-amber-600 to-yellow-600 text-white rounded-full hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl"
               aria-label="Facebook"
             >
               <Facebook className="w-6 h-6" />
@@ -59,11 +59,11 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-right">
           {/* About */}
           <div>
-            <h4 className="text-gold font-bold text-lg mb-4">عن متجرنا</h4>
+            <h4 className="text-amber-600 dark:text-amber-500 font-bold text-lg mb-4">عن متجرنا</h4>
             <ul className="space-y-2">
               {footerLinks.about.map((link, index) => (
                 <li key={index}>
-                  <a href={link.href} className="hover:text-gold transition-smooth">
+                  <a href={link.href} className="text-foreground/70 dark:text-foreground/60 hover:text-amber-600 dark:hover:text-amber-500 transition-colors duration-300">
                     {link.name}
                   </a>
                 </li>
@@ -73,11 +73,11 @@ const Footer = () => {
 
           {/* Policies */}
           <div>
-            <h4 className="text-gold font-bold text-lg mb-4">الشروط والسياسات</h4>
+            <h4 className="text-amber-600 dark:text-amber-500 font-bold text-lg mb-4">الشروط والسياسات</h4>
             <ul className="space-y-2">
               {footerLinks.policies.map((link, index) => (
                 <li key={index}>
-                  <a href={link.href} className="hover:text-gold transition-smooth">
+                  <a href={link.href} className="text-foreground/70 dark:text-foreground/60 hover:text-amber-600 dark:hover:text-amber-500 transition-colors duration-300">
                     {link.name}
                   </a>
                 </li>
@@ -87,11 +87,11 @@ const Footer = () => {
 
           {/* Contact */}
           <div>
-            <h4 className="text-gold font-bold text-lg mb-4">اتصل بنا</h4>
+            <h4 className="text-amber-600 dark:text-amber-500 font-bold text-lg mb-4">اتصل بنا</h4>
             <ul className="space-y-2">
               {footerLinks.contact.map((link, index) => (
                 <li key={index}>
-                  <a href={link.href} className="hover:text-gold transition-smooth">
+                  <a href={link.href} className="text-foreground/70 dark:text-foreground/60 hover:text-amber-600 dark:hover:text-amber-500 transition-colors duration-300">
                     {link.name}
                   </a>
                 </li>
@@ -101,11 +101,11 @@ const Footer = () => {
         </div>
 
         {/* Bottom Logo */}
-        <div className="text-center mt-12 pt-8 border-t border-gold/20">
-          <div className="text-4xl font-bold gradient-gold bg-clip-text text-transparent mb-2">
+        <div className="text-center mt-12 pt-8 border-t border-amber-500/20">
+          <div className="text-4xl font-bold bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2">
             و
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-foreground/70 dark:text-foreground/60">
             © 2024 متجر العطور الفاخرة. جميع الحقوق محفوظة.
           </p>
         </div>
