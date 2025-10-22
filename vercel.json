@@ -18,7 +18,6 @@
     "api/**/*.js": {
       "memory": 1024,
       "maxDuration": 30,
-      "maxRequestBodySize": "10mb",
       "includeFiles": "{node_modules/pg/**,backend/node_modules/{multer,@vercel}/**}"
     }
   }
