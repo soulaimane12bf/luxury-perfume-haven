@@ -240,7 +240,15 @@ export function HeroSlider() {
       {/* Embla Carousel Container */}
       <div className="embla h-full w-full" ref={emblaRef}>
         <div className="embla__container flex h-full">
-          {sliders.map((slider, index) => (
+          {sliders.map((slider, index) => {
+            console.log(`🖼️ Rendering slider ${index}:`, {
+              id: slider.id,
+              title: slider.title,
+              image_url: slider.image_url,
+              order: slider.order
+            });
+            
+            return (
             <div
               key={slider.id}
               className="embla__slide relative min-w-full h-full flex-shrink-0"
@@ -254,8 +262,9 @@ export function HeroSlider() {
                   className="w-full h-full object-cover"
                   loading={index === 0 ? 'eager' : 'lazy'}
                   decoding="async"
+                  onLoad={() => console.log(`✅ Loaded image ${index}: ${slider.image_url}`)}
                   onError={(e) => {
-                    console.error(`Failed to load image for slider ${slider.id}`);
+                    console.error(`❌ Failed to load image ${index} for slider ${slider.id}: ${slider.image_url}`);
                     e.currentTarget.style.display = 'none';
                   }}
                 />
@@ -287,7 +296,8 @@ export function HeroSlider() {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
