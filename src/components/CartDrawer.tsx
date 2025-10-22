@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, X, ShoppingBag } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
@@ -42,12 +42,25 @@ const CartDrawer = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={closeCart}>
-      <SheetContent side="left" className="w-full sm:w-[420px] bg-background/95 backdrop-blur-xl border-r-2 border-gold/20">
-        <SheetHeader>
+      <SheetContent
+        side="right"
+        className="w-full sm:w-[420px] bg-background/95 backdrop-blur-xl border-l-2 border-gold/20 [&>button:last-of-type]:hidden"
+      >
+        <SheetHeader className="flex flex-row items-center justify-between space-y-0 text-left">
           <SheetTitle className="text-2xl font-bold flex items-center gap-2">
             <ShoppingBag className="h-6 w-6 text-gold" />
             سلة مشترياتي
           </SheetTitle>
+          <SheetClose asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 text-muted-foreground hover:text-foreground border border-transparent hover:border-gold/40 rounded-full transition-colors"
+              onClick={closeCart}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </SheetClose>
         </SheetHeader>
 
         <div className="flex flex-col h-full mt-6">

@@ -104,4 +104,41 @@ export function checkoutCartWhatsApp(cartItems: Product[]): void {
   openWhatsAppCheckout(message);
 }
 
+/**
+ * Generate WhatsApp URL to contact a customer about their order
+ */
+export function generateCustomerWhatsAppUrl(
+  customerPhone: string,
+  orderDetails?: {
+    orderId: string;
+    customerName: string;
+    totalAmount: number;
+  }
+): string {
+  // Remove any non-digit characters from phone number
+  let cleanPhone = customerPhone.replace(/\D/g, '');
+  
+  // If phone starts with 0, replace with country code (assuming Morocco +212)
+  if (cleanPhone.startsWith('0')) {
+    cleanPhone = '212' + cleanPhone.substring(1);
+  }
+  // If phone doesn't start with country code, add Morocco code
+  else if (!cleanPhone.startsWith('212') && !cleanPhone.startsWith('00212')) {
+    cleanPhone = '212' + cleanPhone;
+  }
+  // Remove leading 00 if present
+  if (cleanPhone.startsWith('00')) {
+    cleanPhone = cleanPhone.substring(2);
+  }
+
+  // Generate optional message about the order (use api.whatsapp.com for better encoding support)
+  if (orderDetails) {
+    const message = `مرحباً ${orderDetails.customerName}، أتواصل معك بخصوص طلبك رقم ${orderDetails.orderId} بقيمة ${orderDetails.totalAmount} درهم.`;
+    return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
+  }
+
+  // If no message, just open chat with the customer
+  return `https://wa.me/${cleanPhone}`;
+}
+
 export { WHATSAPP_NUMBER };

@@ -19,6 +19,11 @@ const Product = sequelize.define('Product', {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false
   },
+  old_price: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    comment: 'Original price before discount'
+  },
   category: {
     type: DataTypes.STRING,
     allowNull: false

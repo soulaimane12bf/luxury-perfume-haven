@@ -12,11 +12,13 @@ import reviewRoutes from './routes/reviews.js';
 import authRoutes from './routes/auth.js';
 import orderRoutes from './routes/orders.js';
 import profileRoutes from './routes/profile.js';
+import sliderRoutes from './routes/sliderRoutes.js';
 
 import Product from './models/product.js';
 import Category from './models/category.js';
 import Review from './models/review.js';
 import Admin from './models/admin.js';
+import Slider from './models/slider.js';
 
 dotenv.config();
 
@@ -54,7 +56,8 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Increase limit for base64 image uploads
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 
 // Track the database readiness state. This will be true if the DB initializes
@@ -179,6 +182,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/sliders', sliderRoutes);
 
 // Health check
 app.get('/api/health', async (req, res) => {

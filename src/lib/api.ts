@@ -363,3 +363,51 @@ export const profileApi = {
     }, 'تغيير كلمة المرور');
   },
 };
+
+// Sliders API
+export const slidersApi = {
+  // Public - get active sliders
+  getActive: async () => {
+    return apiCall(`${API_BASE_URL}/sliders/active`, {}, 'جلب السلايدر');
+  },
+
+  // Admin - get all sliders
+  getAll: async () => {
+    return apiCall(`${API_BASE_URL}/sliders`, {
+      headers: withAuth(),
+    }, 'جلب جميع السلايدرات');
+  },
+
+  // Admin - get single slider
+  getById: async (id: string) => {
+    return apiCall(`${API_BASE_URL}/sliders/${id}`, {
+      headers: withAuth(),
+    }, 'جلب تفاصيل السلايدر');
+  },
+
+  // Admin - create slider
+  create: async (sliderData: any) => {
+    return apiCall(`${API_BASE_URL}/sliders`, {
+      method: 'POST',
+      headers: withAuth({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(sliderData),
+    }, 'إنشاء سلايدر');
+  },
+
+  // Admin - update slider
+  update: async (id: string, sliderData: any) => {
+    return apiCall(`${API_BASE_URL}/sliders/${id}`, {
+      method: 'PUT',
+      headers: withAuth({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(sliderData),
+    }, 'تحديث السلايدر');
+  },
+
+  // Admin - delete slider
+  delete: async (id: string) => {
+    return apiCall(`${API_BASE_URL}/sliders/${id}`, {
+      method: 'DELETE',
+      headers: withAuth(),
+    }, 'حذف السلايدر');
+  },
+};
