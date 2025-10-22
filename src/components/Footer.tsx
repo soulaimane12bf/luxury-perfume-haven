@@ -1,4 +1,5 @@
 import { Facebook, Instagram } from "lucide-react";
+import cosmedLogo from "@/assets/images/cosmed-logo.png";
 
 const Footer = () => {
   const footerLinks = {
@@ -129,11 +130,15 @@ const Footer = () => {
 
         {/* Bottom Logo */}
         <div className="text-center mt-12 pt-8 border-t border-amber-500/20">
-          <div className="text-4xl font-bold bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2">
-            و
+          <div className="flex justify-center mb-4">
+            <img 
+              src={cosmedLogo} 
+              alt="COSMED" 
+              className="h-20 w-auto object-contain"
+            />
           </div>
           <p className="text-sm text-foreground/70">
-            © 2024 متجر العطور الفاخرة. جميع الحقوق محفوظة.
+            © 2024 COSMED - متجر العطور الفاخرة. جميع الحقوق محفوظة.
           </p>
         </div>
       </div>

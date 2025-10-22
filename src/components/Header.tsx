@@ -93,8 +93,17 @@ const Header = () => {
               </SheetTrigger>
               <SheetContent side="left" className="w-[280px] sm:w-[320px] bg-white border-r-2 border-gold/30 p-0 z-[200]">
                 <div className="flex flex-col h-full">
+                  {/* Logo at top */}
+                  <div className="flex justify-center py-6 border-b-2 border-gold/30 bg-gradient-to-b from-gold/5 to-transparent">
+                    <img 
+                      src={cosmedLogo} 
+                      alt="COSMED" 
+                      className="h-24 w-auto object-contain"
+                    />
+                  </div>
+
                   {/* Search Input */}
-                  <div className="px-4 py-6 border-b border-gray-200">
+                  <div className="px-4 py-4 border-b border-gray-200">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input
@@ -134,18 +143,6 @@ const Header = () => {
                       </Link>
                     ))}
                   </nav>
-
-                  {/* Logo at bottom */}
-                  <div className="flex justify-center py-6 border-t-2 border-gold/30 bg-gradient-to-t from-gold/5 to-transparent mt-auto">
-                    <img 
-                      src={cosmedLogo} 
-                      alt="COSMED" 
-                      className="h-20 w-auto object-contain"
-                      style={{
-                        filter: 'drop-shadow(0 2px 8px rgba(234, 179, 8, 0.3))'
-                      }}
-                    />
-                  </div>
                 </div>
               </SheetContent>
             </Sheet>
