@@ -8,9 +8,9 @@ const Slider = sequelize.define('Slider', {
     defaultValue: () => `slider-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
   },
   image_url: {
-    type: DataTypes.TEXT('long'), // Use LONGTEXT to support large base64 images (up to 4GB)
+    type: DataTypes.STRING(500), // Store Vercel Blob URL (shorter than base64)
     allowNull: false,
-    comment: 'URL or base64 data of the slider image'
+    comment: 'Vercel Blob Storage URL of the slider image'
   },
   title: {
     type: DataTypes.STRING,

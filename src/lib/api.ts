@@ -385,21 +385,21 @@ export const slidersApi = {
     }, 'جلب تفاصيل السلايدر');
   },
 
-  // Admin - create slider
-  create: async (sliderData: any) => {
+  // Admin - create slider with file upload
+  create: async (formData: FormData) => {
     return apiCall(`${API_BASE_URL}/sliders`, {
       method: 'POST',
-      headers: withAuth({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(sliderData),
+      headers: withAuth(), // Don't set Content-Type, let browser set it with boundary
+      body: formData,
     }, 'إنشاء سلايدر');
   },
 
-  // Admin - update slider
-  update: async (id: string, sliderData: any) => {
+  // Admin - update slider with optional file upload
+  update: async (id: string, formData: FormData) => {
     return apiCall(`${API_BASE_URL}/sliders/${id}`, {
       method: 'PUT',
-      headers: withAuth({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(sliderData),
+      headers: withAuth(), // Don't set Content-Type, let browser set it with boundary
+      body: formData,
     }, 'تحديث السلايدر');
   },
 
