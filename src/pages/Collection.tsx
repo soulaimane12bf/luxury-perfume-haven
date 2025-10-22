@@ -81,7 +81,7 @@ export default function Collection() {
                   تصفية
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-80 overflow-y-auto">
+              <SheetContent side="left" className="w-80 overflow-y-auto">
                 <FilterBar 
                   filters={filters} 
                   onFilterChange={handleFilterChange}

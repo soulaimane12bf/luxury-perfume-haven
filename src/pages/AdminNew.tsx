@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, Fragment } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AdminNavbar from '@/components/AdminNavbar';
 import AdminProfile from '@/components/AdminProfile';
 import AdminSidebar from '@/components/AdminSidebar';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { BestSellingToggle } from '@/components/BestSellingToggle';
 import { Badge } from '@/components/ui/badge';
 import { 
   Table, 
@@ -43,7 +43,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { productsApi, categoriesApi, reviewsApi, ordersApi } from '@/lib/api';
+import { generateCustomerWhatsAppUrl } from '@/lib/whatsapp';
+import { productsApi, categoriesApi, reviewsApi, ordersApi, slidersApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { 
@@ -66,6 +67,7 @@ type Product = {
   name: string;
   brand: string;
   price: string;
+  old_price?: string;
   category: string;
   type: string;
   size: string;
@@ -85,7 +87,7 @@ type Category = {
   name: string;
   slug: string;
   description: string;
-  image_url: string;
+  image_url?: string;
 };
 
 type Review = {
@@ -98,14 +100,28 @@ type Review = {
 };
 
 type DeleteTarget = {
-  type: 'product' | 'category' | 'review' | 'order';
+  type: 'product' | 'category' | 'review' | 'order' | 'slider';
   id: string;
   name?: string;
   meta?: string;
 };
 
+const ADMIN_TABS = ['orders', 'products', 'categories', 'reviews', 'bestsellers', 'sliders', 'profile'] as const;
+type AdminTab = typeof ADMIN_TABS[number];
+const DEFAULT_ADMIN_TAB: AdminTab = 'orders';
+
+type CategoryForm = {
+  name: string;
+  slug: string;
+  description: string;
+};
+
+const isAdminTab = (value: string | null): value is AdminTab =>
+  Boolean(value && (ADMIN_TABS as readonly string[]).includes(value));
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { isAuthenticated, token, loading: authLoading } = useAuth();
   
@@ -113,8 +129,13 @@ export default function AdminDashboard() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [sliders, setSliders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('orders');
+  const [activeTab, setActiveTabState] = useState<AdminTab>(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    return isAdminTab(tabParam) ? tabParam : DEFAULT_ADMIN_TAB;
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
@@ -122,6 +143,13 @@ export default function AdminDashboard() {
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const closeSidebar = () => setIsSidebarOpen(false);
+  const handleTabChange = (tab: string) => {
+    if (isAdminTab(tab)) {
+      setActiveTabState(tab);
+    } else {
+      setActiveTabState(DEFAULT_ADMIN_TAB);
+    }
+  };
   
   const toggleOrderDetails = (orderId: string) => {
     setExpandedOrders(prev => {
@@ -143,11 +171,12 @@ export default function AdminDashboard() {
     name: '',
     brand: '',
     price: '',
+    old_price: '',
     category: '',
     type: 'PRODUIT',
     size: '100ml',
     description: '',
-    stock: 0,
+    stock: '' as string | number,
   });
   const [productImages, setProductImages] = useState<File[]>([]);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
@@ -155,12 +184,25 @@ export default function AdminDashboard() {
   // Category form state
   const [categoryDialog, setCategoryDialog] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [categoryForm, setCategoryForm] = useState({
+  const [categoryForm, setCategoryForm] = useState<CategoryForm>({
     name: '',
     slug: '',
     description: '',
-    image_url: '',
   });
+
+  // Slider form state
+  const [sliderDialog, setSliderDialog] = useState(false);
+  const [editingSlider, setEditingSlider] = useState<any | null>(null);
+  const [sliderForm, setSliderForm] = useState({
+    image_url: '',
+    title: '',
+    subtitle: '',
+    button_text: '',
+    button_link: '',
+    order: 0,
+    active: true,
+  });
+  const [sliderImage, setSliderImage] = useState<File | null>(null);
 
   // Check authentication
   useEffect(() => {
@@ -180,6 +222,22 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchAllData();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    const normalizedTab = isAdminTab(tabParam) ? tabParam : DEFAULT_ADMIN_TAB;
+    setActiveTabState((current) => (current === normalizedTab ? current : normalizedTab));
+  }, [location.search]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('tab') === activeTab) {
+      return;
+    }
+    params.set('tab', activeTab);
+    navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
+  }, [activeTab, location.pathname, location.search, navigate]);
 
   // Helper function to handle API errors
   const handleApiError = (error: any, operation: string) => {
@@ -207,9 +265,51 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleContactCustomer = (order: any) => {
+    const whatsappUrl = generateCustomerWhatsAppUrl(
+      order.customer_phone,
+      {
+        orderId: order.id,
+        customerName: order.customer_name,
+        totalAmount: order.total_amount,
+      }
+    );
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const formatOrderDate = (order: any): string => {
+    try {
+      // Try both created_at (snake_case from DB) and createdAt (camelCase from Sequelize)
+      const dateValue = order.created_at || order.createdAt || order.updatedAt || order.updated_at;
+      
+      if (!dateValue) {
+        console.warn('No date field found in order:', order);
+        return 'لا يوجد تاريخ';
+      }
+      
+      const date = new Date(dateValue);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date value:', dateValue);
+        return 'تاريخ غير صالح';
+      }
+      
+      return date.toLocaleDateString('ar-MA', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'تاريخ غير صالح';
+    }
+  };
+
   const fetchAllData = async () => {
     try {
-      const [productsData, categoriesData, reviewsData, ordersData] = await Promise.all([
+      const [productsData, categoriesData, reviewsData, ordersData, slidersData] = await Promise.all([
         productsApi.getAll({}).catch((err) => {
           console.error('Error fetching products:', err);
           return [];
@@ -226,6 +326,10 @@ export default function AdminDashboard() {
           console.error('Error fetching orders:', err);
           return [];
         }),
+        slidersApi.getAll().catch((err) => {
+          console.error('Error fetching sliders:', err);
+          return [];
+        }),
       ]);
       
       // Ensure we always have arrays
@@ -233,6 +337,7 @@ export default function AdminDashboard() {
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
       setReviews(Array.isArray(reviewsData) ? reviewsData : []);
       setOrders(Array.isArray(ordersData) ? ordersData : []);
+      setSliders(Array.isArray(slidersData) ? slidersData : []);
     } catch (error: any) {
       console.error('Error fetching data:', error);
       // Set empty arrays as fallback
@@ -240,6 +345,7 @@ export default function AdminDashboard() {
       setCategories([]);
       setReviews([]);
       setOrders([]);
+      setSliders([]);
       handleApiError(error, 'تحميل البيانات');
     } finally {
       setLoading(false);
@@ -255,6 +361,7 @@ export default function AdminDashboard() {
         name: product.name,
         brand: product.brand,
         price: product.price,
+        old_price: product.old_price || '',
         category: product.category,
         type: product.type,
         size: product.size || '100ml',
@@ -270,11 +377,12 @@ export default function AdminDashboard() {
         name: '',
         brand: '',
         price: '',
+        old_price: '',
         category: '',
         type: 'PRODUIT',
         size: '100ml',
         description: '',
-        stock: 0,
+        stock: '',
       });
       setExistingImageUrls([]);
       setProductImages([]);
@@ -305,6 +413,8 @@ export default function AdminDashboard() {
       const productData = {
         ...productForm,
         price: parseFloat(productForm.price),
+        old_price: productForm.old_price ? parseFloat(productForm.old_price) : null,
+        stock: typeof productForm.stock === 'string' && productForm.stock === '' ? 0 : Number(productForm.stock),
         notes: null, // Remove notes
         image_urls: imageUrls,
       };
@@ -372,7 +482,6 @@ export default function AdminDashboard() {
         name: category.name,
         slug: category.slug,
         description: category.description || '',
-        image_url: category.image_url || '',
       });
     } else {
       setEditingCategory(null);
@@ -380,7 +489,6 @@ export default function AdminDashboard() {
         name: '',
         slug: '',
         description: '',
-        image_url: '',
       });
     }
     setCategoryDialog(true);
@@ -388,15 +496,18 @@ export default function AdminDashboard() {
 
   const handleSaveCategory = async () => {
     try {
+      const payload = editingCategory
+        ? { ...categoryForm, image_url: editingCategory.image_url }
+        : categoryForm;
       if (editingCategory) {
-        await categoriesApi.update(editingCategory.id, categoryForm);
+        await categoriesApi.update(editingCategory.id, payload);
         toast({ 
           title: '✅ نجح', 
           description: 'تم تحديث الفئة بنجاح',
           className: 'bg-green-50 border-green-200',
         });
       } else {
-        await categoriesApi.create(categoryForm);
+        await categoriesApi.create(payload);
         toast({ 
           title: '✅ نجح', 
           description: 'تم إضافة الفئة بنجاح',
@@ -426,9 +537,94 @@ export default function AdminDashboard() {
     }
   };
 
+  // Slider handlers
+  const openSliderDialog = (slider?: any) => {
+    if (slider) {
+      setEditingSlider(slider);
+      setSliderForm({
+        image_url: slider.image_url || '',
+        title: slider.title || '',
+        subtitle: slider.subtitle || '',
+        button_text: slider.button_text || '',
+        button_link: slider.button_link || '',
+        order: slider.order || 0,
+        active: slider.active !== undefined ? slider.active : true,
+      });
+    } else {
+      setEditingSlider(null);
+      setSliderForm({
+        image_url: '',
+        title: '',
+        subtitle: '',
+        button_text: '',
+        button_link: '',
+        order: 0,
+        active: true,
+      });
+    }
+    setSliderImage(null);
+    setSliderDialog(true);
+  };
+
+  const handleSaveSlider = async () => {
+    try {
+      let imageUrl = sliderForm.image_url;
+      
+      // Convert new image to base64 if uploaded
+      if (sliderImage) {
+        const reader = new FileReader();
+        imageUrl = await new Promise<string>((resolve) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(sliderImage);
+        });
+      }
+
+      const sliderData = {
+        ...sliderForm,
+        image_url: imageUrl,
+      };
+
+      if (editingSlider) {
+        await slidersApi.update(editingSlider.id, sliderData);
+        toast({ 
+          title: '✅ نجح', 
+          description: 'تم تحديث السلايدر بنجاح',
+          className: 'bg-green-50 border-green-200',
+        });
+      } else {
+        await slidersApi.create(sliderData);
+        toast({ 
+          title: '✅ نجح', 
+          description: 'تم إضافة السلايدر بنجاح',
+          className: 'bg-green-50 border-green-200',
+        });
+      }
+      
+      setSliderDialog(false);
+      fetchAllData();
+    } catch (error: any) {
+      handleApiError(error, editingSlider ? 'تحديث السلايدر' : 'إضافة السلايدر');
+    }
+  };
+
+  const handleDeleteSlider = async (sliderId: string) => {
+    try {
+      await slidersApi.delete(sliderId);
+      toast({ 
+        title: '✅ نجح', 
+        description: 'تم حذف السلايدر',
+        className: 'bg-green-50 border-green-200',
+      });
+      fetchAllData();
+    } catch (error: any) {
+      handleApiError(error, 'حذف السلايدر');
+      throw error;
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
-    setActiveTab('orders');
+    setActiveTabState('orders');
     closeSidebar();
     toast({
       title: 'تم تسجيل الخروج',
@@ -525,6 +721,9 @@ export default function AdminDashboard() {
         case 'order':
           await handleDeleteOrder(deleteTarget.id);
           break;
+        case 'slider':
+          await handleDeleteSlider(deleteTarget.id);
+          break;
       }
       setDeleteDialogOpen(false);
       setDeleteTarget(null);
@@ -541,7 +740,7 @@ export default function AdminDashboard() {
         <div className="hidden md:flex">
           <AdminSidebar
             activeTab={activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={handleTabChange}
             onLogout={handleLogout}
             className="md:translate-x-0"
           />
@@ -557,7 +756,7 @@ export default function AdminDashboard() {
               <AdminSidebar
                 activeTab={activeTab}
                 onTabChange={(tab) => {
-                  setActiveTab(tab);
+                  handleTabChange(tab);
                   closeSidebar();
                 }}
                 onLogout={handleLogout}
@@ -605,6 +804,7 @@ export default function AdminDashboard() {
     category: 'الفئة',
     review: 'التقييم',
     order: 'الطلب',
+    slider: 'الصورة',
   };
 
   const deleteTargetLabel = deleteTarget ? deleteLabels[deleteTarget.type] : '';
@@ -617,7 +817,7 @@ export default function AdminDashboard() {
       <div className="hidden md:flex">
         <AdminSidebar 
           activeTab={activeTab} 
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
           onLogout={handleLogout}
         />
       </div>
@@ -632,7 +832,7 @@ export default function AdminDashboard() {
             <AdminSidebar
               activeTab={activeTab}
               onTabChange={(tab) => {
-                setActiveTab(tab);
+                handleTabChange(tab);
                 closeSidebar();
               }}
               onLogout={handleLogout}
@@ -651,7 +851,7 @@ export default function AdminDashboard() {
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-black">
           <div className="container py-4 md:py-8 px-4">
             <div className="md:hidden mb-4">
-              <Select value={activeTab} onValueChange={setActiveTab}>
+              <Select value={activeTab} onValueChange={handleTabChange}>
                 <SelectTrigger className="justify-between bg-white/80 dark:bg-gray-900/60">
                   <SelectValue placeholder="اختر القسم" />
                 </SelectTrigger>
@@ -736,8 +936,8 @@ export default function AdminDashboard() {
                     </TableHeader>
                     <TableBody>
                       {orders.map((order: any) => (
-                        <>
-                          <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50" onClick={() => toggleOrderDetails(order.id)}>
+                        <Fragment key={order.id}>
+                          <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => toggleOrderDetails(order.id)}>
                             <TableCell className="font-mono text-xs">
                               <div className="flex items-center gap-2">
                                 {expandedOrders.has(order.id) ? (
@@ -773,20 +973,18 @@ export default function AdminDashboard() {
                               </Select>
                             </TableCell>
                             <TableCell className="text-xs">
-                              {new Date(order.created_at).toLocaleDateString('ar-MA')}
+                              {formatOrderDate(order)}
                             </TableCell>
                             <TableCell onClick={(e) => e.stopPropagation()}>
                               <div className="flex gap-2">
-                                {order.whatsapp_url && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => window.open(order.whatsapp_url, '_blank')}
-                                    title="إرسال إشعار واتساب"
-                                  >
-                                    <MessageCircle className="h-4 w-4 text-green-600" />
-                                  </Button>
-                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleContactCustomer(order)}
+                                  title="تواصل مع العميل عبر واتساب"
+                                >
+                                  <MessageCircle className="h-4 w-4 text-green-600" />
+                                </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -798,7 +996,7 @@ export default function AdminDashboard() {
                             </TableCell>
                           </TableRow>
                           {expandedOrders.has(order.id) && (
-                            <TableRow>
+                            <TableRow key={`${order.id}-details`}>
                               <TableCell colSpan={6} className="bg-muted/30">
                                 <div className="p-4 space-y-4">
                                   <div className="grid grid-cols-2 gap-4">
@@ -849,7 +1047,7 @@ export default function AdminDashboard() {
                               </TableCell>
                             </TableRow>
                           )}
-                        </>
+                        </Fragment>
                       ))}
                     </TableBody>
                   </Table>
@@ -930,7 +1128,7 @@ export default function AdminDashboard() {
                               </div>
                             )}
                             <div className="text-xs text-muted-foreground">
-                              التاريخ: {new Date(order.created_at).toLocaleDateString('ar-MA')}
+                              التاريخ: {formatOrderDate(order)}
                             </div>
                           </div>
                         )}
@@ -952,16 +1150,14 @@ export default function AdminDashboard() {
                               <SelectItem value="cancelled">ملغي</SelectItem>
                             </SelectContent>
                           </Select>
-                          {order.whatsapp_url && (
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => window.open(order.whatsapp_url, '_blank')}
-                              title="إرسال إشعار واتساب"
-                            >
-                              <MessageCircle className="h-4 w-4 text-green-600" />
-                            </Button>
-                          )}
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleContactCustomer(order)}
+                            title="تواصل مع العميل عبر واتساب"
+                          >
+                            <MessageCircle className="h-4 w-4 text-green-600" />
+                          </Button>
                           <Button
                             variant="destructive"
                             size="icon"
@@ -1343,8 +1539,11 @@ export default function AdminDashboard() {
               <CardContent className="p-0 md:p-6 md:pt-0">
                 {/* Mobile View - Cards */}
                 <div className="md:hidden space-y-3 p-4">
-                  {products.map((product) => (
-                    <Card key={product.id} className="p-4">
+                  {products.map((product) => {
+                    const toggleId = `best-selling-toggle-${product.id}`;
+                    const labelId = `${toggleId}-label`;
+                    return (
+                      <Card key={product.id} className="p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-sm truncate">{product.name}</h3>
@@ -1352,20 +1551,18 @@ export default function AdminDashboard() {
                           <p className="text-sm font-bold text-gold mt-1">{product.price} درهم</p>
                         </div>
                         <div className="flex flex-col items-center gap-2">
-                          <span className="text-xs text-muted-foreground whitespace-nowrap">الأكثر مبيعاً</span>
-                          <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                            product.best_selling ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-                          }`}>
-                            <Switch
-                              checked={product.best_selling}
-                              onCheckedChange={() => handleToggleBestSelling(product.id)}
-                              className="data-[state=checked]:bg-green-500"
-                            />
-                          </div>
+                          <span id={labelId} className="text-xs text-muted-foreground whitespace-nowrap">الأكثر مبيعاً</span>
+                          <BestSellingToggle
+                            id={toggleId}
+                            ariaLabelledBy={labelId}
+                            checked={product.best_selling}
+                            onChange={() => handleToggleBestSelling(product.id)}
+                          />
                         </div>
                       </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    );
+                  })}
                 </div>
 
                 {/* Desktop View - Table */}
@@ -1380,25 +1577,113 @@ export default function AdminDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {products.map((product) => (
-                        <TableRow key={product.id}>
-                          <TableCell className="font-medium">{product.name}</TableCell>
-                          <TableCell>{product.brand}</TableCell>
-                          <TableCell>{product.price} درهم</TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex items-center justify-center">
-                              <Switch
-                                checked={product.best_selling}
-                                onCheckedChange={() => handleToggleBestSelling(product.id)}
-                                className="data-[state=checked]:bg-green-500"
-                              />
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {products.map((product) => {
+                        const toggleId = `best-selling-toggle-desktop-${product.id}`;
+                        const labelId = `${toggleId}-label`;
+                        return (
+                          <TableRow key={product.id}>
+                            <TableCell className="font-medium">{product.name}</TableCell>
+                            <TableCell>{product.brand}</TableCell>
+                            <TableCell>{product.price} درهم</TableCell>
+                            <TableCell className="text-center">
+                              <div className="flex items-center justify-center">
+                                <span id={labelId} className="sr-only">الأكثر مبيعاً</span>
+                                <BestSellingToggle
+                                  id={toggleId}
+                                  ariaLabelledBy={labelId}
+                                  checked={product.best_selling}
+                                  onChange={() => handleToggleBestSelling(product.id)}
+                                />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Sliders Tab */}
+              {activeTab === 'sliders' && (
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle>إدارة السلايدر</CardTitle>
+                      <CardDescription>إدارة صور وعروض السلايدر الرئيسي</CardDescription>
+                    </div>
+                    <Button onClick={() => openSliderDialog()}>
+                      <Plus className="ml-2 h-4 w-4" />
+                      إضافة شريحة جديدة
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-right">الصورة</TableHead>
+                          <TableHead className="text-right">العنوان</TableHead>
+                          <TableHead className="text-right">الترتيب</TableHead>
+                          <TableHead className="text-right">الحالة</TableHead>
+                          <TableHead className="text-right">الإجراءات</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sliders.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                              لا توجد شرائح. قم بإضافة شريحة جديدة للبدء.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          sliders.map((slider) => (
+                            <TableRow key={slider.id}>
+                              <TableCell>
+                                <img 
+                                  src={slider.image_url} 
+                                  alt={slider.title || 'Slider'}
+                                  className="h-16 w-24 object-cover rounded"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{slider.title || 'بدون عنوان'}</p>
+                                  {slider.subtitle && (
+                                    <p className="text-sm text-muted-foreground">{slider.subtitle}</p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>{slider.order}</TableCell>
+                              <TableCell>
+                                <Badge variant={slider.active ? 'default' : 'secondary'}>
+                                  {slider.active ? 'نشط' : 'غير نشط'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openSliderDialog(slider)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openDeleteDialog({ type: 'slider' as any, id: slider.id, name: slider.title })}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
                   </CardContent>
                 </Card>
               )}
@@ -1470,25 +1755,13 @@ export default function AdminDashboard() {
             </DialogHeader>
             
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="product-id">معرّف المنتج</Label>
-                  <Input
-                    id="product-id"
-                    value={productForm.id}
-                    onChange={(e) => setProductForm({ ...productForm, id: e.target.value })}
-                    placeholder="product-id-slug"
-                    disabled={!!editingProduct}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="product-name">اسم المنتج</Label>
-                  <Input
-                    id="product-name"
-                    value={productForm.name}
-                    onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="product-name">اسم المنتج</Label>
+                <Input
+                  id="product-name"
+                  value={productForm.name}
+                  onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1501,13 +1774,24 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="product-price">السعر (درهم)</Label>
+                  <Label htmlFor="product-price">السعر الحالي (درهم)</Label>
                   <Input
                     id="product-price"
                     type="number"
                     value={productForm.price}
                     onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="product-old-price">السعر القديم (اختياري)</Label>
+                  <Input
+                    id="product-old-price"
+                    type="number"
+                    placeholder="للتخفيضات فقط"
+                    value={productForm.old_price}
+                    onChange={(e) => setProductForm({ ...productForm, old_price: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">إذا كان هناك تخفيض، أدخل السعر القديم هنا</p>
                 </div>
               </div>
 
@@ -1551,7 +1835,8 @@ export default function AdminDashboard() {
                     id="product-stock"
                     type="number"
                     value={productForm.stock}
-                    onChange={(e) => setProductForm({ ...productForm, stock: parseInt(e.target.value) || 0 })}
+                    onChange={(e) => setProductForm({ ...productForm, stock: e.target.value === '' ? '' : parseInt(e.target.value) || 0 })}
+                    placeholder="0"
                   />
                 </div>
               </div>
@@ -1680,16 +1965,6 @@ export default function AdminDashboard() {
                   rows={2}
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="category-image">رابط الصورة</Label>
-                <Input
-                  id="category-image"
-                  value={categoryForm.image_url}
-                  onChange={(e) => setCategoryForm({ ...categoryForm, image_url: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
             </div>
 
             <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -1698,6 +1973,107 @@ export default function AdminDashboard() {
               </Button>
               <Button onClick={handleSaveCategory} className="w-full sm:w-auto">
                 {editingCategory ? 'حفظ التعديلات' : 'إضافة الفئة'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Slider Dialog */}
+        <Dialog open={sliderDialog} onOpenChange={setSliderDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{editingSlider ? 'تعديل شريحة' : 'إضافة شريحة جديدة'}</DialogTitle>
+              <DialogDescription>
+                أضف صورة وعنوان ونص للشريحة التي ستظهر في الصفحة الرئيسية
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="slider-image">صورة السلايدر</Label>
+                <Input
+                  id="slider-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setSliderImage(e.target.files?.[0] || null)}
+                />
+                {(sliderForm.image_url || sliderImage) && (
+                  <img 
+                    src={sliderImage ? URL.createObjectURL(sliderImage) : sliderForm.image_url} 
+                    alt="Preview"
+                    className="mt-2 h-32 w-full object-cover rounded"
+                  />
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="slider-title">العنوان الرئيسي</Label>
+                <Input
+                  id="slider-title"
+                  placeholder="مثال: عروض خاصة على العطور الفاخرة"
+                  value={sliderForm.title}
+                  onChange={(e) => setSliderForm({ ...sliderForm, title: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="slider-subtitle">النص الفرعي</Label>
+                <Textarea
+                  id="slider-subtitle"
+                  placeholder="وصف قصير للعرض أو المحتوى"
+                  value={sliderForm.subtitle}
+                  onChange={(e) => setSliderForm({ ...sliderForm, subtitle: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="slider-button-text">نص الزر (اختياري)</Label>
+                  <Input
+                    id="slider-button-text"
+                    placeholder="تسوق الآن"
+                    value={sliderForm.button_text}
+                    onChange={(e) => setSliderForm({ ...sliderForm, button_text: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="slider-button-link">رابط الزر (اختياري)</Label>
+                  <Input
+                    id="slider-button-link"
+                    placeholder="/collection/parfums"
+                    value={sliderForm.button_link}
+                    onChange={(e) => setSliderForm({ ...sliderForm, button_link: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="slider-order">ترتيب العرض</Label>
+                  <Input
+                    id="slider-order"
+                    type="number"
+                    value={sliderForm.order}
+                    onChange={(e) => setSliderForm({ ...sliderForm, order: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="space-y-2 flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="slider-active"
+                    checked={sliderForm.active}
+                    onChange={(e) => setSliderForm({ ...sliderForm, active: e.target.checked })}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="slider-active">نشط</Label>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSliderDialog(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleSaveSlider}>
+                {editingSlider ? 'تحديث' : 'إضافة'}
               </Button>
             </DialogFooter>
           </DialogContent>

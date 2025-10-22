@@ -89,12 +89,14 @@ All colors MUST be HSL.
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
     -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    @apply bg-background text-foreground font-cairo;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: Cairo, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
@@ -109,6 +111,39 @@ All colors MUST be HSL.
   
   input, textarea, select, button {
     font-size: 16px !important;
+  }
+}
+
+@layer components {
+  .best-selling-toggle [aria-hidden] {
+    transition: left 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  :dir(rtl) .best-selling-toggle {
+    direction: rtl;
+  }
+
+  /* Embla Carousel Styles */
+  .embla {
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+  }
+
+  .embla__container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    backface-visibility: hidden;
+    touch-action: pan-y;
+  }
+
+  .embla__slide {
+    flex: 0 0 100%;
+    min-width: 0;
+    position: relative;
+    height: 100%;
+    width: 100%;
   }
 }
 

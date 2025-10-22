@@ -34,6 +34,25 @@ export default function ProductSingle() {
   
   const loading = productLoading || reviewsLoading;
 
+  // Calculate discount percentage if old_price exists
+  const currentPrice = parseFloat(product?.price) || 0;
+  const oldPrice = product?.old_price ? parseFloat(product.old_price) : null;
+  const discountPercentage = oldPrice && oldPrice > currentPrice
+    ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100)
+    : null;
+
+  // Debug logging
+  if (product) {
+    console.log('Product data:', {
+      name: product.name,
+      price: product.price,
+      old_price: product.old_price,
+      currentPrice,
+      oldPrice,
+      discountPercentage
+    });
+  }
+
   const handleReviewSubmit = async () => {
     // Invalidate reviews query to refetch
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.reviews.byProduct(id!) });
@@ -122,15 +141,42 @@ export default function ProductSingle() {
             </div>
 
             {/* Type Badge */}
-            <div>
+            <div className="flex gap-2">
               <Badge variant={product.type === 'PRODUIT' ? 'default' : 'secondary'} className="text-lg px-4 py-1">
                 {product.type}
               </Badge>
+              {discountPercentage && (
+                <Badge className="bg-green-600 text-white text-lg px-4 py-1 font-bold">
+                  خصم {discountPercentage}%
+                </Badge>
+              )}
             </div>
 
             {/* Price */}
             <div>
-              <p className="text-4xl font-bold text-primary">{product.price} درهم</p>
+              {oldPrice && oldPrice > currentPrice ? (
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">السعر القديم:</p>
+                    <p className="text-3xl font-bold text-gray-400 line-through decoration-red-500 decoration-2">
+                      {oldPrice.toFixed(2)} درهم
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-green-600">السعر الجديد:</p>
+                    <p className="text-5xl font-black bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
+                      {currentPrice.toFixed(2)} درهم
+                    </p>
+                  </div>
+                  <div className="inline-block bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-2 border-green-500 dark:border-green-600 rounded-xl px-6 py-3 shadow-md">
+                    <p className="text-green-700 dark:text-green-400 font-black text-xl">
+                      💰 وفّر {(oldPrice - currentPrice).toFixed(2)} درهم ({discountPercentage}% خصم)
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-4xl font-bold text-primary">{currentPrice.toFixed(2)} درهم</p>
+              )}
               {product.stock < 10 && (
                 <p className="text-sm text-red-500 mt-1">بقي {product.stock} فقط في المخزون!</p>
               )}
@@ -196,7 +242,7 @@ export default function ProductSingle() {
 
         {/* Description */}
         <Card className="mt-8 p-8">
-          <h2 className="text-2xl font-bold mb-4">وصف العطر</h2>
+          <h2 className="text-2xl font-bold mb-4">وصف المنتج</h2>
           <p className="text-lg leading-relaxed text-muted-foreground">{product.description}</p>
         </Card>
 
