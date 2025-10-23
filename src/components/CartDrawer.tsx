@@ -40,8 +40,15 @@ const CartDrawer = () => {
     closeCart();
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // Just close the cart without navigation
+      closeCart();
+    }
+  };
+
   return (
-    <Sheet open={isOpen} onOpenChange={closeCart}>
+    <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
         className="w-full sm:w-[420px] bg-background/95 backdrop-blur-xl border-l-2 border-gold/20 [&>button:last-of-type]:hidden flex flex-col p-0"
