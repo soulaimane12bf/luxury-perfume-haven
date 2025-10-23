@@ -19,6 +19,7 @@ type Category = {
 const Header = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [sidebarSearchQuery, setSidebarSearchQuery] = useState("");
   const { getTotalItems, openCart } = useCart();
 
   useEffect(() => {
@@ -94,27 +95,24 @@ const Header = () => {
               <SheetContent side="left" className="w-[280px] sm:w-[320px] bg-white border-r-2 border-gold/30 p-0 z-[200]">
                 <div className="flex flex-col h-full">
                   {/* Logo at top */}
-                  <div className="flex justify-center py-6 border-b-2 border-gold/30 bg-gradient-to-b from-gold/5 to-transparent">
+                  <div className="flex justify-center py-4 border-b-2 border-gold/30 bg-gradient-to-b from-gold/5 to-transparent">
                     <img 
                       src={cosmedLogo} 
                       alt="COSMED Logo" 
-                      className="h-24 w-auto object-contain"
+                      className="h-16 w-auto object-contain"
                     />
                   </div>
 
-                  {/* Search Input */}
+                  {/* Search Input - Independent */}
                   <div className="px-4 py-4 border-b border-gray-200">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input
                         type="search"
                         placeholder="ابحث عن المنتجات..."
+                        value={sidebarSearchQuery}
+                        onChange={(e) => setSidebarSearchQuery(e.target.value)}
                         className="pl-10 pr-4 h-10 border-gray-300 focus:border-gold focus:ring-gold"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSearchOpen(true);
-                        }}
-                        readOnly
                       />
                     </div>
                   </div>

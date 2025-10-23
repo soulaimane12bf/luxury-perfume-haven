@@ -53,7 +53,7 @@ export default function Collection() {
         <div className="border-b">
           <div className="container py-8">
             <h1 className="text-4xl font-bold mb-2">
-              {categoryData?.name || 'جميع العطور'}
+              {categoryData?.name ? `${categoryData.name}` : 'جميع العطور'}
             </h1>
             {categoryData?.description && (
               <p className="text-muted-foreground">{categoryData.description}</p>

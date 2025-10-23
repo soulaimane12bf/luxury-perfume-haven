@@ -128,7 +128,7 @@ export default function OrderForm({ open, onOpenChange, items, totalAmount, onSu
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-w-[95vw] max-h-[95vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="sm:max-w-[500px] max-w-[95vw] max-h-[95vh] overflow-y-auto p-4 sm:p-6 z-[250]">
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-lg sm:text-xl flex items-center gap-2">
             <ShoppingBag className="h-5 w-5 text-gold" />
