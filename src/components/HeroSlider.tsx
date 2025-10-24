@@ -1,72 +1,38 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { slidersApi } from '@/lib/api';
+import { Button } from './ui/button';
 
-// Mock API for demo
-const slidersApi = {
-  getActive: async () => [
-    {
-      id: '1',
-      image_url: 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=1920',
-      title: 'عطور فاخرة للمناسبات الخاصة',
-      subtitle: 'اكتشف روائح لا تُنسى',
-      button_text: 'تسوق الآن',
-      button_link: '/collection',
-      order: 1,
-      active: true
-    },
-    {
-      id: '2',
-      image_url: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=1920',
-      title: 'مجموعة العطور الشرقية',
-      subtitle: 'أصالة وفخامة في زجاجة',
-      button_text: 'استكشف',
-      button_link: '/collection',
-      order: 2,
-      active: true
-    },
-    {
-      id: '3',
-      image_url: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59d75?w=1920',
-      title: 'عطور نسائية راقية',
-      subtitle: 'تألقي بأناقة لا مثيل لها',
-      button_text: 'اطلبي الآن',
-      button_link: '/collection',
-      order: 3,
-      active: true
-    }
-  ]
-};
+interface Slider {
+  id: string;
+  image_url: string;
+  title: string;
+  subtitle: string;
+  button_text?: string;
+  button_link?: string;
+  order?: number;
+  active?: boolean;
+}
 
-const Button = ({ children, onClick, className = '', size = 'default' }) => {
-  const sizeClasses = {
-    default: 'px-6 py-3 text-base',
-    lg: 'px-8 py-4 text-lg'
-  };
-  
-  return (
-    <button
-      onClick={onClick}
-      className={`rounded-full font-semibold transition-all duration-300 ${sizeClasses[size]} ${className}`}
-    >
-      {children}
-    </button>
-  );
-};
-
-export default function HeroSlider() {
-  const [sliders, setSliders] = useState([]);
+export function HeroSlider() {
+  const [sliders, setSliders] = useState<Slider[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [direction, setDirection] = useState('next');
 
+  // Fetch sliders from API
   useEffect(() => {
     const fetchSliders = async () => {
       try {
+        console.log('🔄 Fetching sliders...');
         const data = await slidersApi.getActive();
+        
+        console.log('📦 API Response:', data);
+
         const validSliders = (Array.isArray(data) ? data : [])
-          .filter((slider) => slider && slider.id && slider.image_url)
-          .map((slider) => ({
+          .filter((slider: Slider) => slider && slider.id && slider.image_url)
+          .map((slider: Slider) => ({
             ...slider,
             title: slider.title || 'عنوان الشريحة',
             subtitle: slider.subtitle || '',
@@ -75,10 +41,11 @@ export default function HeroSlider() {
           }))
           .sort((a, b) => a.order - b.order);
 
+        console.log(`✅ Loaded ${validSliders.length} sliders:`, validSliders);
         setSliders(validSliders);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching sliders:', error);
+        console.error('❌ Error fetching sliders:', error);
         setSliders([]);
         setLoading(false);
       }
@@ -87,6 +54,7 @@ export default function HeroSlider() {
     fetchSliders();
   }, []);
 
+  // Auto-play functionality
   useEffect(() => {
     if (sliders.length <= 1) return;
 
@@ -97,6 +65,7 @@ export default function HeroSlider() {
     return () => clearInterval(interval);
   }, [sliders.length, currentIndex]);
 
+  // Navigation functions
   const goToNext = () => {
     if (isTransitioning || sliders.length === 0) return;
     setDirection('next');
@@ -113,7 +82,7 @@ export default function HeroSlider() {
     setTimeout(() => setIsTransitioning(false), 700);
   };
 
-  const goToSlide = (index) => {
+  const goToSlide = (index: number) => {
     if (isTransitioning || index === currentIndex) return;
     setDirection(index > currentIndex ? 'next' : 'prev');
     setIsTransitioning(true);
@@ -121,13 +90,15 @@ export default function HeroSlider() {
     setTimeout(() => setIsTransitioning(false), 700);
   };
 
-  const handleButtonClick = (link) => {
+  // Handle button click
+  const handleButtonClick = (link?: string) => {
     window.location.href = link || '/collection';
   };
 
+  // Loading state
   if (loading) {
     return (
-      <div className="relative w-full h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
+      <div className="relative w-full h-[600px] md:h-[700px] lg:h-[800px] bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
           <div className="relative w-24 h-24">
             <div className="absolute inset-0 rounded-full border-4 border-purple-400/30"></div>
@@ -144,9 +115,10 @@ export default function HeroSlider() {
     );
   }
 
+  // Empty state
   if (sliders.length === 0) {
     return (
-      <div className="relative w-full h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 flex items-center justify-center overflow-hidden">
+      <div className="relative w-full h-[600px] md:h-[700px] lg:h-[800px] bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500 rounded-full filter blur-3xl animate-pulse"></div>
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-500 rounded-full filter blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
@@ -172,7 +144,7 @@ export default function HeroSlider() {
   }
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-black">
+    <div className="relative w-full h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden bg-black">
       {/* Animated Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
@@ -217,7 +189,9 @@ export default function HeroSlider() {
                     isActive ? 'scale-110' : 'scale-100'
                   }`}
                   loading={index === 0 ? 'eager' : 'lazy'}
+                  onLoad={() => console.log(`✅ Image loaded: ${slider.id}`)}
                   onError={(e) => {
+                    console.error(`❌ Image failed: ${slider.id}`);
                     e.currentTarget.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20600%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%236b21a8%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23db2777%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20fill%3D%22url(%23g)%22%20width%3D%221200%22%20height%3D%22600%22%2F%3E%3C%2Fsvg%3E';
                   }}
                 />
@@ -290,6 +264,11 @@ export default function HeroSlider() {
                     </Button>
                   </div>
                 </div>
+              </div>
+
+              {/* Debug Info */}
+              <div className="absolute top-4 left-4 bg-black/70 text-white text-xs px-3 py-1 rounded font-mono z-30">
+                Slide {index + 1} 
               </div>
             </div>
           );
