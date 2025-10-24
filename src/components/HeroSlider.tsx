@@ -172,8 +172,8 @@ export function HeroSlider() {
                 <img
                   src={slider.image_url}
                   alt={slider.title}
-                  className={`w-full h-full object-cover transition-transform duration-[10000ms] ease-out ${
-                    isActive ? 'scale-110' : 'scale-100'
+                  className={`w-full h-full object-cover object-center transition-transform duration-[10000ms] ease-out ${
+                    isActive ? 'scale-105 md:scale-110' : 'scale-100'
                   }`}
                   loading={index === 0 ? 'eager' : 'lazy'}
                   onLoad={() => console.log(`✅ Image loaded: ${slider.id}`)}

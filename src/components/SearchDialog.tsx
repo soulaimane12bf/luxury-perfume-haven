@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
-import { productsApi } from '@/lib/api';
+import { productsApi, categoriesApi } from '@/lib/api';
 
 interface SearchDialogProps {
   open: boolean;
@@ -20,26 +20,62 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const navigate = useNavigate();
+
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await categoriesApi.getAll();
+        setCategories(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searchQuery.trim().length >= 2) {
-        performSearch(searchQuery);
-      } else {
+      if (searchQuery.trim().length >= 2 || (selectedCategory !== 'all' && searchQuery.trim().length === 0)) {
+        performSearch(searchQuery, selectedCategory);
+      } else if (searchQuery.trim().length < 2) {
         setSearchResults([]);
       }
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, selectedCategory]);
 
-  const performSearch = async (query: string) => {
+  const performSearch = async (query: string, categoryId?: string) => {
     setIsSearching(true);
     try {
-      const products = await productsApi.search(query, 10);
-      setSearchResults(Array.isArray(products) ? products : []);
+      let products;
+      
+      if (query.trim().length >= 2) {
+        // Search with query
+        products = await productsApi.search(query, 20);
+      } else if (categoryId && categoryId !== 'all') {
+        // Search all products when only category is selected
+        products = await productsApi.search('', 50); // Empty query to get all products
+      } else {
+        setSearchResults([]);
+        setIsSearching(false);
+        return;
+      }
+      
+      let filteredProducts = Array.isArray(products) ? products : [];
+      
+      // Filter by category if selected (not "all")
+      if (categoryId && categoryId !== 'all') {
+        filteredProducts = filteredProducts.filter(product => product.category === categoryId);
+      }
+      
+      // Limit to 10 results after filtering
+      setSearchResults(filteredProducts.slice(0, 10));
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);
@@ -52,11 +88,13 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
     navigate(`/product/${productId}`);
     onOpenChange(false);
     setSearchQuery('');
+    setSelectedCategory('all');
     setSearchResults([]);
   };
 
   const clearSearch = () => {
     setSearchQuery('');
+    setSelectedCategory('all');
     setSearchResults([]);
   };
 
@@ -66,6 +104,22 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
         <DialogHeader>
           <DialogTitle className="text-xl md:text-2xl">بحث عن المنتجات</DialogTitle>
         </DialogHeader>
+
+        {/* Category Selector */}
+        <div className="mb-4">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="all">جميع الفئات</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {/* Search Input */}
         <div className="relative">

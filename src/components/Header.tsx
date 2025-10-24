@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { ShoppingCart, Search, Menu } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ShoppingCart, Search, Menu, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { categoriesApi } from "@/lib/api";
+import { categoriesApi, productsApi } from "@/lib/api";
 import { useCart } from "@/contexts/CartContext";
 import SearchDialog from "@/components/SearchDialog";
 import cosmedLogo from "@/assets/images/cosmed-logo.png";
@@ -20,7 +20,10 @@ const Header = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState("");
+  const [sidebarSearchResults, setSidebarSearchResults] = useState<any[]>([]);
+  const [isSidebarSearching, setIsSidebarSearching] = useState(false);
   const { getTotalItems, openCart } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -33,6 +36,43 @@ const Header = () => {
     };
     fetchCategories();
   }, []);
+
+  // Debounce sidebar search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (sidebarSearchQuery.trim().length >= 2) {
+        performSidebarSearch(sidebarSearchQuery);
+      } else {
+        setSidebarSearchResults([]);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [sidebarSearchQuery]);
+
+  const performSidebarSearch = async (query: string) => {
+    setIsSidebarSearching(true);
+    try {
+      const products = await productsApi.search(query, 8); // Limit to 8 results for sidebar
+      setSidebarSearchResults(Array.isArray(products) ? products : []);
+    } catch (error) {
+      console.error('Sidebar search error:', error);
+      setSidebarSearchResults([]);
+    } finally {
+      setIsSidebarSearching(false);
+    }
+  };
+
+  const handleSidebarProductClick = (productId: string) => {
+    navigate(`/product/${productId}`);
+    setSidebarSearchQuery('');
+    setSidebarSearchResults([]);
+  };
+
+  const clearSidebarSearch = () => {
+    setSidebarSearchQuery('');
+    setSidebarSearchResults([]);
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[100] bg-black shadow-xl border-b-2 border-gold/30">
@@ -103,7 +143,7 @@ const Header = () => {
                     />
                   </div>
 
-                  {/* Search Input - Independent */}
+                  {/* Search Input - With Results */}
                   <div className="px-4 py-4 border-b border-gray-200">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -112,11 +152,69 @@ const Header = () => {
                         placeholder="ابحث عن المنتجات..."
                         value={sidebarSearchQuery}
                         onChange={(e) => setSidebarSearchQuery(e.target.value)}
-                        className="pl-10 pr-4 h-10 border-gray-300 focus:border-gold focus:ring-gold"
+                        className="pl-10 pr-10 h-10 border-gray-300 focus:border-gold focus:ring-gold"
                         autoComplete="off"
                         data-autofocus="false"
                       />
+                      {sidebarSearchQuery && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-6"
+                          onClick={clearSidebarSearch}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
                     </div>
+
+                    {/* Search Results */}
+                    {(sidebarSearchResults.length > 0 || isSidebarSearching) && (
+                      <div className="mt-3 max-h-64 overflow-y-auto border-t border-gray-200 pt-3">
+                        {isSidebarSearching ? (
+                          <div className="text-center py-4 text-gray-500">
+                            <Loader2 className="h-5 w-5 animate-spin mx-auto mb-1" />
+                            <p className="text-sm">جاري البحث...</p>
+                          </div>
+                        ) : sidebarSearchResults.length > 0 ? (
+                          <div className="space-y-2">
+                            {sidebarSearchResults.map((product) => (
+                              <button
+                                key={product.id}
+                                onClick={() => handleSidebarProductClick(product.id)}
+                                className="w-full text-left p-3 rounded-lg hover:bg-gold/10 transition-colors border border-gray-100 hover:border-gold/30"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <img
+                                    src={product.image_urls?.[0] || product.image_url || '/placeholder-product.png'}
+                                    alt={product.name}
+                                    className="w-12 h-12 object-cover rounded-md flex-shrink-0"
+                                    onError={(e) => {
+                                      e.currentTarget.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20fill%3D%22%23f3f4f6%22%20width%3D%22100%22%20height%3D%22100%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%20fill%3D%22%239ca3af%22%20font-size%3D%2212%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fsvg%3E';
+                                    }}
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 truncate">
+                                      {product.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500 truncate">
+                                      {product.brand || 'علامة تجارية غير محددة'}
+                                    </p>
+                                    <p className="text-sm font-semibold text-gold">
+                                      {product.price ? `${product.price} ريال` : 'السعر غير محدد'}
+                                    </p>
+                                  </div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        ) : sidebarSearchQuery.length >= 2 ? (
+                          <div className="text-center py-4 text-gray-500">
+                            <p className="text-sm">لا توجد نتائج للبحث</p>
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
                   </div>
 
                   {/* Navigation Links */}
