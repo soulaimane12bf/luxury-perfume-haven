@@ -71,6 +71,16 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Apply rate limiting to all API routes
 app.use('/api/', apiLimiter);
 
+// CRITICAL: Disable caching for ALL API responses
+app.use((req, res, next) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'X-Accel-Expires': '0',
+  });
+  next();
+});
 
 // Track the database readiness state. This will be true if the DB initializes
 // successfully and false otherwise. The value is exported so other modules can
