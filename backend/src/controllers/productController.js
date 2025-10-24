@@ -5,8 +5,13 @@ import { Op } from 'sequelize';
 // Get all products with filters
 export const getAllProducts = async (req, res) => {
   try {
-    // Add cache headers for public product data (5 minutes)
-    res.set('Cache-Control', 'public, max-age=300, s-maxage=300, stale-while-revalidate=60');
+    // Skip cache for authenticated admin requests, cache for public
+    const isAdmin = req.headers.authorization;
+    if (isAdmin) {
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    } else {
+      res.set('Cache-Control', 'public, max-age=300, s-maxage=300, stale-while-revalidate=60');
+    }
     
     const { category, brand, minPrice, maxPrice, type, best_selling, sort } = req.query;
     

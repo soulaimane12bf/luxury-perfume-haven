@@ -355,6 +355,43 @@ export default function AdminDashboard() {
     }
   };
 
+  // Refresh data for the current active tab
+  const refreshTabData = async () => {
+    await refreshSpecificTab(activeTab);
+  };
+
+  // Refresh data for a specific tab
+  const refreshSpecificTab = async (tab: string) => {
+    try {
+      switch (tab) {
+        case 'products':
+        case 'bestsellers':
+          const productsData = await productsApi.getAll({});
+          setProducts(Array.isArray(productsData) ? productsData : []);
+          break;
+        case 'categories':
+          const categoriesData = await categoriesApi.getAll();
+          setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+          break;
+        case 'reviews':
+          const reviewsData = await reviewsApi.getAll();
+          setReviews(Array.isArray(reviewsData) ? reviewsData : []);
+          break;
+        case 'orders':
+          const ordersData = await ordersApi.getAll();
+          setOrders(Array.isArray(ordersData) ? ordersData : []);
+          break;
+        case 'sliders':
+          const slidersData = await slidersApi.getAll();
+          setSliders(Array.isArray(slidersData) ? slidersData : []);
+          break;
+      }
+    } catch (error: any) {
+      console.error(`Error refreshing ${tab}:`, error);
+      handleApiError(error, `تحديث ${tab}`);
+    }
+  };
+
   // Product handlers
   const openProductDialog = (product?: Product) => {
     if (product) {
@@ -439,7 +476,7 @@ export default function AdminDashboard() {
       }
       
       setProductDialog(false);
-      refreshTabData();
+      await refreshTabData();
     } catch (error: any) {
       handleApiError(error, editingProduct ? 'تحديث المنتج' : 'إضافة المنتج');
     }
@@ -453,7 +490,7 @@ export default function AdminDashboard() {
         description: 'تم حذف المنتج',
         className: 'bg-green-50 border-green-200',
       });
-      refreshTabData();
+      await refreshTabData();
     } catch (error: any) {
       handleApiError(error, 'حذف المنتج');
       throw error;
@@ -468,10 +505,9 @@ export default function AdminDashboard() {
         description: result.best_selling ? 'تمت الإضافة للأكثر مبيعاً' : 'تمت الإزالة من الأكثر مبيعاً',
         className: 'bg-green-50 border-green-200',
       });
-      // Update local state immediately
-      setProducts(products.map(p => 
-        p.id === productId ? { ...p, best_selling: result.best_selling } : p
-      ));
+      // Refresh data from server to ensure consistency
+      await refreshSpecificTab('products');
+      await refreshSpecificTab('bestsellers');
     } catch (error: any) {
       handleApiError(error, 'تحديث حالة الأكثر مبيعاً');
     }
@@ -627,7 +663,7 @@ export default function AdminDashboard() {
       
       setSliderDialog(false);
       setSliderImage(null);
-      await refreshSpecificTab('reviews');
+      await refreshSpecificTab('sliders');
     } catch (error: any) {
       handleApiError(error, editingSlider ? 'تحديث السلايدر' : 'إضافة السلايدر');
     }
@@ -641,7 +677,7 @@ export default function AdminDashboard() {
         description: 'تم حذف السلايدر',
         className: 'bg-green-50 border-green-200',
       });
-      await refreshSpecificTab('reviews');
+      await refreshSpecificTab('sliders');
     } catch (error: any) {
       handleApiError(error, 'حذف السلايدر');
       throw error;
@@ -668,7 +704,7 @@ export default function AdminDashboard() {
         description: 'تم الموافقة على التقييم',
         className: 'bg-green-50 border-green-200',
       });
-      await refreshSpecificTab('sliders');
+      await refreshSpecificTab('reviews');
     } catch (error: any) {
       handleApiError(error, 'الموافقة على التقييم');
     }
@@ -682,7 +718,7 @@ export default function AdminDashboard() {
         description: 'تم حذف التقييم',
         className: 'bg-green-50 border-green-200',
       });
-      await refreshSpecificTab('sliders');
+      await refreshSpecificTab('reviews');
     } catch (error: any) {
       handleApiError(error, 'حذف التقييم');
       throw error;

@@ -69,7 +69,7 @@ export default function ProductSingle() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-background pt-[88px] md:pt-[92px]">
+      <div className="min-h-screen bg-background pt-[90px] md:pt-[96px]">
         {/* Header Navigation */}
         <div className="border-b">
           <div className="container py-4">
