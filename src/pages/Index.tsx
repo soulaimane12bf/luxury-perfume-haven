@@ -63,7 +63,7 @@ const Index = () => {
       <Header />
 
       {/* Main content with padding for fixed header */}
-      <div className="pt-[88px] md:pt-[92px]">
+      <div className="pt-[90px] md:pt-[96px]">
         {/* Hero Slider Section */}
         <HeroSlider />
 

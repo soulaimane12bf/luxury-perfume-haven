@@ -142,7 +142,14 @@ export const productsApi = {
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.append(key, String(value));
     });
-    return apiCall(`${API_BASE_URL}/products?${params}`, {}, 'جلب المنتجات');
+    // Add cache-busting timestamp for admin requests
+    const token = getToken();
+    if (token) {
+      params.append('_t', Date.now().toString());
+    }
+    return apiCall(`${API_BASE_URL}/products?${params}`, {
+      headers: token ? withAuth({ 'Cache-Control': 'no-cache' }) : {},
+    }, 'جلب المنتجات');
   },
 
   getById: async (id: string | number) => {
@@ -190,7 +197,7 @@ export const productsApi = {
   toggleBestSelling: async (id: string | number) => {
     return apiCall(`${API_BASE_URL}/products/${id}/best-selling`, {
       method: 'PATCH',
-      headers: withAuth(),
+      headers: withAuth({ 'Cache-Control': 'no-cache' }),
     }, 'تحديث حالة الأكثر مبيعاً');
   },
 };
@@ -198,7 +205,13 @@ export const productsApi = {
 // Categories API
 export const categoriesApi = {
   getAll: async () => {
-    return apiCall(`${API_BASE_URL}/categories`, {}, 'جلب الفئات');
+    const token = getToken();
+    const url = token 
+      ? `${API_BASE_URL}/categories?_t=${Date.now()}`
+      : `${API_BASE_URL}/categories`;
+    return apiCall(url, {
+      headers: token ? withAuth({ 'Cache-Control': 'no-cache' }) : {},
+    }, 'جلب الفئات');
   },
 
   getBySlug: async (slug: string) => {
@@ -242,8 +255,12 @@ export const reviewsApi = {
 
   getAll: async () => {
     try {
-      return await apiCall(`${API_BASE_URL}/reviews`, {
-        headers: withAuth(),
+      const token = getToken();
+      const url = token 
+        ? `${API_BASE_URL}/reviews?_t=${Date.now()}`
+        : `${API_BASE_URL}/reviews`;
+      return await apiCall(url, {
+        headers: withAuth({ 'Cache-Control': 'no-cache' }),
       }, 'جلب جميع التقييمات');
     } catch (error: any) {
       if (error.isAuthError) {
@@ -264,7 +281,7 @@ export const reviewsApi = {
   approve: async (id: string | number) => {
     return apiCall(`${API_BASE_URL}/reviews/${id}/approve`, {
       method: 'PATCH',
-      headers: withAuth(),
+      headers: withAuth({ 'Cache-Control': 'no-cache' }),
     }, 'الموافقة على التقييم');
   },
 
@@ -280,8 +297,9 @@ export const reviewsApi = {
 export const ordersApi = {
   getAll: async () => {
     try {
-      return await apiCall(`${API_BASE_URL}/orders`, {
-        headers: withAuth(),
+      const url = `${API_BASE_URL}/orders?_t=${Date.now()}`;
+      return await apiCall(url, {
+        headers: withAuth({ 'Cache-Control': 'no-cache' }),
       }, 'جلب جميع الطلبات');
     } catch (error: any) {
       if (error.isAuthError) {
@@ -322,7 +340,7 @@ export const ordersApi = {
   updateStatus: async (id: string | number, status: string) => {
     return apiCall(`${API_BASE_URL}/orders/${id}/status`, {
       method: 'PATCH',
-      headers: withAuth({ 'Content-Type': 'application/json' }),
+      headers: withAuth({ 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' }),
       body: JSON.stringify({ status }),
     }, 'تحديث حالة الطلب');
   },
@@ -373,8 +391,9 @@ export const slidersApi = {
 
   // Admin - get all sliders
   getAll: async () => {
-    return apiCall(`${API_BASE_URL}/sliders`, {
-      headers: withAuth(),
+    const url = `${API_BASE_URL}/sliders?_t=${Date.now()}`;
+    return apiCall(url, {
+      headers: withAuth({ 'Cache-Control': 'no-cache' }),
     }, 'جلب جميع السلايدرات');
   },
 
