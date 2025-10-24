@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { HeroSlider } from "@/components/HeroSlider";
+import HeroSlider from "@/components/HeroSlider";
 import { BestSellers } from "@/components/BestSellers";
 import { CategorySection } from "@/components/CategorySection";
 import { categoriesApi, productsApi } from "@/lib/api";
