@@ -56,26 +56,28 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
       let products;
       
       if (query.trim().length >= 2) {
-        // Search with query
-        products = await productsApi.search(query, 20);
+        // If we have a search query, use search API and filter by category on frontend
+        products = await productsApi.search(query, 50);
+        let filteredProducts = Array.isArray(products) ? products : [];
+        
+        // Filter by category if selected (not "all")
+        if (categoryId && categoryId !== 'all') {
+          filteredProducts = filteredProducts.filter(product => product.category === categoryId);
+        }
+        
+        products = filteredProducts;
       } else if (categoryId && categoryId !== 'all') {
-        // Search all products when only category is selected
-        products = await productsApi.search('', 50); // Empty query to get all products
+        // If only category is selected, get all products from that category
+        products = await productsApi.getAll({ category: categoryId, limit: 50 });
       } else {
+        // No query and no category selected
         setSearchResults([]);
         setIsSearching(false);
         return;
       }
       
-      let filteredProducts = Array.isArray(products) ? products : [];
-      
-      // Filter by category if selected (not "all")
-      if (categoryId && categoryId !== 'all') {
-        filteredProducts = filteredProducts.filter(product => product.category === categoryId);
-      }
-      
-      // Limit to 10 results after filtering
-      setSearchResults(filteredProducts.slice(0, 10));
+      // Limit to 10 results
+      setSearchResults(Array.isArray(products) ? products.slice(0, 10) : []);
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);
