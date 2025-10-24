@@ -22,13 +22,17 @@ const commonOptions = {
   dialect,
   logging: false,
   pool: {
-    max: 2, // Reduce max connections for serverless (was 10)
+    max: 1, // Single connection for serverless
     min: 0,
-    acquire: 10000, // Reduce timeout (was 30000)
-    idle: 5000, // Reduce idle time (was 10000)
-    evict: 5000, // Add eviction timeout
+    acquire: 3000, // Fast acquire timeout
+    idle: 0, // Close idle connections immediately
+    evict: 1000, // Quick eviction
   },
-  dialectOptions: {},
+  dialectOptions: {
+    // Optimize for serverless
+    connectTimeout: 3000,
+    statement_timeout: 10000,
+  },
 };
 
 // Configure SSL for both PostgreSQL and MySQL cloud databases

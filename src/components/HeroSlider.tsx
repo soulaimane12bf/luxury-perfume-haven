@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { slidersApi } from '@/lib/api';
 import { Button } from './ui/button';
+import OptimizedImage from './OptimizedImage';
 
 interface Slider {
   id: string;
@@ -140,12 +141,19 @@ export function HeroSlider() {
               index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
           >
-            {/* Background Image */}
+            {/* Background Image - Optimized */}
+            <OptimizedImage
+              src={slider.image_url}
+              alt={slider.title}
+              className="absolute inset-0 w-full h-full"
+              width={1920}
+              height={800}
+              priority={index === 0}
+            />
             <img
               src={slider.image_url}
               alt={slider.title}
-              className="absolute inset-0 w-full h-full object-cover"
-              loading={index === 0 ? 'eager' : 'lazy'}
+              className="hidden"
               onLoad={() => console.log(`✅ Image loaded: ${slider.id}`)}
               onError={(e) => {
                 console.error(`❌ Image failed: ${slider.id}`);
