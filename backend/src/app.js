@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import compression from 'compression';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -27,6 +28,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+
+// Use compression middleware (gzip/brotli when available)
+app.use(compression());
 
 // Middleware - CORS configuration for Vercel deployments
 const corsOptions = {
@@ -59,6 +63,20 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' })); // Increase limit for base64 image uploads
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Lightweight caching headers for public GET API responses (allows CDN caching)
+app.use((req, res, next) => {
+  try {
+    // Only set cache for GET requests and when no Authorization header is present
+    if (req.method === 'GET' && !req.headers.authorization && req.path.startsWith('/api')) {
+      // Short TTL for dynamic content, take advantage of Vercel CDN
+      res.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    }
+  } catch (err) {
+    // ignore
+  }
+  next();
+});
 
 
 // Track the database readiness state. This will be true if the DB initializes

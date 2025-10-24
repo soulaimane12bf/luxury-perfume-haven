@@ -25,11 +25,12 @@ type Product = {
 const Index = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [productsLoading, setProductsLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Fetch categories first (lightweight), then products
+  // Fetch only categories first (fastest)
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -37,37 +38,43 @@ const Index = () => {
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
       } catch (error) {
         console.error('Failed to fetch categories:', error);
-        toast.error('فشل تحميل الفئات');
-      } finally {
-        setCategoriesLoading(false);
       }
     };
     fetchCategories();
   }, []);
 
-  // Fetch products after a small delay to prioritize initial render
+  // Fetch products (paginated) after a small delay to prioritize initial render
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const productsData = await productsApi.getAll();
-        setProducts(Array.isArray(productsData) ? productsData : []);
+        const data = await productsApi.getAll({ page, limit: 24 });
+        if (data && Array.isArray(data.products)) {
+          // On first page replace, on subsequent pages append
+          setProducts((prev) => (page === 1 ? data.products : [...prev, ...data.products]));
+          setTotalPages(data.totalPages || 1);
+        } else if (Array.isArray(data)) {
+          // Fallback for older API shape
+          setProducts(page === 1 ? data : [...products, ...data]);
+        }
       } catch (error) {
         console.error('Failed to fetch products:', error);
         toast.error('فشل تحميل المنتجات');
       } finally {
-        setProductsLoading(false);
+        setLoading(false);
       }
     };
     
-    // Delay product fetch slightly to prioritize hero slider
     const timer = setTimeout(fetchProducts, 100);
     return () => clearTimeout(timer);
-  }, []);
+  }, [page]);
 
-  // Update overall loading state
-  useEffect(() => {
-    setLoading(categoriesLoading || productsLoading);
-  }, [categoriesLoading, productsLoading]);
+  const loadMore = () => {
+    if (isLoadingMore) return;
+    if (page >= totalPages) return;
+    setIsLoadingMore(true);
+    setPage((p) => p + 1);
+    setTimeout(() => setIsLoadingMore(false), 500);
+  };
 
   // Gradient color combinations for each category
   const gradients = [
@@ -134,6 +141,19 @@ const Index = () => {
           </div>
         </div>
       )}
+
+        {/* Load more button for pagination */}
+        {!loading && page < totalPages && (
+          <div className="container mx-auto px-4 py-8 text-center">
+            <button
+              onClick={loadMore}
+              className="px-6 py-2 bg-amber-600 text-white rounded-md"
+              disabled={isLoadingMore}
+            >
+              {isLoadingMore ? 'جاري التحميل...' : 'تحميل المزيد'}
+            </button>
+          </div>
+        )}
       </div> {/* Close main content wrapper */}
 
       <Footer />

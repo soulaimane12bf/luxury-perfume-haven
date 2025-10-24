@@ -4,15 +4,23 @@ import {
   getCategoryBySlug,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
 } from '../controllers/categoryController.js';
 import { authMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Public routes
-router.get('/', getAllCategories);
-router.get('/:slug', getCategoryBySlug);
+// Cache middleware
+const cacheMiddleware = (duration) => (req, res, next) => {
+  if (!req.headers.authorization) {
+    res.set('Cache-Control', `public, max-age=${duration}`);
+  }
+  next();
+};
+
+// Public routes with caching
+router.get('/', cacheMiddleware(120), getAllCategories);
+router.get('/:slug', cacheMiddleware(120), getCategoryBySlug);
 
 // Admin routes (protected)
 router.post('/', authMiddleware, createCategory);
