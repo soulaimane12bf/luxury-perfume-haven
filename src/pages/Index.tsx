@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { HeroSlider } from "@/components/HeroSlider";
 import { BestSellers } from "@/components/BestSellers";
 import { CategorySection } from "@/components/CategorySection";
+import { FastLoadingSkeleton } from "@/components/FastLoadingSkeleton";
 import { categoriesApi, productsApi } from "@/lib/api";
 
 type Category = {
@@ -57,6 +58,17 @@ const Index = () => {
     { from: 'from-orange-500', to: 'to-red-600' },
     { from: 'from-cyan-500', to: 'to-blue-600' },
   ];
+
+  // Show fast loading skeleton on initial load
+  if (loading && products.length === 0) {
+    return (
+      <>
+        <Header />
+        <FastLoadingSkeleton />
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

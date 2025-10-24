@@ -1,31 +1,55 @@
 // Global cache for the app instance and initialization promise
 let appInstance = null;
 let initPromise = null;
+let initStartTime = 0;
 
 async function getApp() {
-  if (appInstance) return appInstance;
-  
-  if (!initPromise) {
-    initPromise = (async () => {
-      try {
-        console.log('[Init] Loading backend app...');
-        const module = await import('../backend/src/app.js');
-        const app = module.default;
-        const initDb = module.initializeDatabase;
-        
-        console.log('[Init] Initializing database...');
-        await initDb();
-        
-        console.log('[Init] Backend ready!');
-        appInstance = app;
-        return app;
-      } catch (error) {
-        console.error('[Init] Failed:', error.message);
-        console.error('[Init] Stack:', error.stack);
-        throw error;
-      }
-    })();
+  // Return cached instance immediately
+  if (appInstance) {
+    console.log('[Cache] Returning cached app instance');
+    return appInstance;
   }
+  
+  // If init is already in progress, wait for it
+  if (initPromise) {
+    console.log('[Cache] Init in progress, waiting...');
+    return initPromise;
+  }
+  
+  // Start new initialization
+  initStartTime = Date.now();
+  initPromise = (async () => {
+    try {
+      console.log('[Init] Starting initialization...');
+      
+      // Load app module
+      const startLoad = Date.now();
+      const module = await import('../backend/src/app.js');
+      console.log(`[Init] Module loaded in ${Date.now() - startLoad}ms`);
+      
+      const app = module.default;
+      const initDb = module.initializeDatabase;
+      
+      // Initialize database with timeout
+      const startDb = Date.now();
+      const dbTimeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database init timeout')), 5000)
+      );
+      
+      await Promise.race([initDb(), dbTimeout]);
+      console.log(`[Init] Database ready in ${Date.now() - startDb}ms`);
+      
+      appInstance = app;
+      console.log(`[Init] Total init time: ${Date.now() - initStartTime}ms`);
+      
+      return app;
+    } catch (error) {
+      console.error('[Init] Failed:', error.message);
+      // Reset promise so next request can retry
+      initPromise = null;
+      throw error;
+    }
+  })();
   
   return initPromise;
 }

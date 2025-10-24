@@ -102,14 +102,20 @@ export async function initializeDatabase() {
     return false;
   }
   try {
+    // Fast connection test
     await sequelize.authenticate();
     console.log('✓ Connected to the database');
 
-    await sequelize.sync({ alter: true });
-    console.log('✓ Database models synchronized');
-
-    // Attempt to seed only if SEED env var is not explicitly disabled.
-    await seedDatabase();
+    // Skip sync in production to avoid slowdown
+    if (process.env.NODE_ENV !== 'production') {
+      await sequelize.sync({ alter: true });
+      console.log('✓ Database models synchronized');
+      
+      // Seed only in non-production
+      await seedDatabase();
+    } else {
+      console.log('✓ Skipping sync in production (faster startup)');
+    }
 
     databaseReady = true;
     return true;
