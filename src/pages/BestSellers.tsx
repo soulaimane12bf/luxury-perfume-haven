@@ -27,7 +27,7 @@ export default function BestSellers() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-background pt-[90px] md:pt-[96px]">
+      <div className="min-h-screen bg-background pt-20 md:pt-24">
         {/* Header */}
         <div className="border-b bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950">
           <div className="container py-12 text-center">
