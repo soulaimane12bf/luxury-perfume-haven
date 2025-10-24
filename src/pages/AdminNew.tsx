@@ -239,7 +239,7 @@ export default function AdminDashboard() {
   });
   const [sliderImage, setSliderImage] = useState<File | null>(null);
 
-  // Check authentication
+  // Check authentication and prefetch critical data
   useEffect(() => {
     // Wait for auth to finish loading before checking
     if (authLoading) return;
@@ -254,6 +254,18 @@ export default function AdminDashboard() {
     } else {
       // Initial load is complete once auth is verified
       setLoading(false);
+      
+      // Prefetch categories in background (needed for product forms)
+      if (!loadedTabs.has('categories')) {
+        categoriesApi.getAll()
+          .then(data => {
+            if (Array.isArray(data)) {
+              setCategories(data);
+              setLoadedTabs(prev => new Set(prev).add('categories'));
+            }
+          })
+          .catch(err => console.error('Background category prefetch failed:', err));
+      }
     }
   }, [isAuthenticated, token, authLoading, navigate, toast]);
 
@@ -360,12 +372,20 @@ export default function AdminDashboard() {
     try {
       switch (tab) {
         case 'products':
-          const productsData = await productsApi.getAll({});
+          // Load products AND categories together (needed for product form dropdown)
+          const [productsData, categoriesData] = await Promise.all([
+            productsApi.getAll({}),
+            loadedTabs.has('categories') ? Promise.resolve(categories) : categoriesApi.getAll()
+          ]);
           setProducts(Array.isArray(productsData) ? productsData : []);
+          if (!loadedTabs.has('categories') && Array.isArray(categoriesData)) {
+            setCategories(categoriesData);
+            setLoadedTabs(prev => new Set(prev).add('categories'));
+          }
           break;
         case 'categories':
-          const categoriesData = await categoriesApi.getAll();
-          setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+          const categoriesDataOnly = await categoriesApi.getAll();
+          setCategories(Array.isArray(categoriesDataOnly) ? categoriesDataOnly : []);
           break;
         case 'reviews':
           const reviewsData = await reviewsApi.getAll();
@@ -436,7 +456,23 @@ export default function AdminDashboard() {
   const paginatedSliders = getPaginatedData(sliders, 'sliders');
 
   // Product handlers
-  const openProductDialog = (product?: Product) => {
+  const openProductDialog = async (product?: Product) => {
+    // Ensure categories are loaded before opening the form
+    if (!loadedTabs.has('categories') && categories.length === 0) {
+      try {
+        const categoriesData = await categoriesApi.getAll();
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        setLoadedTabs(prev => new Set(prev).add('categories'));
+      } catch (error) {
+        console.error('Error loading categories:', error);
+        toast({
+          title: 'خطأ',
+          description: 'فشل تحميل الفئات',
+          variant: 'destructive',
+        });
+      }
+    }
+    
     if (product) {
       setEditingProduct(product);
       setProductForm({
