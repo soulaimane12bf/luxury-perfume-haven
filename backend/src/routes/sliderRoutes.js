@@ -12,8 +12,16 @@ import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
 
-// Public routes
-router.get('/active', getActiveSliders);
+// Cache middleware
+const cacheMiddleware = (duration) => (req, res, next) => {
+  if (!req.headers.authorization) {
+    res.set('Cache-Control', `public, max-age=${duration}`);
+  }
+  next();
+};
+
+// Public routes with caching
+router.get('/active', cacheMiddleware(300), getActiveSliders);
 
 // Admin routes (protected)
 router.get('/', authMiddleware, getAllSliders);

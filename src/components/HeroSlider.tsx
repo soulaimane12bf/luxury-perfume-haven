@@ -71,7 +71,7 @@ export function HeroSlider() {
     setDirection('next');
     setIsTransitioning(true);
     setCurrentIndex((prev) => (prev + 1) % sliders.length);
-    setTimeout(() => setIsTransitioning(false), 700);
+  setTimeout(() => setIsTransitioning(false), 250);
   };
 
   const goToPrev = () => {
@@ -79,7 +79,7 @@ export function HeroSlider() {
     setDirection('prev');
     setIsTransitioning(true);
     setCurrentIndex((prev) => (prev - 1 + sliders.length) % sliders.length);
-    setTimeout(() => setIsTransitioning(false), 700);
+  setTimeout(() => setIsTransitioning(false), 250);
   };
 
   const goToSlide = (index: number) => {
@@ -87,7 +87,7 @@ export function HeroSlider() {
     setDirection(index > currentIndex ? 'next' : 'prev');
     setIsTransitioning(true);
     setCurrentIndex(index);
-    setTimeout(() => setIsTransitioning(false), 700);
+  setTimeout(() => setIsTransitioning(false), 250);
   };
 
   // Handle button click
@@ -102,8 +102,6 @@ export function HeroSlider() {
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
           <div className="relative w-24 h-24">
             <div className="absolute inset-0 rounded-full border-4 border-gray-700"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-t-white border-r-gray-400 border-b-transparent border-l-transparent animate-spin"></div>
-            <div className="absolute inset-3 rounded-full border-4 border-t-transparent border-r-transparent border-b-gray-400 border-l-white animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
           </div>
           <p className="text-white text-xl font-medium tracking-wide">جاري التحميل...</p>
         </div>
@@ -116,8 +114,7 @@ export function HeroSlider() {
     return (
       <div className="relative w-full h-[600px] md:h-[700px] lg:h-[800px] bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full filter blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gray-500 rounded-full filter blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          {/* Removed heavy animated backgrounds for performance */}
         </div>
         <div className="text-center px-4 max-w-4xl relative z-10">
           <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
@@ -150,7 +147,7 @@ export function HeroSlider() {
           return (
             <div
               key={`${slider.id}-${index}`}
-              className={`absolute inset-0 w-full h-full transition-all duration-700 ease-out ${
+              className={`absolute inset-0 w-full h-full transition-all duration-250 ease-out ${
                 isActive 
                   ? 'opacity-100 scale-100 z-20' 
                   : isPrev || isNext
@@ -172,7 +169,7 @@ export function HeroSlider() {
                 <img
                   src={slider.image_url}
                   alt={slider.title}
-                  className={`w-full h-full object-cover object-center transition-transform duration-[10000ms] ease-out ${
+                    className={`w-full h-full object-cover object-center transition-transform duration-250 ease-out ${
                     isActive ? 'scale-105 md:scale-110' : 'scale-100'
                   }`}
                   loading={index === 0 ? 'eager' : 'lazy'}
@@ -193,7 +190,7 @@ export function HeroSlider() {
                   {/* Title with Stagger Animation */}
                   <div className="mb-6 md:mb-8">
                     <h1 
-                      className={`text-5xl md:text-7xl lg:text-8xl font-bold drop-shadow-2xl leading-[1.2] transition-all duration-700 ${
+                      className={`text-5xl md:text-7xl lg:text-8xl font-bold drop-shadow-2xl leading-[1.2] transition-all duration-250 ${
                         isActive ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
                       }`}
                       style={{ 
@@ -209,7 +206,7 @@ export function HeroSlider() {
                   {slider.subtitle && (
                     <div className="mb-8 md:mb-12">
                       <p 
-                        className={`text-xl md:text-3xl lg:text-4xl drop-shadow-lg font-light leading-relaxed transition-all duration-700 ${
+                        className={`text-xl md:text-3xl lg:text-4xl drop-shadow-lg font-light leading-relaxed transition-all duration-250 ${
                           isActive ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
                         }`}
                         style={{ 
@@ -224,7 +221,7 @@ export function HeroSlider() {
                   
                   {/* CTA Button */}
                   <div 
-                    className={`transition-all duration-700 ${
+                    className={`transition-all duration-250 ${
                       isActive ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
                     }`}
                     style={{ transitionDelay: isActive ? '600ms' : '0ms' }}
@@ -232,7 +229,7 @@ export function HeroSlider() {
                     <Button
                       size="lg"
                       onClick={() => handleButtonClick(slider.button_link)}
-                      className="bg-white hover:bg-gray-100 text-black px-10 md:px-16 py-4 md:py-6 text-lg md:text-2xl shadow-2xl hover:scale-110 font-semibold transition-all duration-300"
+                      className="bg-white hover:bg-gray-100 text-black px-10 md:px-16 py-4 md:py-6 text-lg md:text-2xl shadow-2xl font-semibold transition-all duration-150"
                     >
                       {slider.button_text}
                     </Button>
@@ -255,7 +252,7 @@ export function HeroSlider() {
           <button
             onClick={goToPrev}
             disabled={isTransitioning}
-            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-30 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full p-3 md:p-5 shadow-2xl transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-30 border border-white/20 group"
+            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-30 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full p-3 md:p-5 shadow-2xl transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-30 border border-white/20 group"
             aria-label="Previous slide"
             type="button"
           >
@@ -265,7 +262,7 @@ export function HeroSlider() {
           <button
             onClick={goToNext}
             disabled={isTransitioning}
-            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-30 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full p-3 md:p-5 shadow-2xl transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-30 border border-white/20 group"
+            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-30 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full p-3 md:p-5 shadow-2xl transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-30 border border-white/20 group"
             aria-label="Next slide"
             type="button"
           >
@@ -282,7 +279,7 @@ export function HeroSlider() {
               key={index}
               onClick={() => goToSlide(index)}
               disabled={isTransitioning}
-              className={`relative transition-all duration-500 h-2.5 md:h-3 rounded-full focus:outline-none disabled:cursor-not-allowed overflow-hidden ${
+              className={`relative transition-all duration-150 h-2.5 md:h-3 rounded-full focus:outline-none disabled:cursor-not-allowed overflow-hidden ${
                 index === currentIndex
                   ? 'w-12 md:w-16 bg-white'
                   : 'w-2.5 md:w-3 bg-white/40 hover:bg-white/70 hover:scale-125'

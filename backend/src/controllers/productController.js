@@ -13,7 +13,12 @@ export const getAllProducts = async (req, res) => {
       res.set('Cache-Control', 'public, max-age=300, s-maxage=300, stale-while-revalidate=60');
     }
     
-    const { category, brand, minPrice, maxPrice, type, best_selling, sort } = req.query;
+  const { category, brand, minPrice, maxPrice, type, best_selling, sort } = req.query;
+
+  // Pagination: support page & limit query parameters
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = Math.min(parseInt(req.query.limit, 10) || 24, 100); // cap at 100
+  const offset = (page - 1) * limit;
     
     let where = {};
     
@@ -40,14 +45,20 @@ export const getAllProducts = async (req, res) => {
     else if (sort === 'oldest') order = [['created_at', 'ASC']];
     else order = [['created_at', 'DESC']]; // default
     
-    const products = await Product.findAll({ 
-      where, 
+    // Use findAndCountAll so client can know total pages
+    const { count, rows } = await Product.findAndCountAll({
+      where,
       order,
+      limit,
+      offset,
       attributes: { exclude: ['createdAt', 'updatedAt'] }, // Reduce payload size
       raw: true // Faster serialization
     });
-    
-    res.json(products);
+
+    const total = Number(count || 0);
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+
+    res.json({ products: rows, total, page, totalPages });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

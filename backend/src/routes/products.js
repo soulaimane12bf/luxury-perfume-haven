@@ -14,12 +14,20 @@ import { authMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Public routes
-router.get('/', getAllProducts);
-router.get('/best-selling', getBestSelling);
-router.get('/brands', getBrands);
+// Cache middleware for public routes
+const cacheMiddleware = (duration) => (req, res, next) => {
+  if (!req.headers.authorization) {
+    res.set('Cache-Control', `public, max-age=${duration}`);
+  }
+  next();
+};
+
+// Public routes with caching
+router.get('/', cacheMiddleware(60), getAllProducts);
+router.get('/best-selling', cacheMiddleware(60), getBestSelling);
+router.get('/brands', cacheMiddleware(300), getBrands);
 router.get('/search', searchProducts);
-router.get('/:id', getProductById);
+router.get('/:id', cacheMiddleware(60), getProductById);
 
 // Admin routes (protected)
 router.post('/', authMiddleware, createProduct);

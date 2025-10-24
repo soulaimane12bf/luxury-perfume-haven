@@ -49,17 +49,8 @@ export function BestSellers({ products = [], isLoading = false }: BestSellersPro
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
-            {bestSellers.map((product, index) => (
-              <div
-                key={product.id}
-                className="animate-fade-in-up opacity-0"
-                style={{
-                  animationDelay: `${index * 150}ms`,
-                  animationFillMode: 'forwards'
-                }}
-              >
-                <ProductCard product={product} />
-              </div>
+            {bestSellers.map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
