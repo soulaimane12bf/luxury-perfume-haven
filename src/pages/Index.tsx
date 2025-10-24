@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
@@ -26,27 +26,48 @@ const Index = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(true);
 
+  // Fetch categories first (lightweight), then products
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCategories = async () => {
       try {
-        // Fetch categories and all products in parallel
-        const [categoriesData, productsData] = await Promise.all([
-          categoriesApi.getAll(),
-          productsApi.getAll()
-        ]);
-        
+        const categoriesData = await categoriesApi.getAll();
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-        setProducts(Array.isArray(productsData) ? productsData : []);
       } catch (error) {
-        console.error('Failed to fetch data:', error);
-        toast.error('فشل تحميل البيانات');
+        console.error('Failed to fetch categories:', error);
+        toast.error('فشل تحميل الفئات');
       } finally {
-        setLoading(false);
+        setCategoriesLoading(false);
       }
     };
-    fetchData();
+    fetchCategories();
   }, []);
+
+  // Fetch products after a small delay to prioritize initial render
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const productsData = await productsApi.getAll();
+        setProducts(Array.isArray(productsData) ? productsData : []);
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+        toast.error('فشل تحميل المنتجات');
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+    
+    // Delay product fetch slightly to prioritize hero slider
+    const timer = setTimeout(fetchProducts, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Update overall loading state
+  useEffect(() => {
+    setLoading(categoriesLoading || productsLoading);
+  }, [categoriesLoading, productsLoading]);
 
   // Gradient color combinations for each category
   const gradients = [

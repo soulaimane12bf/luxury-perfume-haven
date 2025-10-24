@@ -39,14 +39,14 @@ export function HeroSlider() {
             button_text: slider.button_text || 'تسوق الآن',
             button_link: slider.button_link || '/collection',
           }))
-          .sort((a, b) => a.order - b.order);
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
 
         console.log(`✅ Loaded ${validSliders.length} sliders:`, validSliders);
         setSliders(validSliders);
-        setLoading(false);
       } catch (error) {
         console.error('❌ Error fetching sliders:', error);
         setSliders([]);
+      } finally {
         setLoading(false);
       }
     };

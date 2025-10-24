@@ -2,6 +2,35 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined' ? `${window.location.origin}/api` : '/api');
 
+// Simple in-memory cache with TTL
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 60000; // 1 minute for public data
+const ADMIN_CACHE_TTL = 10000; // 10 seconds for admin data
+
+const getCachedData = (key: string, ttl: number = CACHE_TTL) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < ttl) {
+    console.log(`[Cache HIT] ${key}`);
+    return cached.data;
+  }
+  console.log(`[Cache MISS] ${key}`);
+  return null;
+};
+
+const setCachedData = (key: string, data: any) => {
+  cache.set(key, { data, timestamp: Date.now() });
+};
+
+const clearCache = (pattern?: string) => {
+  if (pattern) {
+    Array.from(cache.keys()).forEach(key => {
+      if (key.includes(pattern)) cache.delete(key);
+    });
+  } else {
+    cache.clear();
+  }
+};
+
 // Error messages in Arabic and English
 const ERROR_MESSAGES = {
   NETWORK_ERROR: {
@@ -138,30 +167,68 @@ export const productsApi = {
   getAll: async (
     filters: Record<string, string | number | boolean | null | undefined> = {}
   ) => {
+    const token = getToken();
+    const isAdmin = !!token;
+    
+    // Create cache key from filters
+    const cacheKey = `products:${JSON.stringify(filters)}`;
+    
+    // Check cache only for non-admin requests
+    if (!isAdmin) {
+      const cached = getCachedData(cacheKey);
+      if (cached) return cached;
+    }
+    
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.append(key, String(value));
     });
+    
     // Add cache-busting timestamp for admin requests
-    const token = getToken();
-    if (token) {
+    if (isAdmin) {
       params.append('_t', Date.now().toString());
     }
-    return apiCall(`${API_BASE_URL}/products?${params}`, {
-      headers: token ? withAuth({ 'Cache-Control': 'no-cache' }) : {},
+    
+    const data = await apiCall(`${API_BASE_URL}/products?${params}`, {
+      headers: isAdmin ? withAuth({ 'Cache-Control': 'no-cache' }) : {},
     }, 'جلب المنتجات');
+    
+    // Cache for public requests
+    if (!isAdmin) {
+      setCachedData(cacheKey, data);
+    }
+    
+    return data;
   },
 
   getById: async (id: string | number) => {
-    return apiCall(`${API_BASE_URL}/products/${id}`, {}, 'جلب تفاصيل المنتج');
+    const cacheKey = `product:${id}`;
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+    
+    const data = await apiCall(`${API_BASE_URL}/products/${id}`, {}, 'جلب تفاصيل المنتج');
+    setCachedData(cacheKey, data);
+    return data;
   },
 
   getBestSelling: async (limit = 8) => {
-    return apiCall(`${API_BASE_URL}/products/best-selling?limit=${limit}`, {}, 'جلب المنتجات الأكثر مبيعاً');
+    const cacheKey = `bestsellers:${limit}`;
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+    
+    const data = await apiCall(`${API_BASE_URL}/products/best-selling?limit=${limit}`, {}, 'جلب المنتجات الأكثر مبيعاً');
+    setCachedData(cacheKey, data);
+    return data;
   },
 
   getBrands: async () => {
-    return apiCall(`${API_BASE_URL}/products/brands`, {}, 'جلب العلامات التجارية');
+    const cacheKey = 'brands';
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+    
+    const data = await apiCall(`${API_BASE_URL}/products/brands`, {}, 'جلب العلامات التجارية');
+    setCachedData(cacheKey, data);
+    return data;
   },
 
   search: async (query: string, limit = 10) => {
@@ -172,33 +239,48 @@ export const productsApi = {
   },
 
   create: async (product: unknown) => {
-    return apiCall(`${API_BASE_URL}/products`, {
+    const data = await apiCall(`${API_BASE_URL}/products`, {
       method: 'POST',
       headers: withAuth({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(product),
     }, 'إنشاء منتج جديد');
+    clearCache('products');
+    clearCache('bestsellers');
+    return data;
   },
 
   update: async (id: string | number, product: unknown) => {
-    return apiCall(`${API_BASE_URL}/products/${id}`, {
+    const data = await apiCall(`${API_BASE_URL}/products/${id}`, {
       method: 'PUT',
       headers: withAuth({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(product),
     }, 'تحديث المنتج');
+    clearCache('products');
+    clearCache('bestsellers');
+    clearCache(`product:${id}`);
+    return data;
   },
 
   delete: async (id: string | number) => {
-    return apiCall(`${API_BASE_URL}/products/${id}`, {
+    const data = await apiCall(`${API_BASE_URL}/products/${id}`, {
       method: 'DELETE',
       headers: withAuth(),
     }, 'حذف المنتج');
+    clearCache('products');
+    clearCache('bestsellers');
+    clearCache(`product:${id}`);
+    return data;
   },
 
   toggleBestSelling: async (id: string | number) => {
-    return apiCall(`${API_BASE_URL}/products/${id}/best-selling`, {
+    const data = await apiCall(`${API_BASE_URL}/products/${id}/best-selling`, {
       method: 'PATCH',
       headers: withAuth({ 'Cache-Control': 'no-cache' }),
     }, 'تحديث حالة الأكثر مبيعاً');
+    clearCache('products');
+    clearCache('bestsellers');
+    clearCache(`product:${id}`);
+    return data;
   },
 };
 
@@ -206,39 +288,67 @@ export const productsApi = {
 export const categoriesApi = {
   getAll: async () => {
     const token = getToken();
+    const cacheKey = 'categories';
+    
+    // Use cache for non-admin requests
+    if (!token) {
+      const cached = getCachedData(cacheKey);
+      if (cached) return cached;
+    }
+    
     const url = token 
       ? `${API_BASE_URL}/categories?_t=${Date.now()}`
       : `${API_BASE_URL}/categories`;
-    return apiCall(url, {
+    
+    const data = await apiCall(url, {
       headers: token ? withAuth({ 'Cache-Control': 'no-cache' }) : {},
     }, 'جلب الفئات');
+    
+    // Cache for public requests
+    if (!token) {
+      setCachedData(cacheKey, data);
+    }
+    
+    return data;
   },
 
   getBySlug: async (slug: string) => {
-    return apiCall(`${API_BASE_URL}/categories/${slug}`, {}, 'جلب تفاصيل الفئة');
+    const cacheKey = `category:${slug}`;
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+    
+    const data = await apiCall(`${API_BASE_URL}/categories/${slug}`, {}, 'جلب تفاصيل الفئة');
+    setCachedData(cacheKey, data);
+    return data;
   },
 
   create: async (category: unknown) => {
-    return apiCall(`${API_BASE_URL}/categories`, {
+    const data = await apiCall(`${API_BASE_URL}/categories`, {
       method: 'POST',
       headers: withAuth({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(category),
     }, 'إنشاء فئة جديدة');
+    clearCache('categories');
+    return data;
   },
 
   update: async (id: string | number, category: unknown) => {
-    return apiCall(`${API_BASE_URL}/categories/${id}`, {
+    const data = await apiCall(`${API_BASE_URL}/categories/${id}`, {
       method: 'PUT',
       headers: withAuth({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(category),
     }, 'تحديث الفئة');
+    clearCache('categories');
+    return data;
   },
 
   delete: async (id: string | number) => {
-    return apiCall(`${API_BASE_URL}/categories/${id}`, {
+    const data = await apiCall(`${API_BASE_URL}/categories/${id}`, {
       method: 'DELETE',
       headers: withAuth(),
     }, 'حذف الفئة');
+    clearCache('categories');
+    return data;
   },
 };
 
@@ -386,7 +496,13 @@ export const profileApi = {
 export const slidersApi = {
   // Public - get active sliders
   getActive: async () => {
-    return apiCall(`${API_BASE_URL}/sliders/active`, {}, 'جلب السلايدر');
+    const cacheKey = 'sliders:active';
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+    
+    const data = await apiCall(`${API_BASE_URL}/sliders/active`, {}, 'جلب السلايدر');
+    setCachedData(cacheKey, data);
+    return data;
   },
 
   // Admin - get all sliders
@@ -406,27 +522,33 @@ export const slidersApi = {
 
   // Admin - create slider with file upload
   create: async (formData: FormData) => {
-    return apiCall(`${API_BASE_URL}/sliders`, {
+    const data = await apiCall(`${API_BASE_URL}/sliders`, {
       method: 'POST',
       headers: withAuth(), // Don't set Content-Type, let browser set it with boundary
       body: formData,
     }, 'إنشاء سلايدر');
+    clearCache('sliders');
+    return data;
   },
 
   // Admin - update slider with optional file upload
   update: async (id: string, formData: FormData) => {
-    return apiCall(`${API_BASE_URL}/sliders/${id}`, {
+    const data = await apiCall(`${API_BASE_URL}/sliders/${id}`, {
       method: 'PUT',
       headers: withAuth(), // Don't set Content-Type, let browser set it with boundary
       body: formData,
     }, 'تحديث السلايدر');
+    clearCache('sliders');
+    return data;
   },
 
   // Admin - delete slider
   delete: async (id: string) => {
-    return apiCall(`${API_BASE_URL}/sliders/${id}`, {
+    const data = await apiCall(`${API_BASE_URL}/sliders/${id}`, {
       method: 'DELETE',
       headers: withAuth(),
     }, 'حذف السلايدر');
+    clearCache('sliders');
+    return data;
   },
 };

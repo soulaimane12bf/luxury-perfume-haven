@@ -238,8 +238,9 @@ export default function AdminDashboard() {
   }, [isAuthenticated, token, authLoading, navigate, toast]);
 
   useEffect(() => {
-    fetchAllData();
-  }, []);
+    // Load data for the active tab only
+    loadTabData(activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -334,50 +335,58 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchAllData = async () => {
+  const loadTabData = async (tab: AdminTab) => {
     try {
-      const [productsData, categoriesData, reviewsData, ordersData, slidersData] = await Promise.all([
-        productsApi.getAll({}).catch((err) => {
-          console.error('Error fetching products:', err);
-          return [];
-        }),
-        categoriesApi.getAll().catch((err) => {
-          console.error('Error fetching categories:', err);
-          return [];
-        }),
-        reviewsApi.getAll().catch((err) => {
-          console.error('Error fetching reviews:', err);
-          return [];
-        }),
-        ordersApi.getAll().catch((err) => {
-          console.error('Error fetching orders:', err);
-          return [];
-        }),
-        slidersApi.getAll().catch((err) => {
-          console.error('Error fetching sliders:', err);
-          return [];
-        }),
-      ]);
+      setLoading(true);
       
-      // Ensure we always have arrays
-      setProducts(Array.isArray(productsData) ? productsData : []);
-      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-      console.log('Categories loaded:', categoriesData);
-      setReviews(Array.isArray(reviewsData) ? reviewsData : []);
-      setOrders(Array.isArray(ordersData) ? ordersData : []);
-      setSliders(Array.isArray(slidersData) ? slidersData : []);
+      switch (tab) {
+        case 'orders':
+          if (orders.length === 0) {
+            const ordersData = await ordersApi.getAll().catch(() => []);
+            setOrders(Array.isArray(ordersData) ? ordersData : []);
+          }
+          break;
+        case 'products':
+        case 'bestsellers':
+          if (products.length === 0) {
+            const productsData = await productsApi.getAll({}).catch(() => []);
+            setProducts(Array.isArray(productsData) ? productsData : []);
+          }
+          break;
+        case 'categories':
+          if (categories.length === 0) {
+            const categoriesData = await categoriesApi.getAll().catch(() => []);
+            setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+          }
+          break;
+        case 'reviews':
+          if (reviews.length === 0) {
+            const reviewsData = await reviewsApi.getAll().catch(() => []);
+            setReviews(Array.isArray(reviewsData) ? reviewsData : []);
+          }
+          break;
+        case 'sliders':
+          if (sliders.length === 0) {
+            const slidersData = await slidersApi.getAll().catch(() => []);
+            setSliders(Array.isArray(slidersData) ? slidersData : []);
+          }
+          break;
+        case 'profile':
+          // Profile tab doesn't need data loading
+          break;
+      }
     } catch (error: any) {
-      console.error('Error fetching data:', error);
-      // Set empty arrays as fallback
-      setProducts([]);
-      setCategories([]);
-      setReviews([]);
-      setOrders([]);
-      setSliders([]);
-      handleApiError(error, 'تحميل البيانات');
+      console.error(`Error loading ${tab} data:`, error);
+      handleApiError(error, `تحميل بيانات ${tab}`);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchAllData = async () => {
+    // Deprecated - now using loadTabData for better performance
+    // This is kept for backward compatibility only
+    await loadTabData(activeTab);
   };
 
   // Refresh data for the current active tab
