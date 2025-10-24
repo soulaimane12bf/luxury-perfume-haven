@@ -7,13 +7,11 @@ import {
   deleteOrder,
 } from '../controllers/orderController.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { validateOrder } from '../middleware/validator.js';
-import { orderLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
 // Public routes
-router.post('/', orderLimiter, validateOrder, createOrder);
+router.post('/', createOrder);
 
 // Admin routes (protected)
 router.get('/', authMiddleware, getAllOrders);

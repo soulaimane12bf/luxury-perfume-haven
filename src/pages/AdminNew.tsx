@@ -60,8 +60,7 @@ import {
   X,
   MessageCircle,
   ChevronDown,
-  ChevronUp,
-  RefreshCw
+  ChevronUp
 } from 'lucide-react';
 
 type Product = {
@@ -133,39 +132,6 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [sliders, setSliders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Track which tabs have been loaded (for lazy loading)
-  const [loadedTabs, setLoadedTabs] = useState<Set<AdminTab>>(new Set());
-  const [tabLoading, setTabLoading] = useState<Record<AdminTab, boolean>>({
-    products: false,
-    categories: false,
-    reviews: false,
-    orders: false,
-    sliders: false,
-    bestsellers: false,
-    profile: false,
-  });
-  
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState<Record<AdminTab, number>>({
-    products: 1,
-    categories: 1,
-    reviews: 1,
-    orders: 1,
-    sliders: 1,
-    bestsellers: 1,
-    profile: 1,
-  });
-  
-  const ITEMS_PER_PAGE: Record<AdminTab, number> = {
-    products: 20,
-    categories: 20,
-    reviews: 10,
-    orders: 10,
-    sliders: 10,
-    bestsellers: 20,
-    profile: 1,
-  };
   const [activeTab, setActiveTabState] = useState<AdminTab>(() => {
     const params = new URLSearchParams(location.search);
     const tabParam = params.get('tab');
@@ -239,7 +205,7 @@ export default function AdminDashboard() {
   });
   const [sliderImage, setSliderImage] = useState<File | null>(null);
 
-  // Check authentication and prefetch critical data
+  // Check authentication
   useEffect(() => {
     // Wait for auth to finish loading before checking
     if (authLoading) return;
@@ -251,33 +217,12 @@ export default function AdminDashboard() {
         variant: 'destructive',
       });
       navigate('/login');
-    } else {
-      // Initial load is complete once auth is verified
-      setLoading(false);
-      
-      // Prefetch categories in background (needed for product forms)
-      if (!loadedTabs.has('categories')) {
-        categoriesApi.getAll()
-          .then(data => {
-            if (Array.isArray(data)) {
-              setCategories(data);
-              setLoadedTabs(prev => new Set(prev).add('categories'));
-            }
-          })
-          .catch(err => console.error('Background category prefetch failed:', err));
-      }
     }
   }, [isAuthenticated, token, authLoading, navigate, toast]);
 
-  // Lazy load data when tab becomes active
   useEffect(() => {
-    if (!isAuthenticated || authLoading) return;
-    
-    // Only load data for the active tab if it hasn't been loaded yet
-    if (!loadedTabs.has(activeTab)) {
-      loadTabData(activeTab);
-    }
-  }, [activeTab, isAuthenticated, authLoading]);
+    fetchAllData();
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -365,114 +310,53 @@ export default function AdminDashboard() {
     }
   };
 
-  // Lazy load data for a specific tab
-  const loadTabData = async (tab: AdminTab) => {
-    setTabLoading(prev => ({ ...prev, [tab]: true }));
-    
+  const fetchAllData = async () => {
     try {
-      switch (tab) {
-        case 'products':
-          // Load products AND categories together (needed for product form dropdown)
-          const [productsData, categoriesData] = await Promise.all([
-            productsApi.getAll({}),
-            loadedTabs.has('categories') ? Promise.resolve(categories) : categoriesApi.getAll()
-          ]);
-          setProducts(Array.isArray(productsData) ? productsData : []);
-          if (!loadedTabs.has('categories') && Array.isArray(categoriesData)) {
-            setCategories(categoriesData);
-            setLoadedTabs(prev => new Set(prev).add('categories'));
-          }
-          break;
-        case 'categories':
-          const categoriesDataOnly = await categoriesApi.getAll();
-          setCategories(Array.isArray(categoriesDataOnly) ? categoriesDataOnly : []);
-          break;
-        case 'reviews':
-          const reviewsData = await reviewsApi.getAll();
-          setReviews(Array.isArray(reviewsData) ? reviewsData : []);
-          break;
-        case 'orders':
-          const ordersData = await ordersApi.getAll();
-          setOrders(Array.isArray(ordersData) ? ordersData : []);
-          break;
-        case 'sliders':
-          const slidersData = await slidersApi.getAll();
-          setSliders(Array.isArray(slidersData) ? slidersData : []);
-          break;
-      }
+      const [productsData, categoriesData, reviewsData, ordersData, slidersData] = await Promise.all([
+        productsApi.getAll({}).catch((err) => {
+          console.error('Error fetching products:', err);
+          return [];
+        }),
+        categoriesApi.getAll().catch((err) => {
+          console.error('Error fetching categories:', err);
+          return [];
+        }),
+        reviewsApi.getAll().catch((err) => {
+          console.error('Error fetching reviews:', err);
+          return [];
+        }),
+        ordersApi.getAll().catch((err) => {
+          console.error('Error fetching orders:', err);
+          return [];
+        }),
+        slidersApi.getAll().catch((err) => {
+          console.error('Error fetching sliders:', err);
+          return [];
+        }),
+      ]);
       
-      // Mark this tab as loaded
-      setLoadedTabs(prev => new Set(prev).add(tab));
+      // Ensure we always have arrays
+      setProducts(Array.isArray(productsData) ? productsData : []);
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      setReviews(Array.isArray(reviewsData) ? reviewsData : []);
+      setOrders(Array.isArray(ordersData) ? ordersData : []);
+      setSliders(Array.isArray(slidersData) ? slidersData : []);
     } catch (error: any) {
-      console.error(`Error fetching ${tab} data:`, error);
-      handleApiError(error, `تحميل ${tab}`);
+      console.error('Error fetching data:', error);
+      // Set empty arrays as fallback
+      setProducts([]);
+      setCategories([]);
+      setReviews([]);
+      setOrders([]);
+      setSliders([]);
+      handleApiError(error, 'تحميل البيانات');
     } finally {
-      setTabLoading(prev => ({ ...prev, [tab]: false }));
+      setLoading(false);
     }
   };
-  
-  // Refresh data for current tab (force reload)
-  const refreshTabData = async () => {
-    // Force reload by removing from cache and reloading immediately
-    setLoadedTabs(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(activeTab);
-      return newSet;
-    });
-    await loadTabData(activeTab);
-  };
-  
-  // Refresh specific tab's data
-  const refreshSpecificTab = async (tab: AdminTab) => {
-    setLoadedTabs(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(tab);
-      return newSet;
-    });
-    await loadTabData(tab);
-  };
-  
-  // Pagination helpers
-  const getPaginatedData = <T,>(data: T[], tab: AdminTab): T[] => {
-    const page = currentPage[tab];
-    const itemsPerPage = ITEMS_PER_PAGE[tab];
-    const startIndex = (page - 1) * itemsPerPage;
-    return data.slice(startIndex, startIndex + itemsPerPage);
-  };
-  
-  const getTotalPages = (dataLength: number, tab: AdminTab): number => {
-    return Math.ceil(dataLength / ITEMS_PER_PAGE[tab]);
-  };
-  
-  const handlePageChange = (tab: AdminTab, page: number) => {
-    setCurrentPage(prev => ({ ...prev, [tab]: page }));
-  };
-  
-  // Get paginated data for each tab
-  const paginatedProducts = getPaginatedData(products, 'products');
-  const paginatedCategories = getPaginatedData(categories, 'categories');
-  const paginatedReviews = getPaginatedData(reviews, 'reviews');
-  const paginatedOrders = getPaginatedData(orders, 'orders');
-  const paginatedSliders = getPaginatedData(sliders, 'sliders');
 
   // Product handlers
-  const openProductDialog = async (product?: Product) => {
-    // Ensure categories are loaded before opening the form
-    if (!loadedTabs.has('categories') && categories.length === 0) {
-      try {
-        const categoriesData = await categoriesApi.getAll();
-        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-        setLoadedTabs(prev => new Set(prev).add('categories'));
-      } catch (error) {
-        console.error('Error loading categories:', error);
-        toast({
-          title: 'خطأ',
-          description: 'فشل تحميل الفئات',
-          variant: 'destructive',
-        });
-      }
-    }
-    
+  const openProductDialog = (product?: Product) => {
     if (product) {
       setEditingProduct(product);
       setProductForm({
@@ -555,8 +439,7 @@ export default function AdminDashboard() {
       }
       
       setProductDialog(false);
-      // Refresh products data to show changes
-      await refreshSpecificTab('products');
+      refreshTabData();
     } catch (error: any) {
       handleApiError(error, editingProduct ? 'تحديث المنتج' : 'إضافة المنتج');
     }
@@ -570,7 +453,7 @@ export default function AdminDashboard() {
         description: 'تم حذف المنتج',
         className: 'bg-green-50 border-green-200',
       });
-      await refreshSpecificTab('products');
+      refreshTabData();
     } catch (error: any) {
       handleApiError(error, 'حذف المنتج');
       throw error;
@@ -1056,35 +939,14 @@ export default function AdminDashboard() {
               {activeTab === 'orders' && (
                 <Card>
               <CardHeader className="p-4 md:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-lg md:text-xl">إدارة الطلبات</CardTitle>
-                    <CardDescription className="text-xs md:text-sm">
-                      {stats.totalOrders} طلب - {stats.pendingOrders} قيد الانتظار
-                    </CardDescription>
-                  </div>
-                  <Button 
-                    onClick={refreshTabData} 
-                    size="sm" 
-                    variant="outline"
-                    disabled={tabLoading.orders}
-                    className="w-full sm:w-auto"
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${tabLoading.orders ? 'animate-spin' : ''}`} />
-                    تحديث
-                  </Button>
+                <div>
+                  <CardTitle className="text-lg md:text-xl">إدارة الطلبات</CardTitle>
+                  <CardDescription className="text-xs md:text-sm">
+                    {stats.totalOrders} طلب - {stats.pendingOrders} قيد الانتظار
+                  </CardDescription>
                 </div>
               </CardHeader>
               <CardContent className="p-0 md:p-6 md:pt-0">
-                {tabLoading.orders ? (
-                  <div className="flex items-center justify-center p-8">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto"></div>
-                      <p className="mt-4 text-sm text-muted-foreground">جاري تحميل الطلبات...</p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
                 {/* Desktop Table */}
                 <div className="hidden md:block rounded-md border">
                   <Table>
@@ -1099,7 +961,7 @@ export default function AdminDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {paginatedOrders.map((order: any) => (
+                      {orders.map((order: any) => (
                         <Fragment key={order.id}>
                           <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => toggleOrderDetails(order.id)}>
                             <TableCell className="font-mono text-xs">
@@ -1219,7 +1081,7 @@ export default function AdminDashboard() {
 
                 {/* Mobile Cards */}
                 <div className="md:hidden space-y-4 p-4">
-                  {paginatedOrders.map((order: any) => (
+                  {orders.map((order: any) => (
                     <Card key={order.id} className="p-4">
                       <div className="space-y-3">
                         <div className="flex justify-between items-start" onClick={() => toggleOrderDetails(order.id)}>
@@ -1334,35 +1196,6 @@ export default function AdminDashboard() {
                     </Card>
                   ))}
                 </div>
-                
-                {/* Pagination for Orders */}
-                {orders.length > ITEMS_PER_PAGE.orders && (
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-4 border-t">
-                    <div className="text-sm text-muted-foreground order-2 sm:order-1">
-                      عرض {((currentPage.orders - 1) * ITEMS_PER_PAGE.orders) + 1} - {Math.min(currentPage.orders * ITEMS_PER_PAGE.orders, orders.length)} من {orders.length} طلب
-                    </div>
-                    <div className="flex gap-2 order-1 sm:order-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange('orders', currentPage.orders - 1)}
-                        disabled={currentPage.orders === 1}
-                      >
-                        السابق
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange('orders', currentPage.orders + 1)}
-                        disabled={currentPage.orders >= getTotalPages(orders.length, 'orders')}
-                      >
-                        التالي
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                </>
-                )}
               </CardContent>
             </Card>
               )}
@@ -1374,41 +1207,18 @@ export default function AdminDashboard() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <CardTitle className="text-lg md:text-xl">إدارة المنتجات</CardTitle>
-                    <CardDescription className="text-xs md:text-sm">
-                      عرض وتعديل وحذف المنتجات ({products.length} منتج)
-                    </CardDescription>
+                    <CardDescription className="text-xs md:text-sm">عرض وتعديل وحذف المنتجات</CardDescription>
                   </div>
-                  <div className="flex gap-2 w-full sm:w-auto">
-                    <Button 
-                      onClick={refreshTabData} 
-                      size="sm" 
-                      variant="outline"
-                      disabled={tabLoading.products}
-                      className="flex-1 sm:flex-initial"
-                    >
-                      <RefreshCw className={`h-4 w-4 mr-2 ${tabLoading.products ? 'animate-spin' : ''}`} />
-                      تحديث
-                    </Button>
-                    <Button onClick={() => openProductDialog()} size="sm" className="flex-1 sm:flex-initial">
-                      <Plus className="h-4 w-4 mr-2" />
-                      إضافة منتج
-                    </Button>
-                  </div>
+                  <Button onClick={() => openProductDialog()} size="sm" className="w-full sm:w-auto">
+                    <Plus className="h-4 w-4 mr-2" />
+                    إضافة منتج
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent className="p-0 md:p-6 md:pt-0">
-                {tabLoading.products ? (
-                  <div className="flex items-center justify-center p-8">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto"></div>
-                      <p className="mt-4 text-sm text-muted-foreground">جاري تحميل المنتجات...</p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
                 {/* Mobile View - Cards */}
                 <div className="md:hidden space-y-3 p-4">
-                  {paginatedProducts.map((product) => (
+                  {products.map((product) => (
                     <Card key={product.id} className="p-4">
                       <div className="flex gap-3">
                         <img 
@@ -1464,7 +1274,7 @@ export default function AdminDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {paginatedProducts.map((product) => (
+                      {products.map((product) => (
                         <TableRow key={product.id}>
                           <TableCell>
                             <img 
@@ -1503,60 +1313,6 @@ export default function AdminDashboard() {
                     </TableBody>
                   </Table>
                 </div>
-                
-                {/* Pagination Controls */}
-                {products.length > ITEMS_PER_PAGE.products && (
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-4 border-t">
-                    <div className="text-sm text-muted-foreground order-2 sm:order-1">
-                      عرض {((currentPage.products - 1) * ITEMS_PER_PAGE.products) + 1} - {Math.min(currentPage.products * ITEMS_PER_PAGE.products, products.length)} من {products.length} منتج
-                    </div>
-                    <div className="flex gap-2 order-1 sm:order-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange('products', currentPage.products - 1)}
-                        disabled={currentPage.products === 1}
-                      >
-                        السابق
-                      </Button>
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: getTotalPages(products.length, 'products') }, (_, i) => i + 1)
-                          .filter(page => {
-                            const current = currentPage.products;
-                            const total = getTotalPages(products.length, 'products');
-                            return page === 1 || page === total || 
-                                   (page >= current - 1 && page <= current + 1);
-                          })
-                          .map((page, idx, arr) => (
-                            <Fragment key={page}>
-                              {idx > 0 && arr[idx - 1] !== page - 1 && (
-                                <span className="px-2 text-muted-foreground">...</span>
-                              )}
-                              <Button
-                                variant={currentPage.products === page ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => handlePageChange('products', page)}
-                                className="min-w-[40px]"
-                              >
-                                {page}
-                              </Button>
-                            </Fragment>
-                          ))
-                        }
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange('products', currentPage.products + 1)}
-                        disabled={currentPage.products >= getTotalPages(products.length, 'products')}
-                      >
-                        التالي
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                </>
-                )}
                   </CardContent>
                 </Card>
               )}

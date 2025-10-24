@@ -4,7 +4,6 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import OptimizedImage from "./OptimizedImage";
 
 interface ProductCardProps {
   product: {
@@ -39,12 +38,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
       
       <CardContent className="p-0 relative flex-shrink-0">
         <div className="aspect-square relative overflow-hidden bg-gray-50">
-          <OptimizedImage
+          <img
             src={product.image_urls[0]}
             alt={product.name}
-            className="w-full h-full transition-all duration-700 group-hover:scale-105"
-            width={400}
-            height={400}
+            loading="lazy"
+            className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
           />
           
           {/* Overlay gradient on hover */}
