@@ -113,7 +113,8 @@ const Header = () => {
                         value={sidebarSearchQuery}
                         onChange={(e) => setSidebarSearchQuery(e.target.value)}
                         className="pl-10 pr-4 h-10 border-gray-300 focus:border-gold focus:ring-gold"
-                        autoFocus={false}
+                        autoComplete="off"
+                        data-autofocus="false"
                       />
                     </div>
                   </div>
