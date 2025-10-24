@@ -187,6 +187,29 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+// Health check (no database check middleware)
+app.get('/api/health', async (req, res) => {
+  try {
+    await sequelize.authenticate();
+    const hasDbUrl = Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL);
+    return res.json({ 
+      status: 'OK', 
+      database: 'connected', 
+      databaseReady,
+      hasDbUrl,
+      nodeEnv: process.env.NODE_ENV
+    });
+  } catch (error) {
+    console.error('Health check error:', error.message);
+    return res.status(503).json({ 
+      status: 'ERROR', 
+      message: 'Database connection failed',
+      error: error.message,
+      hasDbUrl: Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL)
+    });
+  }
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -197,22 +220,18 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/sliders', sliderRoutes);
 // app.use('/api/seed', seedRoutes); // Temporarily disabled for deployment
 
-// Health check
-app.get('/api/health', async (req, res) => {
-  try {
-    await sequelize.authenticate();
-    return res.json({ status: 'OK', database: 'reachable', databaseReady });
-  } catch (error) {
-    console.error('Health check error:', error.message);
-    return res.status(503).json({ status: 'ERROR', message: 'Database connection failed' });
-  }
-});
-
 // Error handling middleware
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  console.error(err.message || err);
-  res.status(500).json({ message: 'Something went wrong!' });
+  console.error('Error:', err.message || err);
+  console.error('Stack:', err.stack);
+  
+  // Send detailed error in development, generic in production
+  const isDev = process.env.NODE_ENV !== 'production';
+  res.status(err.status || 500).json({ 
+    message: isDev ? err.message : 'Something went wrong!',
+    ...(isDev && { stack: err.stack, error: err })
+  });
 });
 
 export default app;
