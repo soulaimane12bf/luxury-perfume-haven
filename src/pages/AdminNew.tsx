@@ -391,14 +391,25 @@ export default function AdminDashboard() {
     }
   };
   
-  // Refresh data for current tab
-  const refreshTabData = () => {
+  // Refresh data for current tab (force reload)
+  const refreshTabData = async () => {
+    // Force reload by removing from cache and reloading immediately
     setLoadedTabs(prev => {
       const newSet = new Set(prev);
       newSet.delete(activeTab);
       return newSet;
     });
-    loadTabData(activeTab);
+    await loadTabData(activeTab);
+  };
+  
+  // Refresh specific tab's data
+  const refreshSpecificTab = async (tab: AdminTab) => {
+    setLoadedTabs(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(tab);
+      return newSet;
+    });
+    await loadTabData(tab);
   };
   
   // Pagination helpers
@@ -508,7 +519,8 @@ export default function AdminDashboard() {
       }
       
       setProductDialog(false);
-      refreshTabData();
+      // Refresh products data to show changes
+      await refreshSpecificTab('products');
     } catch (error: any) {
       handleApiError(error, editingProduct ? 'تحديث المنتج' : 'إضافة المنتج');
     }
@@ -522,7 +534,7 @@ export default function AdminDashboard() {
         description: 'تم حذف المنتج',
         className: 'bg-green-50 border-green-200',
       });
-      refreshTabData();
+      await refreshSpecificTab('products');
     } catch (error: any) {
       handleApiError(error, 'حذف المنتج');
       throw error;
@@ -588,7 +600,7 @@ export default function AdminDashboard() {
       }
       
       setCategoryDialog(false);
-      refreshTabData();
+      await refreshSpecificTab('categories');
     } catch (error: any) {
       handleApiError(error, editingCategory ? 'تحديث الفئة' : 'إضافة الفئة');
     }
@@ -602,7 +614,7 @@ export default function AdminDashboard() {
         description: 'تم حذف الفئة',
         className: 'bg-green-50 border-green-200',
       });
-      refreshTabData();
+      await refreshSpecificTab('categories');
     } catch (error: any) {
       handleApiError(error, 'حذف الفئة');
       throw error;
@@ -696,7 +708,7 @@ export default function AdminDashboard() {
       
       setSliderDialog(false);
       setSliderImage(null);
-      refreshTabData();
+      await refreshSpecificTab('reviews');
     } catch (error: any) {
       handleApiError(error, editingSlider ? 'تحديث السلايدر' : 'إضافة السلايدر');
     }
@@ -710,7 +722,7 @@ export default function AdminDashboard() {
         description: 'تم حذف السلايدر',
         className: 'bg-green-50 border-green-200',
       });
-      refreshTabData();
+      await refreshSpecificTab('reviews');
     } catch (error: any) {
       handleApiError(error, 'حذف السلايدر');
       throw error;
@@ -737,7 +749,7 @@ export default function AdminDashboard() {
         description: 'تم الموافقة على التقييم',
         className: 'bg-green-50 border-green-200',
       });
-      refreshTabData();
+      await refreshSpecificTab('sliders');
     } catch (error: any) {
       handleApiError(error, 'الموافقة على التقييم');
     }
@@ -751,7 +763,7 @@ export default function AdminDashboard() {
         description: 'تم حذف التقييم',
         className: 'bg-green-50 border-green-200',
       });
-      refreshTabData();
+      await refreshSpecificTab('sliders');
     } catch (error: any) {
       handleApiError(error, 'حذف التقييم');
       throw error;
@@ -767,7 +779,7 @@ export default function AdminDashboard() {
         description: 'تم تحديث حالة الطلب',
         className: 'bg-green-50 border-green-200',
       });
-      refreshTabData();
+      await refreshSpecificTab('orders');
     } catch (error: any) {
       handleApiError(error, 'تحديث حالة الطلب');
     }
@@ -781,7 +793,7 @@ export default function AdminDashboard() {
         description: 'تم حذف الطلب',
         className: 'bg-green-50 border-green-200',
       });
-      refreshTabData();
+      await refreshSpecificTab('orders');
     } catch (error: any) {
       handleApiError(error, 'حذف الطلب');
       throw error;
