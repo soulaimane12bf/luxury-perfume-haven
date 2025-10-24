@@ -70,7 +70,7 @@ type Product = {
   price: string;
   old_price?: string;
   category: string;
-  type: string;
+  type?: string;
   size: string;
   description: string;
   notes: {
@@ -151,6 +151,23 @@ export default function AdminDashboard() {
       setActiveTabState(DEFAULT_ADMIN_TAB);
     }
   };
+  
+  // Product search state
+  const [productSearchQuery, setProductSearchQuery] = useState('');
+
+  // Debug: Log categories when they change
+  useEffect(() => {
+    console.log('Categories state updated:', categories);
+  }, [categories]);
+
+  // Filtered products based on search
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = productSearchQuery === '' || 
+      product.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+      product.brand.toLowerCase().includes(productSearchQuery.toLowerCase());
+    
+    return matchesSearch;
+  });
   
   const toggleOrderDetails = (orderId: string) => {
     setExpandedOrders(prev => {
@@ -247,6 +264,13 @@ export default function AdminDashboard() {
     let errorMessage = error?.message || 'حدث خطأ غير متوقع';
     let shouldLogout = false;
 
+    // Try to extract backend error message
+    if (error?.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error?.data?.message) {
+      errorMessage = error.data.message;
+    }
+
     // Check for specific error types
     if (error?.status === 413 || error?.message?.includes('413')) {
       errorMessage = 'حجم الصورة كبير جداً. يرجى اختيار صورة أصغر (أقل من 10MB).';
@@ -338,6 +362,7 @@ export default function AdminDashboard() {
       // Ensure we always have arrays
       setProducts(Array.isArray(productsData) ? productsData : []);
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      console.log('Categories loaded:', categoriesData);
       setReviews(Array.isArray(reviewsData) ? reviewsData : []);
       setOrders(Array.isArray(ordersData) ? ordersData : []);
       setSliders(Array.isArray(slidersData) ? slidersData : []);
@@ -403,7 +428,7 @@ export default function AdminDashboard() {
         price: product.price,
         old_price: product.old_price || '',
         category: product.category,
-        type: product.type,
+        type: product.type || 'PRODUIT',
         size: product.size || '100ml',
         description: product.description || '',
         stock: product.stock,
@@ -432,6 +457,18 @@ export default function AdminDashboard() {
 
   const handleSaveProduct = async () => {
     try {
+      console.log('handleSaveProduct called with productForm:', productForm);
+      
+      // Validate required fields
+      if (!productForm.type) {
+        console.error('Type field is missing or null:', productForm.type);
+        toast({
+          title: 'خطأ',
+          description: 'نوع المنتج مطلوب',
+          variant: 'destructive',
+        });
+        return;
+      }
       // Convert images to base64 or upload them
       let imageUrls = [...existingImageUrls];
       
@@ -457,7 +494,18 @@ export default function AdminDashboard() {
         stock: typeof productForm.stock === 'string' && productForm.stock === '' ? 0 : Number(productForm.stock),
         notes: null, // Remove notes
         image_urls: imageUrls,
+        type: productForm.type || 'PRODUIT', // Ensure type is never null
       };
+
+      console.log('Product form state:', productForm);
+      console.log('Product data being sent:', productData);
+      
+      // Double-check that type is not null
+      if (!productData.type) {
+        console.error('Type field is null in productData:', productData);
+        productData.type = 'PRODUIT';
+        console.log('Fixed type field:', productData.type);
+      }
 
       if (editingProduct) {
         await productsApi.update(editingProduct.id, productData);
@@ -1252,9 +1300,20 @@ export default function AdminDashboard() {
                 </div>
               </CardHeader>
               <CardContent className="p-0 md:p-6 md:pt-0">
+                {/* Search and Filters */}
+                <div className="p-4 md:p-6 md:pt-0 border-b">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="البحث في المنتجات..."
+                      value={productSearchQuery}
+                      onChange={(e) => setProductSearchQuery(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
                 {/* Mobile View - Cards */}
                 <div className="md:hidden space-y-3 p-4">
-                  {products.map((product) => (
+                  {filteredProducts.map((product) => (
                     <Card key={product.id} className="p-4">
                       <div className="flex gap-3">
                         <img 
@@ -1310,7 +1369,7 @@ export default function AdminDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {products.map((product) => (
+                      {filteredProducts.map((product) => (
                         <TableRow key={product.id}>
                           <TableCell>
                             <img 
@@ -1857,39 +1916,38 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="product-category">الفئة</Label>
-                  <Select
+                  <select
+                    id="product-category"
                     value={productForm.category}
-                    onValueChange={(value) => setProductForm({ ...productForm, category: value })}
+                    onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر الفئة" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.slug}>
+                    <option value="">اختر الفئة</option>
+                    {categories.length === 0 ? (
+                      <option disabled>جاري تحميل الفئات...</option>
+                    ) : (
+                      categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
                           {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        </option>
+                      ))
+                    )}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="product-type">النوع</Label>
-                  <Select
+                  <select
+                    id="product-type"
                     value={productForm.type}
-                    onValueChange={(value) => setProductForm({ ...productForm, type: value })}
+                    onChange={(e) => setProductForm({ ...productForm, type: e.target.value })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PRODUIT">PRODUIT</SelectItem>
-                      <SelectItem value="TESTEUR">TESTEUR</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="PRODUIT">PRODUIT</option>
+                    <option value="TESTEUR">TESTEUR</option>
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="product-stock">المخزون</Label>
