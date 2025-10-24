@@ -18,26 +18,7 @@
     "api/**/*.js": {
       "memory": 1024,
       "maxDuration": 30,
-      "includeFiles": "backend/**"
+      "includeFiles": "{node_modules/pg/**,backend/node_modules/{multer,@vercel}/**}"
     }
-  },
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, private, max-age=0"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
-        }
-      ]
-    }
-  ]
+  }
 }

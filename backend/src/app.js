@@ -1,11 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { apiLimiter } from './middleware/rateLimiter.js';
 
 import sequelize from './config/database.js';
 import productRoutes from './routes/products.js';
@@ -58,29 +56,10 @@ const corsOptions = {
   exposedHeaders: ['Content-Range', 'X-Content-Range']
 };
 
-// Security middleware
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: false, // Disable for API
-}));
-
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' })); // Increase limit for base64 image uploads
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Apply rate limiting to all API routes
-app.use('/api/', apiLimiter);
-
-// CRITICAL: Disable caching for ALL API responses
-app.use((req, res, next) => {
-  res.set({
-    'Cache-Control': 'no-store, no-cache, must-revalidate, private',
-    'Pragma': 'no-cache',
-    'Expires': '0',
-    'X-Accel-Expires': '0',
-  });
-  next();
-});
 
 // Track the database readiness state. This will be true if the DB initializes
 // successfully and false otherwise. The value is exported so other modules can
@@ -112,20 +91,14 @@ export async function initializeDatabase() {
     return false;
   }
   try {
-    // Fast connection test
     await sequelize.authenticate();
     console.log('✓ Connected to the database');
 
-    // Skip sync in production to avoid slowdown
-    if (process.env.NODE_ENV !== 'production') {
-      await sequelize.sync({ alter: true });
-      console.log('✓ Database models synchronized');
-      
-      // Seed only in non-production
-      await seedDatabase();
-    } else {
-      console.log('✓ Skipping sync in production (faster startup)');
-    }
+    await sequelize.sync({ alter: true });
+    console.log('✓ Database models synchronized');
+
+    // Attempt to seed only if SEED env var is not explicitly disabled.
+    await seedDatabase();
 
     databaseReady = true;
     return true;
@@ -203,29 +176,6 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-// Health check (no database check middleware)
-app.get('/api/health', async (req, res) => {
-  try {
-    await sequelize.authenticate();
-    const hasDbUrl = Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL);
-    return res.json({ 
-      status: 'OK', 
-      database: 'connected', 
-      databaseReady,
-      hasDbUrl,
-      nodeEnv: process.env.NODE_ENV
-    });
-  } catch (error) {
-    console.error('Health check error:', error.message);
-    return res.status(503).json({ 
-      status: 'ERROR', 
-      message: 'Database connection failed',
-      error: error.message,
-      hasDbUrl: Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL)
-    });
-  }
-});
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -236,18 +186,22 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/sliders', sliderRoutes);
 // app.use('/api/seed', seedRoutes); // Temporarily disabled for deployment
 
+// Health check
+app.get('/api/health', async (req, res) => {
+  try {
+    await sequelize.authenticate();
+    return res.json({ status: 'OK', database: 'reachable', databaseReady });
+  } catch (error) {
+    console.error('Health check error:', error.message);
+    return res.status(503).json({ status: 'ERROR', message: 'Database connection failed' });
+  }
+});
+
 // Error handling middleware
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  console.error('Error:', err.message || err);
-  console.error('Stack:', err.stack);
-  
-  // Send detailed error in development, generic in production
-  const isDev = process.env.NODE_ENV !== 'production';
-  res.status(err.status || 500).json({ 
-    message: isDev ? err.message : 'Something went wrong!',
-    ...(isDev && { stack: err.stack, error: err })
-  });
+  console.error(err.message || err);
+  res.status(500).json({ message: 'Something went wrong!' });
 });
 
 export default app;
