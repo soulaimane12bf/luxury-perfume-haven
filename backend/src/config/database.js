@@ -24,14 +24,17 @@ const commonOptions = {
   pool: {
     max: 1, // Single connection for serverless
     min: 0,
-    acquire: 3000, // Fast acquire timeout
+    acquire: 2000, // Faster acquire timeout
     idle: 0, // Close idle connections immediately
-    evict: 1000, // Quick eviction
+    evict: 500, // Very quick eviction
   },
   dialectOptions: {
-    // Optimize for serverless
-    connectTimeout: 3000,
-    statement_timeout: 10000,
+    // Optimize for serverless - faster connections
+    connectTimeout: 2000,
+    statement_timeout: 8000,
+    // Connection pooling optimization
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 0,
   },
 };
 
