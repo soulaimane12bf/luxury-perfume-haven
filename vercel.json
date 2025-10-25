@@ -62,8 +62,8 @@
   ],
   "functions": {
     "api/**/*.js": {
-      "memory": 1024,
-      "maxDuration": 30
+      "memory": 1536,
+      "maxDuration": 60
     }
   }
 }
