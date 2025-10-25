@@ -24,11 +24,9 @@ type Product = {
 
 const Index = () => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  // productsByCategory stores up to 4 products per category (slug => products[])
+  const [productsByCategory, setProductsByCategory] = useState<Record<string, Product[]>>({});
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Fetch only categories first (fastest)
   useEffect(() => {
@@ -43,38 +41,42 @@ const Index = () => {
     fetchCategories();
   }, []);
 
-  // Fetch products (paginated) after a small delay to prioritize initial render
+  // Fetch up to 4 products per category so each category section shows 4 items
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchPerCategory = async () => {
+      setLoading(true);
       try {
-        const data = await productsApi.getAll({ page, limit: 24 });
-        if (data && Array.isArray(data.products)) {
-          // On first page replace, on subsequent pages append
-          setProducts((prev) => (page === 1 ? data.products : [...prev, ...data.products]));
-          setTotalPages(data.totalPages || 1);
-        } else if (Array.isArray(data)) {
-          // Fallback for older API shape
-          setProducts(page === 1 ? data : [...products, ...data]);
-        }
-      } catch (error) {
-        console.error('Failed to fetch products:', error);
-        toast.error('فشل تحميل المنتجات');
+        if (!categories || categories.length === 0) return;
+
+        const results: Record<string, Product[]> = {};
+        await Promise.all(categories.map(async (cat) => {
+          try {
+            const data = await productsApi.getAll({ category: cat.slug, limit: 4 });
+            // productsApi returns an array for public requests
+            const prods = Array.isArray(data) ? data : (data.products || []);
+            results[cat.slug] = prods;
+          } catch (err) {
+            console.error(`Failed to fetch products for category ${cat.slug}:`, err);
+            results[cat.slug] = [];
+          }
+        }));
+
+        setProductsByCategory(results);
       } finally {
         setLoading(false);
       }
     };
-    
-    const timer = setTimeout(fetchProducts, 100);
-    return () => clearTimeout(timer);
-  }, [page]);
 
-  const loadMore = () => {
-    if (isLoadingMore) return;
-    if (page >= totalPages) return;
-    setIsLoadingMore(true);
-    setPage((p) => p + 1);
-    setTimeout(() => setIsLoadingMore(false), 500);
-  };
+    // Run after categories are loaded
+    if (categories.length > 0) {
+      fetchPerCategory();
+    }
+  }, [categories]);
+
+  // Aggregate all fetched category products for components that expect a flat list
+  const aggregatedProducts = useMemo(() => {
+    return Object.values(productsByCategory).flat();
+  }, [productsByCategory]);
 
   // Gradient color combinations for each category
   const gradients = [
@@ -95,13 +97,13 @@ const Index = () => {
         {/* Hero Slider Section */}
         <HeroSlider />
 
-      {/* Best Sellers Section - Pass products as prop */}
-      <BestSellers products={products} isLoading={loading} />
+  {/* Best Sellers Section - pass aggregated products (we fetch per-category) */}
+  <BestSellers products={aggregatedProducts} isLoading={loading} />
 
-      {/* Dynamic Category Sections - Pass filtered products */}
+      {/* Dynamic Category Sections - fetch and pass up to 4 products per category */}
       {!loading && categories.length > 0 && categories.map((category, index) => {
-        const categoryProducts = products.filter(p => p.category === category.slug);
-        
+        const categoryProducts = productsByCategory[category.slug] || [];
+
         return (
           <div key={category.id}>
             {/* Separator Line */}
@@ -118,7 +120,7 @@ const Index = () => {
               gradientFrom={gradients[index % gradients.length].from}
               gradientTo={gradients[index % gradients.length].to}
               products={categoryProducts}
-              isLoading={false}
+              isLoading={loading}
             />
           </div>
         );
@@ -142,18 +144,7 @@ const Index = () => {
         </div>
       )}
 
-        {/* Load more button for pagination */}
-        {!loading && page < totalPages && (
-          <div className="container mx-auto px-4 py-8 text-center">
-            <button
-              onClick={loadMore}
-              className="px-6 py-2 bg-amber-600 text-white rounded-md"
-              disabled={isLoadingMore}
-            >
-              {isLoadingMore ? 'جاري التحميل...' : 'تحميل المزيد'}
-            </button>
-          </div>
-        )}
+        {/* (Removed global "load more" pagination: each category shows up to 4 products with its own "عرض الكل" link) */}
       </div> {/* Close main content wrapper */}
 
       <Footer />
