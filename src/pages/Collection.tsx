@@ -62,6 +62,15 @@ export default function Collection() {
     }
   }, [category]);
 
+  // Ensure we start at the top of the collection page when navigating to a category
+  useEffect(() => {
+    try {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    } catch (e) {
+      // no-op in environments without window
+    }
+  }, [resolvedCategory]);
+
   return (
     <>
       <Header />
