@@ -63,8 +63,7 @@
   "functions": {
     "api/**/*.js": {
       "memory": 1024,
-      "maxDuration": 10,
-      "includeFiles": "{node_modules/pg/**,backend/node_modules/{multer,@vercel}/**}"
+      "maxDuration": 30
     }
   }
 }

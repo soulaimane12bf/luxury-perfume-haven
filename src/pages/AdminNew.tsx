@@ -127,6 +127,11 @@ export default function AdminDashboard() {
   const { isAuthenticated, token, loading: authLoading } = useAuth();
   
   const [products, setProducts] = useState<Product[]>([]);
+  const [productPage, setProductPage] = useState<number>(1);
+  const [productLimit, setProductLimit] = useState<number>(24);
+  const [productTotalPages, setProductTotalPages] = useState<number>(1);
+  const [productTotal, setProductTotal] = useState<number>(0);
+  const [productBestSellersCount, setProductBestSellersCount] = useState<number>(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -236,6 +241,47 @@ export default function AdminDashboard() {
       navigate('/login');
     }
   }, [isAuthenticated, token, authLoading, navigate, toast]);
+
+  // When admin logs in, pre-fetch counts/stats so top cards show correct numbers
+  useEffect(() => {
+    const fetchAdminStats = async () => {
+      if (authLoading || !isAuthenticated) return;
+      try {
+        // Fetch lightweight paginated product meta + small lists for other entities in parallel
+        setLoading(true);
+        const [productsPage, categoriesList, reviewsList, ordersList, bestSellersPage] = await Promise.all([
+          productsApi.getAll({ page: 1, limit: 1 }).catch(() => ({ products: [], total: 0, totalPages: 1 })),
+          categoriesApi.getAll().catch(() => []),
+          reviewsApi.getAll().catch(() => []),
+          ordersApi.getAll().catch(() => []),
+          // get count of best selling products via filtered paginated request
+          productsApi.getAll({ best_selling: true, page: 1, limit: 1 }).catch(() => ({ products: [], total: 0 })),
+        ]);
+
+        // Update product totals (server-provided)
+        if (productsPage && typeof productsPage.total !== 'undefined') {
+          setProductTotal(Number(productsPage.total || 0));
+          setProductTotalPages(Number(productsPage.totalPages || 1));
+        }
+
+        // Populate other admin lists so stats derive correctly
+        if (Array.isArray(categoriesList) && categoriesList.length > 0) setCategories(categoriesList as any);
+        if (Array.isArray(reviewsList) && reviewsList.length > 0) setReviews(reviewsList as any);
+        if (Array.isArray(ordersList) && ordersList.length > 0) setOrders(ordersList as any);
+
+        // Best sellers count from paginated meta
+        if (bestSellersPage && typeof bestSellersPage.total !== 'undefined') {
+          setProductBestSellersCount(Number(bestSellersPage.total || 0));
+        }
+      } catch (err) {
+        console.error('Failed to prefetch admin stats', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAdminStats();
+  }, [authLoading, isAuthenticated]);
 
   useEffect(() => {
     // Load data for the active tab only
@@ -349,8 +395,16 @@ export default function AdminDashboard() {
         case 'products':
         case 'bestsellers':
           if (products.length === 0) {
-            const productsData = await productsApi.getAll({}).catch(() => []);
-            setProducts(Array.isArray(productsData) ? productsData : []);
+            const productsData = await productsApi.getAll({ page: productPage, limit: productLimit }).catch(() => ({ products: [] }));
+            // If admin receives paginated response, it will include products + meta
+            if (productsData && productsData.products) {
+              setProducts(Array.isArray(productsData.products) ? productsData.products : []);
+              setProductTotal(Number(productsData.total || 0));
+              setProductTotalPages(Number(productsData.totalPages || 1));
+            } else {
+              const productsArray = Array.isArray(productsData) ? productsData : (productsData.products || []);
+              setProducts(Array.isArray(productsArray) ? productsArray : []);
+            }
           }
           break;
         case 'categories':
@@ -389,6 +443,30 @@ export default function AdminDashboard() {
     await loadTabData(activeTab);
   };
 
+  // Re-fetch products when page or limit changes (only when products tab is active)
+  useEffect(() => {
+    if (activeTab === 'products') {
+      (async () => {
+        try {
+          setLoading(true);
+          const productsData = await productsApi.getAll({ page: productPage, limit: productLimit });
+          if (productsData && productsData.products) {
+            setProducts(Array.isArray(productsData.products) ? productsData.products : []);
+            setProductTotal(Number(productsData.total || 0));
+            setProductTotalPages(Number(productsData.totalPages || 1));
+          } else {
+            const productsArray = Array.isArray(productsData) ? productsData : (productsData.products || []);
+            setProducts(Array.isArray(productsArray) ? productsArray : []);
+          }
+        } catch (error: any) {
+          handleApiError(error, 'جلب المنتجات');
+        } finally {
+          setLoading(false);
+        }
+      })();
+    }
+  }, [productPage, productLimit, activeTab]);
+
   // Refresh data for the current active tab
   const refreshTabData = async () => {
     await refreshSpecificTab(activeTab);
@@ -400,8 +478,25 @@ export default function AdminDashboard() {
       switch (tab) {
         case 'products':
         case 'bestsellers':
-          const productsData = await productsApi.getAll({});
-          setProducts(Array.isArray(productsData) ? productsData : []);
+          const productsData = await productsApi.getAll({ page: productPage, limit: productLimit });
+          // Handle both new API format { products: [], total, page, totalPages }
+            if (productsData && productsData.products) {
+              setProducts(Array.isArray(productsData.products) ? productsData.products : []);
+              setProductTotal(Number(productsData.total || 0));
+              setProductTotalPages(Number(productsData.totalPages || 1));
+              // also refresh best-sellers count
+              (async () => {
+                try {
+                  const bestPage = await productsApi.getAll({ best_selling: true, page: 1, limit: 1 });
+                  if (bestPage && typeof bestPage.total !== 'undefined') setProductBestSellersCount(Number(bestPage.total || 0));
+                } catch (e) {
+                  // ignore
+                }
+              })();
+            } else {
+              const productsArray = productsData.products || (Array.isArray(productsData) ? productsData : []);
+              setProducts(Array.isArray(productsArray) ? productsArray : []);
+            }
           break;
         case 'categories':
           const categoriesData = await categoriesApi.getAll();
@@ -901,9 +996,10 @@ export default function AdminDashboard() {
   }
 
   const stats = {
-    totalProducts: Array.isArray(products) ? products.length : 0,
+    // Prefer server-provided total when available (productTotal), fallback to loaded products length
+    totalProducts: productTotal > 0 ? productTotal : (Array.isArray(products) ? products.length : 0),
     totalCategories: Array.isArray(categories) ? categories.length : 0,
-    bestSellers: Array.isArray(products) ? products.filter(p => p.best_selling).length : 0,
+  bestSellers: productBestSellersCount > 0 ? productBestSellersCount : (Array.isArray(products) ? products.filter(p => p.best_selling).length : 0),
     pendingReviews: Array.isArray(reviews) ? reviews.filter(r => !r.approved).length : 0,
     totalOrders: Array.isArray(orders) ? orders.length : 0,
     pendingOrders: Array.isArray(orders) ? orders.filter((o: any) => o.status === 'pending').length : 0,
@@ -1417,9 +1513,33 @@ export default function AdminDashboard() {
                     </TableBody>
                   </Table>
                 </div>
-                  </CardContent>
-                </Card>
-              )}
+
+                {/* Pagination controls */}
+                <div className="flex items-center justify-between px-4 py-3 bg-white/5 border-t mt-4">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={productPage <= 1}
+                      onClick={() => setProductPage((p) => Math.max(1, p - 1))}
+                    >
+                      السابق
+                    </Button>
+                    <div className="px-3">صفحة {productPage} من {productTotalPages}</div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={productPage >= productTotalPages}
+                      onClick={() => setProductPage((p) => Math.min(productTotalPages, p + 1))}
+                    >
+                      التالي
+                    </Button>
+                  </div>
+                  <div className="text-sm text-muted">إجمالي المنتجات: {productTotal}</div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
               {/* Categories Tab */}
               {activeTab === 'categories' && (
