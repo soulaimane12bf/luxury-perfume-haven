@@ -132,6 +132,12 @@ export default function AdminDashboard() {
   const [productTotalPages, setProductTotalPages] = useState<number>(1);
   const [productTotal, setProductTotal] = useState<number>(0);
   const [productBestSellersCount, setProductBestSellersCount] = useState<number>(0);
+  // Best-sellers specific pagination/state
+  const [bestSellersProducts, setBestSellersProducts] = useState<Product[]>([]);
+  const [bestSellersPage, setBestSellersPage] = useState<number>(1);
+  const [bestSellersLimit, setBestSellersLimit] = useState<number>(24);
+  const [bestSellersTotalPages, setBestSellersTotalPages] = useState<number>(1);
+  const [bestSellersTotal, setBestSellersTotal] = useState<number>(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -393,7 +399,6 @@ export default function AdminDashboard() {
           }
           break;
         case 'products':
-        case 'bestsellers':
           if (products.length === 0) {
             const productsData = await productsApi.getAll({ page: productPage, limit: productLimit }).catch(() => ({ products: [] }));
             // If admin receives paginated response, it will include products + meta
@@ -404,6 +409,20 @@ export default function AdminDashboard() {
             } else {
               const productsArray = Array.isArray(productsData) ? productsData : (productsData.products || []);
               setProducts(Array.isArray(productsArray) ? productsArray : []);
+            }
+          }
+          break;
+        case 'bestsellers':
+          // Load best-selling products with pagination
+          if (bestSellersProducts.length === 0) {
+            const bestData = await productsApi.getAll({ best_selling: true, page: bestSellersPage, limit: bestSellersLimit }).catch(() => ({ products: [] }));
+            if (bestData && bestData.products) {
+              setBestSellersProducts(Array.isArray(bestData.products) ? bestData.products : []);
+              setBestSellersTotal(Number(bestData.total || 0));
+              setBestSellersTotalPages(Number(bestData.totalPages || 1));
+            } else {
+              const arr = Array.isArray(bestData) ? bestData : (bestData.products || []);
+              setBestSellersProducts(Array.isArray(arr) ? arr : []);
             }
           }
           break;
@@ -467,6 +486,31 @@ export default function AdminDashboard() {
     }
   }, [productPage, productLimit, activeTab]);
 
+  // Re-fetch best-sellers when its page or limit changes (only when bestsellers tab is active)
+  useEffect(() => {
+    if (activeTab === 'bestsellers') {
+      (async () => {
+        try {
+          setLoading(true);
+          const bestData = await productsApi.getAll({ best_selling: true, page: bestSellersPage, limit: bestSellersLimit });
+          if (bestData && bestData.products) {
+            setBestSellersProducts(Array.isArray(bestData.products) ? bestData.products : []);
+            setBestSellersTotal(Number(bestData.total || 0));
+            setBestSellersTotalPages(Number(bestData.totalPages || 1));
+            if (typeof bestData.total !== 'undefined') setProductBestSellersCount(Number(bestData.total || 0));
+          } else {
+            const arr = Array.isArray(bestData) ? bestData : (bestData.products || []);
+            setBestSellersProducts(Array.isArray(arr) ? arr : []);
+          }
+        } catch (error: any) {
+          handleApiError(error, 'جلب الأكثر مبيعاً');
+        } finally {
+          setLoading(false);
+        }
+      })();
+    }
+  }, [bestSellersPage, bestSellersLimit, activeTab]);
+
   // Refresh data for the current active tab
   const refreshTabData = async () => {
     await refreshSpecificTab(activeTab);
@@ -477,14 +521,14 @@ export default function AdminDashboard() {
     try {
       switch (tab) {
         case 'products':
-        case 'bestsellers':
-          const productsData = await productsApi.getAll({ page: productPage, limit: productLimit });
-          // Handle both new API format { products: [], total, page, totalPages }
+          {
+            const productsData = await productsApi.getAll({ page: productPage, limit: productLimit });
+            // Handle both new API format { products: [], total, page, totalPages }
             if (productsData && productsData.products) {
               setProducts(Array.isArray(productsData.products) ? productsData.products : []);
               setProductTotal(Number(productsData.total || 0));
               setProductTotalPages(Number(productsData.totalPages || 1));
-              // also refresh best-sellers count
+              // also refresh best-sellers count (lightweight)
               (async () => {
                 try {
                   const bestPage = await productsApi.getAll({ best_selling: true, page: 1, limit: 1 });
@@ -497,6 +541,22 @@ export default function AdminDashboard() {
               const productsArray = productsData.products || (Array.isArray(productsData) ? productsData : []);
               setProducts(Array.isArray(productsArray) ? productsArray : []);
             }
+          }
+          break;
+        case 'bestsellers':
+          {
+            const bestData = await productsApi.getAll({ best_selling: true, page: bestSellersPage, limit: bestSellersLimit });
+            if (bestData && bestData.products) {
+              setBestSellersProducts(Array.isArray(bestData.products) ? bestData.products : []);
+              setBestSellersTotal(Number(bestData.total || 0));
+              setBestSellersTotalPages(Number(bestData.totalPages || 1));
+              // keep top-card count in sync
+              if (typeof bestData.total !== 'undefined') setProductBestSellersCount(Number(bestData.total || 0));
+            } else {
+              const arr = bestData.products || (Array.isArray(bestData) ? bestData : []);
+              setBestSellersProducts(Array.isArray(arr) ? arr : []);
+            }
+          }
           break;
         case 'categories':
           const categoriesData = await categoriesApi.getAll();
@@ -1789,7 +1849,7 @@ export default function AdminDashboard() {
               <CardContent className="p-0 md:p-6 md:pt-0">
                 {/* Mobile View - Cards */}
                 <div className="md:hidden space-y-3 p-4">
-                  {products.map((product) => {
+                  {bestSellersProducts.map((product) => {
                     const toggleId = `best-selling-toggle-${product.id}`;
                     const labelId = `${toggleId}-label`;
                     return (
@@ -1827,7 +1887,7 @@ export default function AdminDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {products.map((product) => {
+                      {bestSellersProducts.map((product) => {
                         const toggleId = `best-selling-toggle-desktop-${product.id}`;
                         const labelId = `${toggleId}-label`;
                         return (
@@ -1851,6 +1911,30 @@ export default function AdminDashboard() {
                       })}
                     </TableBody>
                   </Table>
+                </div>
+
+                {/* Pagination controls for Best Sellers */}
+                <div className="flex items-center justify-between px-4 py-3 bg-white/5 border-t mt-4">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={bestSellersPage <= 1}
+                      onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))}
+                    >
+                      السابق
+                    </Button>
+                    <div className="px-3">صفحة {bestSellersPage} من {bestSellersTotalPages}</div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={bestSellersPage >= bestSellersTotalPages}
+                      onClick={() => setBestSellersPage((p) => Math.min(bestSellersTotalPages, p + 1))}
+                    >
+                      التالي
+                    </Button>
+                  </div>
+                  <div className="text-sm text-muted">إجمالي المنتجات الأكثر مبيعاً: {bestSellersTotal}</div>
                 </div>
                   </CardContent>
                 </Card>

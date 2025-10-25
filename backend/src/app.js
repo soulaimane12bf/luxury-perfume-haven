@@ -6,7 +6,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
-import sequelize from './config/database.js';
+import sequelize, { USING_IN_MEMORY_FALLBACK } from './config/database.js';
 import productRoutes from './routes/products.js';
 import categoryRoutes from './routes/categories.js';
 import reviewRoutes from './routes/reviews.js';
@@ -95,8 +95,11 @@ export let databaseReady = false;
  * On success, it returns true. On failure, it logs the error and returns false.
  */
 export async function initializeDatabase() {
-  // If no database connection information is provided, skip initialization.
+  // If no external database configuration is provided and we're NOT using
+  // the in-memory fallback, skip initialization. When USING_IN_MEMORY_FALLBACK
+  // is set, allow initialization to proceed (it will create sqlite in-memory).
   if (
+    !USING_IN_MEMORY_FALLBACK &&
     !process.env.DATABASE_URL &&
     !process.env.POSTGRES_URL &&
     !process.env.DB_URL &&
@@ -112,11 +115,14 @@ export async function initializeDatabase() {
     await sequelize.authenticate();
     console.log('✓ Connected to the database');
 
-    await sequelize.sync({ alter: true });
-    console.log('✓ Database models synchronized');
+    // Use a standard sync in serverless to keep startup fast. Avoid alter
+    // operations on cold starts as they can be slow; use migrations in prod.
+    await sequelize.sync();
+    console.log('✓ Database models synchronized (sync)');
 
-    // Attempt to seed only if SEED env var is not explicitly disabled.
-    await seedDatabase();
+  // Attempt to seed only if SEED env var requests it. For in-memory
+  // fallbacks we set SEED=true in the DB config so this will populate demo data.
+  await seedDatabase();
 
     databaseReady = true;
     return true;
@@ -184,11 +190,20 @@ async function seedDatabase() {
 }
 
 // Middleware to check database readiness before processing API requests
+// Allow public GET requests to proceed even when the DB is not yet ready.
+// Only block modifying requests (POST/PUT/PATCH/DELETE) when the DB is unavailable.
 app.use('/api', (req, res, next) => {
   if (!databaseReady) {
-    return res.status(503).json({ 
-      error: 'Service unavailable: database not ready.',
-      message: 'The database is not configured or not reachable. Please configure database environment variables and restart the server.'
+    const method = req.method && req.method.toUpperCase();
+    if (method === 'GET' || method === 'OPTIONS') {
+      // allow read-only requests to try (handlers may return cached/fallback data)
+      return next();
+    }
+
+    return res.status(503).json({
+      error: 'Service unavailable: database not ready',
+      message:
+        'The database is not configured or reachable. Read-only endpoints may still work. Configure database environment variables for full API functionality.'
     });
   }
   next();
