@@ -53,7 +53,7 @@ export function CategorySection({
           </div>
           
           <Link
-            to={`/collection?category=${categorySlug}`}
+            to={`/collection/${categorySlug}`}
             className="hidden md:inline-flex items-center gap-2 px-6 py-3 border-2 border-amber-600 text-amber-600 dark:text-amber-500 font-semibold rounded-full hover:bg-amber-600 hover:text-white dark:hover:bg-amber-600 dark:hover:text-white transition-all duration-300 hover:scale-105 group"
           >
             <span>عرض الكل</span>
@@ -77,7 +77,7 @@ export function CategorySection({
         {/* Mobile View All Button */}
         <div className="md:hidden text-center mt-8">
           <Link
-            to={`/collection?category=${categorySlug}`}
+            to={`/collection/${categorySlug}`}
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
           >
             <span>عرض الكل</span>
