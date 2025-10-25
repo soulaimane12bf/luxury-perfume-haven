@@ -13,8 +13,11 @@ export default function Collection() {
   const { category } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Prefer path param (/:category) but fall back to ?category= query param
+  const resolvedCategory = category || searchParams.get('category') || undefined;
+
   const filters = {
-    category: category || searchParams.get('category'),
+    category: resolvedCategory,
     brand: searchParams.get('brand'),
     type: searchParams.get('type'),
     minPrice: searchParams.get('minPrice'),
@@ -28,7 +31,10 @@ export default function Collection() {
   const { data: brandsData, isLoading: brandsLoading } = useBrands();
   const { data: catData } = useCategory(category!);
   
-  const products = Array.isArray(productsData) ? productsData : [];
+  // productsData can be either an array (public) or a paginated object (admin responses)
+  const products = Array.isArray(productsData)
+    ? productsData
+    : (productsData && Array.isArray((productsData as any).products) ? (productsData as any).products : []);
   const brands = Array.isArray(brandsData) ? brandsData : [];
   const categoryData = catData as any;
   const loading = productsLoading || brandsLoading;
@@ -44,6 +50,16 @@ export default function Collection() {
     
     setSearchParams(newParams);
   };
+
+  // If the page was opened with a path param (/:category) ensure the query string is in sync
+  // so downstream components that read from searchParams keep working.
+  useEffect(() => {
+    if (category && searchParams.get('category') !== category) {
+      const p = new URLSearchParams(searchParams);
+      p.set('category', category);
+      setSearchParams(p, { replace: true });
+    }
+  }, [category]);
 
   return (
     <>
