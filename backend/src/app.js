@@ -198,6 +198,21 @@ app.use('/api', (req, res, next) => {
       return next();
     }
 
+    // TEMPORARY: allow POST /api/auth/login to proceed when ADMIN credentials
+    // are provided via environment variables even if the DB isn't ready. This
+    // is an emergency fallback to enable admin sign-in while DB init is fixed.
+    // IMPORTANT: remove this after you confirm DB-backed auth is working.
+    try {
+      const adminLoginPath = '/auth/login'; // middleware is mounted at /api
+      const isAuthLogin = req.path && req.path.toLowerCase().startsWith(adminLoginPath);
+      const hasAdminEnv = process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD;
+      if (isAuthLogin && method === 'POST' && hasAdminEnv) {
+        return next();
+      }
+    } catch (e) {
+      // ignore and fall through to 503
+    }
+
     return res.status(503).json({
       error: 'Service unavailable: database not ready',
       message:
