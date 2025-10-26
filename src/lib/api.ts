@@ -250,7 +250,12 @@ export const productsApi = {
     const params = new URLSearchParams();
     params.append('q', query);
     params.append('limit', String(limit));
-    return apiCall(`${API_BASE_URL}/products/search?${params}`, {}, 'البحث عن المنتجات');
+    const data = await apiCall(`${API_BASE_URL}/products/search?${params}`, {}, 'البحث عن المنتجات');
+    // Normalize response: some backends return { products, total } while others return an array
+    const anyData = data as any;
+    if (Array.isArray(anyData)) return anyData;
+    if (Array.isArray(anyData?.products)) return anyData.products;
+    return [];
   },
 
   create: async (product: unknown) => {
