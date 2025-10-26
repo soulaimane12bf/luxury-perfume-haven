@@ -39,8 +39,8 @@ const App = () => (
           <Toaster />
           <Sonner />
           <CartDrawer />
-          <FloatingWhatsApp />
           <BrowserRouter>
+            <FloatingWhatsApp />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
