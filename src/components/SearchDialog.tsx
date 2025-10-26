@@ -21,7 +21,7 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all'); // stores category slug or 'all'
   const navigate = useNavigate();
 
   // Fetch categories
@@ -50,32 +50,33 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
     return () => clearTimeout(timer);
   }, [searchQuery, selectedCategory]);
 
-  const performSearch = async (query: string, categoryId?: string) => {
+  const performSearch = async (query: string, categorySlug?: string) => {
     setIsSearching(true);
     try {
       let products;
-      
+
       if (query.trim().length >= 2) {
         // If we have a search query, use search API and filter by category on frontend
         products = await productsApi.search(query, 50);
         let filteredProducts = Array.isArray(products) ? products : [];
-        
+
         // Filter by category if selected (not "all")
-        if (categoryId && categoryId !== 'all') {
-          filteredProducts = filteredProducts.filter(product => product.category === categoryId);
+        if (categorySlug && categorySlug !== 'all') {
+          // product.category is stored as category slug in our data model, so compare to slug
+          filteredProducts = filteredProducts.filter(product => product.category === categorySlug);
         }
-        
+
         products = filteredProducts;
-      } else if (categoryId && categoryId !== 'all') {
-        // If only category is selected, get all products from that category
-        products = await productsApi.getAll({ category: categoryId, limit: 50 });
+      } else if (categorySlug && categorySlug !== 'all') {
+        // If only category is selected, get all products from that category (backend expects slug)
+        products = await productsApi.getAll({ category: categorySlug, limit: 50 });
       } else {
         // No query and no category selected
         setSearchResults([]);
         setIsSearching(false);
         return;
       }
-      
+
       // Limit to 10 results
       setSearchResults(Array.isArray(products) ? products.slice(0, 10) : []);
     } catch (error) {
@@ -116,7 +117,7 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
           >
             <option value="all">جميع الفئات</option>
             {categories.map((category) => (
-              <option key={category.id} value={category.id}>
+              <option key={category.id} value={category.slug}>
                 {category.name}
               </option>
             ))}
