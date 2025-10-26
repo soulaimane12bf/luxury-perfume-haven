@@ -413,17 +413,32 @@ export default function AdminDashboard() {
           }
           break;
         case 'bestsellers':
-          // Load best-selling products with pagination
+          // For admin UX we want to show the same paginated product list here
+          // but with a toggle for "best_selling". So load the regular products
+          // page and also fetch a lightweight count of total best-selling items
+          // to display the totals.
           if (bestSellersProducts.length === 0) {
-            const bestData = await productsApi.getAll({ best_selling: true, page: bestSellersPage, limit: bestSellersLimit }).catch(() => ({ products: [] }));
-            if (bestData && bestData.products) {
-              setBestSellersProducts(Array.isArray(bestData.products) ? bestData.products : []);
-              setBestSellersTotal(Number(bestData.total || 0));
-              setBestSellersTotalPages(Number(bestData.totalPages || 1));
+            const productsPage = await productsApi.getAll({ page: bestSellersPage, limit: bestSellersLimit }).catch(() => ({ products: [] }));
+            if (productsPage && productsPage.products) {
+              setBestSellersProducts(Array.isArray(productsPage.products) ? productsPage.products : []);
+              // total here is total products; keep separate total for best-sellers count
+              setBestSellersTotalPages(Number(productsPage.totalPages || 1));
             } else {
-              const arr = Array.isArray(bestData) ? bestData : (bestData.products || []);
+              const arr = Array.isArray(productsPage) ? productsPage : (productsPage.products || []);
               setBestSellersProducts(Array.isArray(arr) ? arr : []);
             }
+
+            // Fetch only the meta count for best-selling products so we can show totals
+            (async () => {
+              try {
+                const bestCount = await productsApi.getAll({ best_selling: true, page: 1, limit: 1 }).catch(() => ({ total: 0 }));
+                if (bestCount && typeof bestCount.total !== 'undefined') {
+                  setBestSellersTotal(Number(bestCount.total || 0));
+                }
+              } catch (e) {
+                // ignore
+              }
+            })();
           }
           break;
         case 'categories':
@@ -492,15 +507,25 @@ export default function AdminDashboard() {
       (async () => {
         try {
           setLoading(true);
-          const bestData = await productsApi.getAll({ best_selling: true, page: bestSellersPage, limit: bestSellersLimit });
-          if (bestData && bestData.products) {
-            setBestSellersProducts(Array.isArray(bestData.products) ? bestData.products : []);
-            setBestSellersTotal(Number(bestData.total || 0));
-            setBestSellersTotalPages(Number(bestData.totalPages || 1));
-            if (typeof bestData.total !== 'undefined') setProductBestSellersCount(Number(bestData.total || 0));
+          // Load regular paginated products for admin view so toggled-off items remain visible
+          const productsPage = await productsApi.getAll({ page: bestSellersPage, limit: bestSellersLimit });
+          if (productsPage && productsPage.products) {
+            setBestSellersProducts(Array.isArray(productsPage.products) ? productsPage.products : []);
+            setBestSellersTotalPages(Number(productsPage.totalPages || 1));
           } else {
-            const arr = Array.isArray(bestData) ? bestData : (bestData.products || []);
+            const arr = Array.isArray(productsPage) ? productsPage : (productsPage.products || []);
             setBestSellersProducts(Array.isArray(arr) ? arr : []);
+          }
+
+          // Also fetch best-sellers count meta separately
+          try {
+            const bestCount = await productsApi.getAll({ best_selling: true, page: 1, limit: 1 });
+            if (bestCount && typeof bestCount.total !== 'undefined') {
+              setBestSellersTotal(Number(bestCount.total || 0));
+              if (typeof bestCount.total !== 'undefined') setProductBestSellersCount(Number(bestCount.total || 0));
+            }
+          } catch (e) {
+            // ignore count fetch error
           }
         } catch (error: any) {
           handleApiError(error, 'جلب الأكثر مبيعاً');
