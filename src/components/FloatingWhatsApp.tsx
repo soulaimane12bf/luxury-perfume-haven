@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -11,16 +12,27 @@ export default function FloatingWhatsApp() {
   const [phone, setPhone] = useState<string | null>(null);
 
   // Hide the floating WhatsApp bubble on admin pages (any path containing /admin)
-  if (typeof window !== 'undefined') {
-    const p = window.location.pathname || '';
-    if (p === '/admin' || p.startsWith('/admin/') || p.startsWith('/admin')) return null;
-  }
+  // Use React Router location so we react to SPA navigations without a full
+  // page refresh. An early return based on window.location prevents updates
+  // when the user navigates within the app, causing the behavior you reported.
+  const location = typeof window !== 'undefined' ? useLocation() : { pathname: '' };
+  const [isAdminRoute, setIsAdminRoute] = useState(() => {
+    const p = typeof window !== 'undefined' ? window.location.pathname : '';
+    return p === '/admin' || p.startsWith('/admin/');
+  });
 
   useEffect(() => {
     const onResize = () => setIsRight(window.innerWidth < 768);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  // Update admin-route state when the router location changes.
+  useEffect(() => {
+    if (!location || !location.pathname) return;
+    const p = location.pathname;
+    setIsAdminRoute(p === '/admin' || p.startsWith('/admin/'));
+  }, [location && location.pathname]);
 
   const fallbackPhone = '212600000000'; // used if contact endpoint is unavailable
   const message = 'مرحباً، أريد الاستفسار عن منتجاتكم';
@@ -70,6 +82,10 @@ export default function FloatingWhatsApp() {
       mounted = false;
     };
   }, []);
+
+  // If we're on an admin route, render nothing. This uses state derived from
+  // the router location so it updates immediately on SPA navigation.
+  if (isAdminRoute) return null;
 
   // container position depends on isRight
   const containerClass = isRight ? 'fixed bottom-6 right-6 z-50' : 'fixed bottom-6 left-6 z-50';
