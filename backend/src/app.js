@@ -80,7 +80,11 @@ const corsOptions = {
     'Cache-Control',
     'X-Requested-With',
     'Accept',
-    'Origin'
+    'Origin',
+    // Vercel-specific headers used when deployment protection is enabled
+    'x-vercel-protection-bypass',
+    'x-vercel-id',
+    'x-vercel-deployment-url'
   ],
   exposedHeaders: ['Content-Range', 'X-Content-Range']
 };
