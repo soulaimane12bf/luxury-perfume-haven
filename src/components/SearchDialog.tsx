@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 import { productsApi, categoriesApi } from '@/lib/api';
+import { productMatchesQuery } from '@/lib/searchUtils';
 
 interface SearchDialogProps {
   open: boolean;
@@ -56,14 +57,14 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
       let products;
 
       if (query.trim().length >= 2) {
-        // If we have a search query, use search API and filter by category on frontend
-        products = await productsApi.search(query, 50);
-        let filteredProducts = Array.isArray(products) ? products : [];
+        // If we have a search query, use search API and then apply client-side smart filtering
+        const raw = await productsApi.search(query, 50);
+        const arr = Array.isArray(raw) ? raw : [];
 
-        // Filter by category if selected (not "all")
+        // Apply fuzzy/case-insensitive matching and optionally category filter
+        let filteredProducts = arr.filter((p) => productMatchesQuery(p, query));
         if (categorySlug && categorySlug !== 'all') {
-          // product.category is stored as category slug in our data model, so compare to slug
-          filteredProducts = filteredProducts.filter(product => product.category === categorySlug);
+          filteredProducts = filteredProducts.filter(product => String(product.category) === String(categorySlug));
         }
 
         products = filteredProducts;

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { categoriesApi, productsApi } from "@/lib/api";
+import { productMatchesQuery } from '@/lib/searchUtils';
 import { useCart } from "@/contexts/CartContext";
 import SearchDialog from "@/components/SearchDialog";
 import cosmedLogo from "@/assets/images/cosmed-logo.png";
@@ -53,8 +54,11 @@ const Header = () => {
   const performSidebarSearch = async (query: string) => {
     setIsSidebarSearching(true);
     try {
-      const products = await productsApi.search(query, 8); // Limit to 8 results for sidebar
-      setSidebarSearchResults(Array.isArray(products) ? products : []);
+      // Fetch a larger set and then apply client-side fuzzy matching for smarter results
+      const raw = await productsApi.search(query, 20);
+      const arr = Array.isArray(raw) ? raw : [];
+      const filtered = arr.filter((p) => productMatchesQuery(p, query)).slice(0, 8);
+      setSidebarSearchResults(filtered);
     } catch (error) {
       console.error('Sidebar search error:', error);
       setSidebarSearchResults([]);
