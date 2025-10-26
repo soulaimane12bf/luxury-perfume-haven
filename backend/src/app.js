@@ -83,6 +83,9 @@ app.use((req, res, next) => {
 // successfully and false otherwise. The value is exported so other modules can
 // check it and handle requests appropriately.
 export let databaseReady = false;
+let _initializing = false;
+let _initAttempts = 0;
+const _MAX_INIT_ATTEMPTS = 10;
 
 /**
  * Initialize and seed the database if connection information is provided.
@@ -95,6 +98,9 @@ export let databaseReady = false;
  * On success, it returns true. On failure, it logs the error and returns false.
  */
 export async function initializeDatabase() {
+  if (_initializing) return databaseReady;
+  _initializing = true;
+  _initAttempts++;
   // If no external database configuration is provided and we're NOT using
   // the in-memory fallback, skip initialization. When USING_IN_MEMORY_FALLBACK
   // is set, allow initialization to proceed (it will create sqlite in-memory).
@@ -161,6 +167,19 @@ export async function initializeDatabase() {
     // Log the full error object (message + stack) to help diagnose init failures
     console.error('✗ Database initialization error:', error);
     databaseReady = false;
+    _initializing = false;
+
+    // Retry initialization after a backoff unless we've reached max attempts.
+    if (_initAttempts < _MAX_INIT_ATTEMPTS) {
+      const backoffMs = Math.min(30000, 5000 * _initAttempts);
+      console.log(`⚠️  Will retry database initialization in ${backoffMs}ms (attempt ${_initAttempts}/${_MAX_INIT_ATTEMPTS})`);
+      setTimeout(() => {
+        initializeDatabase().catch(() => {});
+      }, backoffMs);
+    } else {
+      console.warn('⚠️  Max database initialization attempts reached; will stop retrying.');
+    }
+
     return false;
   }
 }
