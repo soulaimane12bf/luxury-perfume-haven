@@ -11,7 +11,9 @@ const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
     // allow extra bottom padding on small screens so fixed UI (eg. floating buttons)
     // don't overlap pagination; also center the nav and allow horizontal scroll/wrap
     // Ensure pagination sits above fixed floating elements (like WhatsApp bubble)
-    className={cn("mx-auto flex w-full justify-center pb-24 md:pb-0 relative z-60", className)}
+    // We avoid forcing extra bottom padding here; the admin hides floating bubbles
+    // so the extra padding is not required. Keep high z-index so it's above fixed UI.
+    className={cn("mx-auto flex w-full justify-center relative z-60", className)}
     {...props}
   />
 );

@@ -1665,7 +1665,19 @@ export default function AdminDashboard() {
                             // `productTotalPages`, but fall back to computing it from
                             // `productTotal` and `productLimit` if something went wrong.
                             const computedFromTotal = Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)));
-                            const total = productTotalPages && productTotalPages > 0 ? productTotalPages : computedFromTotal;
+                            // If the server mistakenly returned a raw product count in
+                            // productTotalPages (e.g. 144) detect it by comparing to
+                            // productTotal. If productTotalPages is larger than the
+                            // actual product count, use the computed pages instead.
+                            let total = computedFromTotal;
+                            if (productTotalPages && productTotalPages > 0) {
+                              if (productTotal && productTotalPages > productTotal) {
+                                // server returned total products instead of pages — use computed
+                                total = computedFromTotal;
+                              } else {
+                                total = productTotalPages;
+                              }
+                            }
                             const add = (n: number | 'e') => pages.push(n);
 
                             // Always show first
