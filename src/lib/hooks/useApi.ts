@@ -43,10 +43,10 @@ export function useProduct(id: string | number) {
   });
 }
 
-export function useBestSellingProducts(limit = 8) {
+export function useBestSellingProducts(limit = 8, page?: number) {
   return useQuery({
-    queryKey: QUERY_KEYS.products.bestSelling(limit),
-    queryFn: () => productsApi.getBestSelling(limit),
+    queryKey: QUERY_KEYS.products.bestSelling(`${limit}:${page ?? 1}` as any),
+    queryFn: () => productsApi.getBestSelling(limit, page),
     staleTime: 10 * 60 * 1000, // 10 minutes - best sellers don't change often
   });
 }

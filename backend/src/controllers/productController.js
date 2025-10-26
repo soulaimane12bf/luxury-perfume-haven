@@ -131,12 +131,23 @@ export const deleteProduct = async (req, res) => {
 // Get best selling products
 export const getBestSelling = async (req, res) => {
   try {
-    const limit = req.query.limit || 8;
-    const products = await Product.findAll({ 
+    // Support pagination for best-selling list
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 8, 100);
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await Product.findAndCountAll({
       where: { best_selling: true },
-      limit: Number(limit)
+      limit,
+      offset,
+      order: [['created_at', 'DESC']],
+      raw: true,
     });
-    res.json(products);
+
+    const total = Number(count || 0);
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+
+    res.json({ products: rows, total, page, totalPages });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

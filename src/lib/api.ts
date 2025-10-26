@@ -193,12 +193,17 @@ export const productsApi = {
       headers: isAdmin ? withAuth({ 'Cache-Control': 'no-cache' }) : {},
     }, 'جلب المنتجات') as any;
 
-    // For admin requests return full paginated response (products + meta)
-    if (isAdmin) {
-      return data;
+    // If the caller requested pagination (page or limit present) return the full
+    // paginated response (products + meta). This allows public pages to request
+    // specific pages and render pagination controls. Admin requests always
+    // receive the full paginated response as well.
+    const hasPaginationRequested = Object.prototype.hasOwnProperty.call(filters, 'page') || Object.prototype.hasOwnProperty.call(filters, 'limit');
+
+    if (isAdmin || hasPaginationRequested) {
+      return data; // { products, total, page, totalPages }
     }
 
-    // For public requests return only products array and cache it
+    // For simple public list requests (no pagination) return only products array and cache it
     const productsData = data.products || data;
     setCachedData(cacheKey, productsData);
     return productsData;
@@ -214,12 +219,19 @@ export const productsApi = {
     return data;
   },
 
-  getBestSelling: async (limit = 8) => {
-    const cacheKey = `bestsellers:${limit}`;
+  getBestSelling: async (limit = 8, page: number | undefined = undefined) => {
+    // If page is provided, request paginated response; otherwise behave like
+    // previous implementation (return list limited by `limit`). Cache keys
+    // include page when present.
+    const cacheKey = page ? `bestsellers:page=${page}:limit=${limit}` : `bestsellers:limit=${limit}`;
     const cached = getCachedData(cacheKey);
     if (cached) return cached;
-    
-    const data = await apiCall(`${API_BASE_URL}/products/best-selling?limit=${limit}`, {}, 'جلب المنتجات الأكثر مبيعاً');
+
+    const params = new URLSearchParams();
+    params.append('limit', String(limit));
+    if (page) params.append('page', String(page));
+
+    const data = await apiCall(`${API_BASE_URL}/products/best-selling?${params}`, {}, 'جلب المنتجات الأكثر مبيعاً');
     setCachedData(cacheKey, data);
     return data;
   },
