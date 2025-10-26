@@ -2,6 +2,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@/lib/hooks/useApi';
+import { productsApi } from '@/lib/api';
 import ProductCard from '@/components/ProductCard';
 import { ProductGridSkeleton } from '@/components/ProductCardSkeleton';
 import FilterBar from '@/components/FilterBar';
@@ -39,7 +40,6 @@ export default function Collection() {
 
   // Pagination state (defaults match backend default limit = 24)
   // Keep page in sync with query string for shareable URLs
-  const [searchParams, setSearchParams] = useSearchParams();
   const pageParam = parseInt(searchParams.get('page') || '1', 10) || 1;
   const [page, setPage] = useState<number>(pageParam);
   const [limit] = useState<number>(24);
