@@ -717,9 +717,13 @@ export default function AdminDashboard() {
         description: result.best_selling ? 'تمت الإضافة للأكثر مبيعاً' : 'تمت الإزالة من الأكثر مبيعاً',
         className: 'bg-green-50 border-green-200',
       });
-      // Refresh data from server to ensure consistency
+      // Update local lists so toggled product remains visible in the Best Sellers
+      // tab (don't immediately remove it from the UI when the admin toggles it).
+      setBestSellersProducts((prev) => prev.map((p) => p.id === productId ? { ...p, best_selling: result.best_selling } : p));
+      setProducts((prev) => prev.map((p) => p.id === productId ? { ...p, best_selling: result.best_selling } : p));
+      // Refresh main products list to keep global state consistent, but avoid
+      // refetching the bestsellers list which would remove the toggled item.
       await refreshSpecificTab('products');
-      await refreshSpecificTab('bestsellers');
     } catch (error: any) {
       handleApiError(error, 'تحديث حالة الأكثر مبيعاً');
     }
