@@ -13,9 +13,12 @@ export default function FloatingWhatsApp() {
   };
 
   return (
-    <div className="fixed bottom-6 left-6 z-50">
+    // Place the floating button on the right for small screens (mobile) so it
+    // doesn't cover centered pagination; on medium+ screens keep it on the left
+    // as originally designed.
+    <div className="fixed bottom-6 right-6 md:left-6 md:right-auto z-50">
       {isOpen && (
-        <div className="absolute bottom-20 left-0 bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-5 w-72 mb-2 border-2 border-green-500/20 animate-in slide-in-from-bottom-4 duration-300">
+        <div className="absolute bottom-20 right-0 md:left-0 bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-5 w-72 mb-2 border-2 border-green-500/20 animate-in slide-in-from-bottom-4 duration-300">
           <button
             onClick={() => setIsOpen(false)}
             className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"

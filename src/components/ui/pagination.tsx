@@ -8,7 +8,10 @@ const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
   <nav
     role="navigation"
     aria-label="pagination"
-    className={cn("mx-auto flex w-full justify-center", className)}
+    // allow extra bottom padding on small screens so fixed UI (eg. floating buttons)
+    // don't overlap pagination; also center the nav and allow horizontal scroll/wrap
+    // Ensure pagination sits above fixed floating elements (like WhatsApp bubble)
+    className={cn("mx-auto flex w-full justify-center pb-24 md:pb-0 relative z-60", className)}
     {...props}
   />
 );
@@ -16,7 +19,16 @@ Pagination.displayName = "Pagination";
 
 const PaginationContent = React.forwardRef<HTMLUListElement, React.ComponentProps<"ul">>(
   ({ className, ...props }, ref) => (
-    <ul ref={ref} className={cn("flex flex-row items-center gap-1", className)} {...props} />
+    // Allow wrapping and horizontal scrolling on very small screens. Add small
+    // horizontal padding so buttons don't touch the edges.
+    <ul
+      ref={ref}
+      className={cn(
+        "flex flex-row flex-wrap items-center gap-1 justify-center overflow-auto px-2",
+        className,
+      )}
+      {...props}
+    />
   ),
 );
 PaginationContent.displayName = "PaginationContent";
