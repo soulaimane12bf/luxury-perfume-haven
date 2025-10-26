@@ -127,10 +127,8 @@ export async function initializeDatabase() {
     databaseReady = true;
     return true;
   } catch (error) {
-    console.error(
-      '✗ Database initialization error:',
-      error instanceof Error ? error.message : error
-    );
+    // Log the full error object (message + stack) to help diagnose init failures
+    console.error('✗ Database initialization error:', error);
     databaseReady = false;
     return false;
   }
