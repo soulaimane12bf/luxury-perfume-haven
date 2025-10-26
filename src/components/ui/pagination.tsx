@@ -19,12 +19,12 @@ Pagination.displayName = "Pagination";
 
 const PaginationContent = React.forwardRef<HTMLUListElement, React.ComponentProps<"ul">>(
   ({ className, ...props }, ref) => (
-    // Allow wrapping and horizontal scrolling on very small screens. Add small
-    // horizontal padding so buttons don't touch the edges.
+    // Keep pagination on a single line (no wrap) and allow horizontal scrolling
+    // when it overflows. This prevents controls from stacking line-under-line.
     <ul
       ref={ref}
       className={cn(
-        "flex flex-row flex-wrap items-center gap-1 justify-center overflow-auto px-2",
+        "flex flex-row items-center gap-1 justify-center whitespace-nowrap overflow-x-auto px-2",
         className,
       )}
       {...props}

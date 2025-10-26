@@ -4,8 +4,11 @@ import { Button } from '@/components/ui/button';
 
 export default function FloatingWhatsApp() {
   const [isOpen, setIsOpen] = useState(false);
-  // Hide the floating WhatsApp bubble on admin pages to avoid covering admin UI
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) return null;
+  // Hide the floating WhatsApp bubble on admin pages (any path containing /admin)
+  if (typeof window !== 'undefined') {
+    const p = window.location.pathname || '';
+    if (p === '/admin' || p.startsWith('/admin/') || p.startsWith('/admin')) return null;
+  }
   const adminPhone = '212600000000'; // Replace with actual admin phone
   const message = 'مرحباً، أريد الاستفسار عن منتجاتكم';
 
