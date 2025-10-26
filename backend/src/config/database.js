@@ -4,17 +4,27 @@ import './pg-loader.js'; // Force pg to be loaded
 
 dotenv.config();
 
-// Auto-detect database type from environment variables
+// Auto-detect database type from environment variables. Support several
+// common provider-specific names (Neon/Heroku/etc.). We prefer an explicit
+// URL if provided (DATABASE_URL, POSTGRES_URL, POSTGRES_URL_NO_SSL, ...).
+const candidateUrls = [
+  process.env.DATABASE_URL,
+  process.env.POSTGRES_URL,
+  process.env.DB_URL,
+  process.env.POSTGRES_URL_NO_SSL,
+  process.env.POSTGRES_URL_UNPOOLED,
+  process.env.POSTGRES_URL_NO_POOLER,
+  process.env.POSTGRES_URL_UNPOOLED,
+].filter(Boolean);
+
 const isPostgres = Boolean(
-  process.env.POSTGRES_URL || 
-  process.env.DATABASE_URL?.includes('postgres')
+  candidateUrls.find(u => /postgres/i.test(u)) ||
+  process.env.POSTGRES_HOST ||
+  process.env.PGHOST_UNPOOLED ||
+  process.env.PGHOST
 );
 
-const useUrl = Boolean(
-  process.env.DATABASE_URL || 
-  process.env.POSTGRES_URL || 
-  process.env.DB_URL
-);
+const useUrl = candidateUrls.length > 0;
 
 const dialect = isPostgres ? 'postgres' : 'mysql';
 
@@ -41,8 +51,15 @@ if (isPostgres) {
   commonOptions.dialectOptions.ssl = { require: true };
 }
 
-// Use DATABASE_URL, POSTGRES_URL, or DB_URL if available, otherwise use individual vars
-const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.DB_URL;
+// Prefer a URL if available (support several env names commonly used by Neon)
+const databaseUrl =
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.DB_URL ||
+  process.env.POSTGRES_URL_NO_SSL ||
+  process.env.POSTGRES_URL_UNPOOLED ||
+  process.env.POSTGRES_URL_NO_POOLER ||
+  null;
 
 // Detect whether any DB configuration is present. If not, fall back to an
 // in-memory SQLite database. This makes the server responsive on Vercel
