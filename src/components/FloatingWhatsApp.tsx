@@ -8,6 +8,7 @@ export default function FloatingWhatsApp() {
     if (typeof window === 'undefined') return true;
     return window.innerWidth < 768; // tailwind md breakpoint
   });
+  const [phone, setPhone] = useState<string | null>(null);
 
   // Hide the floating WhatsApp bubble on admin pages (any path containing /admin)
   if (typeof window !== 'undefined') {
@@ -21,13 +22,40 @@ export default function FloatingWhatsApp() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const adminPhone = '212600000000'; // Replace with actual admin phone
+  const fallbackPhone = '212600000000'; // used if contact endpoint is unavailable
   const message = 'مرحباً، أريد الاستفسار عن منتجاتكم';
 
   const handleClick = () => {
-    const whatsappUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
+    const targetPhone = phone || fallbackPhone;
+    const whatsappUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
+
+  useEffect(() => {
+    // Fetch the public contact phone from the backend. If this fails,
+    // we'll continue to use the fallbackPhone so the feature remains usable.
+    if (typeof window === 'undefined') return;
+    let mounted = true;
+    fetch('/api/contact')
+      .then((res) => {
+        if (!res.ok) throw new Error('no-contact');
+        return res.json();
+      })
+      .then((data) => {
+        if (mounted && data && data.phone) {
+          // normalize to digits and optional leading +
+          const normalized = String(data.phone).replace(/[^0-9+]/g, '');
+          setPhone(normalized);
+        }
+      })
+      .catch(() => {
+        // ignore; fallback will be used
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // container position depends on isRight
   const containerClass = isRight ? 'fixed bottom-6 right-6 z-50' : 'fixed bottom-6 left-6 z-50';

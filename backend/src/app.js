@@ -289,6 +289,41 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Public contact endpoint: returns the WhatsApp phone number maintained by the
+// admin profile (super-admin). Falls back to ADMIN_WHATSAPP env var when not
+// present. This endpoint is intentionally read-only and public so the frontend
+// can display an up-to-date contact number without requiring authentication.
+app.get('/api/contact', async (req, res) => {
+  try {
+    // Try to read the super-admin's phone from the DB if available.
+    let phone = null;
+    try {
+      const admin = await Admin.findOne({ where: { role: 'super-admin' } });
+      if (admin && admin.phone) phone = admin.phone;
+    } catch (e) {
+      // DB might not be available (read-only endpoints should still work);
+      // we'll ignore DB errors and fall back to env var.
+      console.warn('Contact endpoint: could not read admin from DB:', e.message || e);
+    }
+
+    if (!phone) {
+      phone = process.env.ADMIN_WHATSAPP || null;
+    }
+
+    if (!phone) {
+      return res.status(404).json({ error: 'contact_not_found', message: 'No contact phone configured' });
+    }
+
+    // Normalize the phone to a plain numeric string without spaces so the
+    // frontend can directly build a wa.me link.
+    const normalized = String(phone).replace(/[^0-9+]/g, '');
+    return res.json({ phone: normalized });
+  } catch (err) {
+    console.error('Contact endpoint error:', err.message || err);
+    return res.status(500).json({ error: 'internal_error', message: 'Failed to retrieve contact' });
+  }
+});
+
 // Error handling middleware
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
