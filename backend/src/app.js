@@ -314,9 +314,41 @@ app.get('/api/contact', async (req, res) => {
       return res.status(404).json({ error: 'contact_not_found', message: 'No contact phone configured' });
     }
 
-    // Normalize the phone to a plain numeric string without spaces so the
-    // frontend can directly build a wa.me link.
-    const normalized = String(phone).replace(/[^0-9+]/g, '');
+    // Format the phone for wa.me links. Handle several common input formats
+    // and ensure Moroccan mobile numbers that start with 06/07 become
+    // the international form starting with 2126/2127 (i.e. drop the leading 0
+    // and prefix with 212).
+    const formatPhoneForWa = (raw) => {
+      if (!raw) return null;
+      let s = String(raw).trim();
+      // remove common separators but keep leading + for now
+      s = s.replace(/[^0-9+]/g, '');
+      // remove leading + or international 00 prefix
+      if (s.startsWith('+')) s = s.slice(1);
+      if (s.startsWith('00')) s = s.slice(2);
+
+      // If it already starts with country code 212, return as-is
+      if (s.startsWith('212')) return s;
+
+      // If it starts with a single leading 0 (local format), drop it and
+      // prefix with 212. This covers 06xxxxxxx -> 2126xxxxxxx and
+      // 07xxxxxxx -> 2127xxxxxxx
+      if (s.startsWith('0')) {
+        s = s.slice(1);
+        return `212${s}`;
+      }
+
+      // If it looks like a local mobile (starts with 6 or 7 and is short),
+      // prefix with 212 as well.
+      if (/^[67]/.test(s)) {
+        return `212${s}`;
+      }
+
+      // Fallback: return digits as-is.
+      return s;
+    };
+
+    const normalized = formatPhoneForWa(phone);
     return res.json({ phone: normalized });
   } catch (err) {
     console.error('Contact endpoint error:', err.message || err);

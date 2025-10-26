@@ -36,6 +36,21 @@ export default function FloatingWhatsApp() {
     // we'll continue to use the fallbackPhone so the feature remains usable.
     if (typeof window === 'undefined') return;
     let mounted = true;
+    const formatPhoneClient = (raw) => {
+      if (!raw) return null;
+      let s = String(raw).trim();
+      s = s.replace(/[^0-9+]/g, '');
+      if (s.startsWith('+')) s = s.slice(1);
+      if (s.startsWith('00')) s = s.slice(2);
+      if (s.startsWith('212')) return s;
+      if (s.startsWith('0')) {
+        s = s.slice(1);
+        return `212${s}`;
+      }
+      if (/^[67]/.test(s)) return `212${s}`;
+      return s;
+    };
+
     fetch('/api/contact')
       .then((res) => {
         if (!res.ok) throw new Error('no-contact');
@@ -43,8 +58,7 @@ export default function FloatingWhatsApp() {
       })
       .then((data) => {
         if (mounted && data && data.phone) {
-          // normalize to digits and optional leading +
-          const normalized = String(data.phone).replace(/[^0-9+]/g, '');
+          const normalized = formatPhoneClient(data.phone);
           setPhone(normalized);
         }
       })
