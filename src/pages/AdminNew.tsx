@@ -1661,7 +1661,11 @@ export default function AdminDashboard() {
                           {(() => {
                             const pages: (number | 'e')[] = [];
                             const current = productPage || 1;
-                            const total = productTotalPages || 1;
+                            // Ensure we use a sane total pages number: prefer server-provided
+                            // `productTotalPages`, but fall back to computing it from
+                            // `productTotal` and `productLimit` if something went wrong.
+                            const computedFromTotal = Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)));
+                            const total = productTotalPages && productTotalPages > 0 ? productTotalPages : computedFromTotal;
                             const add = (n: number | 'e') => pages.push(n);
 
                             // Always show first

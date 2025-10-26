@@ -93,8 +93,9 @@ const Header = () => {
                 <Menu className="h-5 w-5 md:h-6 md:w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] sm:w-[320px] bg-white border-r-2 border-gold/30 p-0 z-[200]">
-              <div className="flex flex-col h-full">
+            {/* Open client menu from the RIGHT so it doesn't conflict with admin sidebar */}
+            <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-white border-l-2 border-gold/30 p-0 z-[200]">
+                <div className="flex flex-col h-full">
                 {/* Logo at top */}
                 <div className="flex justify-center py-4 border-b-2 border-gold/30 bg-gradient-to-b from-gold/5 to-transparent">
                   <img 
@@ -202,8 +203,8 @@ const Header = () => {
                     </Link>
                   ))}
                 </nav>
-              </div>
-            </SheetContent>
+        </div>
+      </SheetContent>
           </Sheet>
 
           {/* Center: Logo */}

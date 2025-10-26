@@ -50,9 +50,10 @@ const CartDrawer = () => {
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetContent
-        side="right"
-        className="w-full sm:w-[420px] bg-background/95 backdrop-blur-xl border-l-2 border-gold/20 [&>button:last-of-type]:hidden flex flex-col p-0"
-      >
+          // Open cart from the LEFT on client as requested
+          side="left"
+          className="w-full sm:w-[420px] bg-background/95 backdrop-blur-xl border-r-2 border-gold/20 [&>button:last-of-type]:hidden flex flex-col p-0"
+        >
         <SheetHeader className="flex flex-row items-center justify-between space-y-0 text-left px-6 py-4 border-b">
           <SheetTitle className="text-2xl font-bold flex items-center gap-2">
             <ShoppingBag className="h-6 w-6 text-gold" />
