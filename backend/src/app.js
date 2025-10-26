@@ -112,12 +112,22 @@ export async function initializeDatabase() {
     return false;
   }
   try {
-    await sequelize.authenticate();
+    // Helper to race a promise against a timeout so startup doesn't hang
+    const withTimeout = (p, ms, label) =>
+      Promise.race([
+        p,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+        )
+      ]);
+
+    await withTimeout(sequelize.authenticate(), 15000, 'sequelize.authenticate');
     console.log('✓ Connected to the database');
 
     // Use a standard sync in serverless to keep startup fast. Avoid alter
     // operations on cold starts as they can be slow; use migrations in prod.
-    await sequelize.sync();
+    // Race sync against a 30s timeout so we fail fast and avoid long cold-starts
+    await withTimeout(sequelize.sync(), 30000, 'sequelize.sync');
     console.log('✓ Database models synchronized (sync)');
 
   // Attempt to seed only if SEED env var requests it. For in-memory
