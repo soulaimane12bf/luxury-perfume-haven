@@ -124,6 +124,17 @@ export async function initializeDatabase() {
     await withTimeout(sequelize.authenticate(), 15000, 'sequelize.authenticate');
     console.log('✓ Connected to the database');
 
+    // Allow skipping sync/seed on startup (useful in production serverless).
+    // If SKIP_SYNC_ON_STARTUP=true is set in the environment, we will
+    // skip `sequelize.sync()` and seeding to avoid long cold-starts and
+    // potential connection termination from the provider. Migrations should
+    // be run separately as part of your deploy pipeline.
+    if (process.env.SKIP_SYNC_ON_STARTUP === 'true') {
+      console.log('⚠️  SKIP_SYNC_ON_STARTUP=true — skipping sequelize.sync() and seeding on startup');
+      databaseReady = true;
+      return true;
+    }
+
     // Use a standard sync in serverless to keep startup fast. Avoid alter
     // operations on cold starts as they can be slow; use migrations in prod.
     // Race sync against a 30s timeout so we fail fast and avoid long cold-starts
