@@ -39,12 +39,28 @@ const corsOptions = {
     if (!origin) return callback(null, true);
     
     // Allow all Vercel preview and production URLs
-    if (
-      origin.includes('.vercel.app') || 
-      origin.includes('localhost') ||
-      origin === process.env.FRONTEND_ORIGIN
-    ) {
-      return callback(null, true);
+    // Allow vercel domains, localhost and any explicitly-configured origins.
+    try {
+      if (origin.includes('.vercel.app') || origin.includes('localhost')) {
+        return callback(null, true);
+      }
+
+      // Support a single FRONTEND_ORIGIN or a comma-separated FRONTEND_ORIGINS
+      const configured = new Set();
+      if (process.env.FRONTEND_ORIGIN) configured.add(process.env.FRONTEND_ORIGIN.trim());
+      if (process.env.FRONTEND_ORIGINS) {
+        process.env.FRONTEND_ORIGINS.split(',').forEach(s => {
+          const v = String(s || '').trim(); if (v) configured.add(v);
+        });
+      }
+
+      // Also allow the common custom domain used here
+      configured.add('https://cosmedstores.com');
+      configured.add('https://www.cosmedstores.com');
+
+      if (configured.has(origin)) return callback(null, true);
+    } catch (e) {
+      // fall through to deny
     }
     
     // Allow the specific origin if FRONTEND_ORIGIN is set
