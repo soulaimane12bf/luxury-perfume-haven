@@ -1,5 +1,5 @@
 import { useState, useEffect, Fragment } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import AdminNavbar from '@/components/AdminNavbar';
 import AdminProfile from '@/components/AdminProfile';
 import AdminSidebar from '@/components/AdminSidebar';
@@ -62,6 +62,15 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
 
 type Product = {
   id: string;
@@ -127,14 +136,17 @@ export default function AdminDashboard() {
   const { isAuthenticated, token, loading: authLoading } = useAuth();
   
   const [products, setProducts] = useState<Product[]>([]);
-  const [productPage, setProductPage] = useState<number>(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const productPageParam = parseInt(searchParams.get('productsPage') || '1', 10) || 1;
+  const [productPage, setProductPage] = useState<number>(productPageParam);
   const [productLimit, setProductLimit] = useState<number>(24);
   const [productTotalPages, setProductTotalPages] = useState<number>(1);
   const [productTotal, setProductTotal] = useState<number>(0);
   const [productBestSellersCount, setProductBestSellersCount] = useState<number>(0);
   // Best-sellers specific pagination/state
   const [bestSellersProducts, setBestSellersProducts] = useState<Product[]>([]);
-  const [bestSellersPage, setBestSellersPage] = useState<number>(1);
+  const bestSellersPageParam = parseInt(searchParams.get('bestsellersPage') || '1', 10) || 1;
+  const [bestSellersPage, setBestSellersPage] = useState<number>(bestSellersPageParam);
   const [bestSellersLimit, setBestSellersLimit] = useState<number>(24);
   const [bestSellersTotalPages, setBestSellersTotalPages] = useState<number>(1);
   const [bestSellersTotal, setBestSellersTotal] = useState<number>(0);
@@ -300,6 +312,36 @@ export default function AdminDashboard() {
     const normalizedTab = isAdminTab(tabParam) ? tabParam : DEFAULT_ADMIN_TAB;
     setActiveTabState((current) => (current === normalizedTab ? current : normalizedTab));
   }, [location.search]);
+
+  // Keep product page in sync with URL so refresh/back-forward preserves page
+  useEffect(() => {
+    const p = parseInt(searchParams.get('productsPage') || '1', 10) || 1;
+    if (p !== productPage) setProductPage(p);
+  }, [searchParams]);
+
+  useEffect(() => {
+    const p = parseInt(searchParams.get('productsPage') || '1', 10) || 1;
+    if (p !== productPage) {
+      const np = new URLSearchParams(searchParams);
+      np.set('productsPage', String(productPage));
+      setSearchParams(np, { replace: true });
+    }
+  }, [productPage]);
+
+  // Keep best-sellers page in sync with URL
+  useEffect(() => {
+    const bp = parseInt(searchParams.get('bestsellersPage') || '1', 10) || 1;
+    if (bp !== bestSellersPage) setBestSellersPage(bp);
+  }, [searchParams]);
+
+  useEffect(() => {
+    const bp = parseInt(searchParams.get('bestsellersPage') || '1', 10) || 1;
+    if (bp !== bestSellersPage) {
+      const np = new URLSearchParams(searchParams);
+      np.set('bestsellersPage', String(bestSellersPage));
+      setSearchParams(np, { replace: true });
+    }
+  }, [bestSellersPage]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -1604,28 +1646,65 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Pagination controls */}
-                <div className="flex items-center justify-between px-4 py-3 bg-white/5 border-t mt-4">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={productPage <= 1}
-                      onClick={() => setProductPage((p) => Math.max(1, p - 1))}
-                    >
-                      السابق
-                    </Button>
-                    <div className="px-3">صفحة {productPage} من {productTotalPages}</div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={productPage >= productTotalPages}
-                      onClick={() => setProductPage((p) => Math.min(productTotalPages, p + 1))}
-                    >
-                      التالي
-                    </Button>
+                {productTotalPages > 1 && (
+                  <div className="flex items-center justify-between px-4 py-3 bg-white/5 border-t mt-4">
+                    <div className="flex items-center gap-2">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious onClick={() => setProductPage((p) => Math.max(1, p - 1))}>
+                              السابق
+                            </PaginationPrevious>
+                          </PaginationItem>
+
+                          {/* Compact pagination: show first, last, current +/- 2, with ellipses */}
+                          {(() => {
+                            const pages: (number | 'e')[] = [];
+                            const current = productPage || 1;
+                            const total = productTotalPages || 1;
+                            const add = (n: number | 'e') => pages.push(n);
+
+                            // Always show first
+                            add(1);
+
+                            // Show left ellipsis if needed
+                            if (current - 3 > 1) add('e');
+
+                            // Show current-2..current+2
+                            for (let i = Math.max(2, current - 2); i <= Math.min(total - 1, current + 2); i++) add(i);
+
+                            // Show right ellipsis if needed
+                            if (current + 3 < total) add('e');
+
+                            // Always show last if > 1
+                            if (total > 1) add(total);
+
+                            return pages.map((pn, idx) => {
+                              if (pn === 'e') return <PaginationItem key={`e-${idx}`}><PaginationEllipsis>…</PaginationEllipsis></PaginationItem>;
+                              return (
+                                <PaginationItem key={pn}>
+                                  <PaginationLink
+                                    isActive={pn === productPage}
+                                    onClick={() => setProductPage(Number(pn))}
+                                  >
+                                    {pn}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            });
+                          })()}
+
+                          <PaginationItem>
+                            <PaginationNext onClick={() => setProductPage((p) => Math.min(productTotalPages, p + 1))}>
+                              التالي
+                            </PaginationNext>
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                    <div className="text-sm text-muted">إجمالي المنتجات: {productTotal}</div>
                   </div>
-                  <div className="text-sm text-muted">إجمالي المنتجات: {productTotal}</div>
-                </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -1943,28 +2022,55 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Pagination controls for Best Sellers */}
-                <div className="flex items-center justify-between px-4 py-3 bg-white/5 border-t mt-4">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={bestSellersPage <= 1}
-                      onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))}
-                    >
-                      السابق
-                    </Button>
-                    <div className="px-3">صفحة {bestSellersPage} من {bestSellersTotalPages}</div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={bestSellersPage >= bestSellersTotalPages}
-                      onClick={() => setBestSellersPage((p) => Math.min(bestSellersTotalPages, p + 1))}
-                    >
-                      التالي
-                    </Button>
+                {bestSellersTotalPages > 1 && (
+                  <div className="flex items-center justify-between px-4 py-3 bg-white/5 border-t mt-4">
+                    <div className="flex items-center gap-2">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))}>
+                              السابق
+                            </PaginationPrevious>
+                          </PaginationItem>
+
+                          {(() => {
+                            const pages: (number | 'e')[] = [];
+                            const current = bestSellersPage || 1;
+                            const total = bestSellersTotalPages || 1;
+                            const add = (n: number | 'e') => pages.push(n);
+
+                            add(1);
+                            if (current - 3 > 1) add('e');
+                            for (let i = Math.max(2, current - 2); i <= Math.min(total - 1, current + 2); i++) add(i);
+                            if (current + 3 < total) add('e');
+                            if (total > 1) add(total);
+
+                            return pages.map((pn, idx) => {
+                              if (pn === 'e') return <PaginationItem key={`e-b-${idx}`}><PaginationEllipsis>…</PaginationEllipsis></PaginationItem>;
+                              return (
+                                <PaginationItem key={`b-${pn}`}>
+                                  <PaginationLink
+                                    isActive={pn === bestSellersPage}
+                                    onClick={() => setBestSellersPage(Number(pn))}
+                                  >
+                                    {pn}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            });
+                          })()}
+
+                          <PaginationItem>
+                            <PaginationNext onClick={() => setBestSellersPage((p) => Math.min(bestSellersTotalPages, p + 1))}>
+                              التالي
+                            </PaginationNext>
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                    <div className="text-sm text-muted">إجمالي المنتجات الأكثر مبيعاً: {bestSellersTotal}</div>
                   </div>
-                  <div className="text-sm text-muted">إجمالي المنتجات الأكثر مبيعاً: {bestSellersTotal}</div>
-                </div>
+                )}
                   </CardContent>
                 </Card>
               )}
