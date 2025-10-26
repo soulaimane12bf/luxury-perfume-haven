@@ -98,11 +98,21 @@ export async function initializeDatabase() {
   // If no external database configuration is provided and we're NOT using
   // the in-memory fallback, skip initialization. When USING_IN_MEMORY_FALLBACK
   // is set, allow initialization to proceed (it will create sqlite in-memory).
+  // Consider several provider-specific env names (Neon etc.) when deciding
+  // whether an external DB is configured.
+  const hasUrlConfig = Boolean(
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.DB_URL ||
+    process.env.POSTGRES_URL_NO_SSL ||
+    process.env.POSTGRES_URL_UNPOOLED ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    process.env.DATABASE_URL_UNPOOLED
+  );
+
   if (
     !USING_IN_MEMORY_FALLBACK &&
-    !process.env.DATABASE_URL &&
-    !process.env.POSTGRES_URL &&
-    !process.env.DB_URL &&
+    !hasUrlConfig &&
     !(process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME)
   ) {
     console.warn(
