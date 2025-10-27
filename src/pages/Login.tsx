@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, AlertCircle, Lock, User, ArrowRight } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 
 const Login = () => {
 	const [username, setUsername] = useState('')
@@ -13,26 +14,39 @@ const Login = () => {
 	const [loading, setLoading] = useState(false)
 	const [focusedField, setFocusedField] = useState(null)
 
+	const navigate = useNavigate()
+	const location = useLocation() as { state?: { from?: { pathname?: string } } }
+
+	const { login, isAuthenticated, loading: authLoading } = useAuth()
+
+	const from = location.state?.from?.pathname || '/admin'
+
+	useEffect(() => {
+		// if the auth hook finished and user is authenticated, redirect away from login
+		if (!authLoading && isAuthenticated) {
+			navigate(from, { replace: true })
+		}
+	}, [authLoading, isAuthenticated, navigate, from])
+
 	useEffect(() => {
 		if (error) {
 			setError(null)
 		}
-	}, [username, password])
+	}, [username, password, error])
 
 	const onSubmit = async (e) => {
 		e.preventDefault()
 		setError(null)
 		setLoading(true)
-		
-		// Simulate login
-		setTimeout(() => {
-			if (username === 'admin' && password === 'admin') {
-				alert('Login successful!')
-			} else {
-				setError('اسم المستخدم أو كلمة المرور غير صحيحة')
-			}
+		try {
+			await login(username, password)
+			// login sets auth state in hook; navigate will happen in the effect above
+		} catch (err) {
+			const message = err instanceof Error ? err.message : 'اسم المستخدم أو كلمة المرور غير صحيحة'
+			setError(message)
+		} finally {
 			setLoading(false)
-		}, 1500)
+		}
 	}
 
 	return (
@@ -187,7 +201,7 @@ const Login = () => {
 					{/* Bottom Info */}
 					<div className="mt-6 text-center">
 						<p className="text-gray-500 text-xs">
-							© 2025 Cosmed Perfumes · جميع الحقوق محفوظة
+							© 2025 Cosmedstores · جميع الحقوق محفوظة
 						</p>
 					</div>
 				</div>
