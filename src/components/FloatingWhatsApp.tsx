@@ -174,7 +174,11 @@ export default function FloatingWhatsApp() {
   
 
   const inner = (
-    <div style={{ position: 'fixed', left: 24, bottom: `${baseBottom + offsetBottom}px`, zIndex: 9999 }}>
+    // Use a z-index that keeps the bubble above regular page content but
+    // below overlaying UI like Sheets/Drawers (SheetContent uses z-[200]).
+    // This ensures when the cart or mobile sidebar opens the WhatsApp bubble
+    // sits underneath them instead of overlapping.
+    <div style={{ position: 'fixed', left: 24, bottom: `${baseBottom + offsetBottom}px`, zIndex: 120 }}>
       {isOpen && (
         <div className={`absolute bottom-20 ${popupAlignClass} bg-white/95 dark:bg-gray-900/95 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] p-6 w-80 mb-2 border border-gold/10 backdrop-blur-sm animate-in slide-in-from-bottom-4 duration-300`}>
           <button
