@@ -1086,6 +1086,7 @@ export default function AdminDashboard() {
     { id: 'orders', label: 'الطلبات' },
     { id: 'products', label: 'المنتجات' },
     { id: 'bestsellers', label: 'الأكثر مبيعاً' },
+    { id: 'sliders', label: 'السلايدر' },
     { id: 'categories', label: 'الأقسام' },
     { id: 'reviews', label: 'التقييمات' },
     { id: 'profile', label: 'الملف الشخصي' },

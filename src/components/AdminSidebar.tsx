@@ -1,4 +1,4 @@
-import { Package, ShoppingCart, FolderTree, Star, User, LogOut, LayoutDashboard, TrendingUp, X } from 'lucide-react';
+import { Package, ShoppingCart, FolderTree, Star, User, LogOut, LayoutDashboard, TrendingUp, X, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +16,7 @@ export default function AdminSidebar({ activeTab, onTabChange, onLogout, onClose
     { id: 'orders', label: 'الطلبات', icon: ShoppingCart, color: 'text-amber-600' },
     { id: 'products', label: 'المنتجات', icon: Package, color: 'text-blue-600' },
     { id: 'bestsellers', label: 'الأكثر مبيعاً', icon: TrendingUp, color: 'text-emerald-500' },
+    { id: 'sliders', label: 'السلايدر', icon: Image, color: 'text-pink-500' },
     { id: 'categories', label: 'الأقسام', icon: FolderTree, color: 'text-green-600' },
     { id: 'reviews', label: 'التقييمات', icon: Star, color: 'text-yellow-600' },
     { id: 'profile', label: 'الملف الشخصي', icon: User, color: 'text-purple-600' },
