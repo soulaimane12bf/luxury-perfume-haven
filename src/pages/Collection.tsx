@@ -86,6 +86,9 @@ export default function Collection() {
   const categoryData = catData as { name?: string; description?: string } | undefined;
   const loading = productsLoading || brandsLoading;
 
+  // Ref to the products area so we can scroll the first product into view
+  const productsRef = useRef<HTMLDivElement | null>(null);
+
   const handleFilterChange = (key: string, value: string | null) => {
     const newParams = new URLSearchParams(searchParams);
     
@@ -115,21 +118,20 @@ export default function Collection() {
     } else {
       setPage(p as number);
     }
-    // Scroll pagination into view so the user sees the top of the pagination
-    // controls after clicking on a page number (helpful on long lists/mobile).
+    // Scroll the products container into view (so the user sees the first
+    // product on the next page). Respect the fixed header by using the
+    // --header-height CSS var if present.
     try {
-      const nav = document.querySelector('nav[aria-label="pagination"]') as HTMLElement | null;
-      // Respect the fixed header by reading the CSS var set by Header and
-      // scrolling so the pagination top sits below the header.
+      const container = productsRef.current ?? document.querySelector('.lg\\:col-span-3') as HTMLElement | null;
       const headerHeightStr = getComputedStyle(document.documentElement).getPropertyValue('--header-height') || '';
       const headerHeight = headerHeightStr ? parseInt(headerHeightStr, 10) : 0;
-      if (nav) {
-        const navTop = nav.getBoundingClientRect().top + window.scrollY;
+      if (container) {
+        const top = container.getBoundingClientRect().top + window.scrollY;
         const offset = Math.max(12, headerHeight || 12);
-        window.scrollTo({ top: Math.max(0, navTop - offset), behavior: 'smooth' });
+        window.scrollTo({ top: Math.max(0, top - offset), behavior: 'smooth' });
       }
     } catch (e) {
-      // ignore if anything goes wrong
+      // ignore errors when running in non-browser environments
     }
 
     // Clear the flag after a short delay once the router and effects settle.
@@ -230,7 +232,7 @@ export default function Collection() {
           </div>
 
           {/* Products Grid */}
-          <div className="lg:col-span-3">
+          <div ref={productsRef} className="lg:col-span-3">
             {loading ? (
               <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
                 <ProductGridSkeleton count={9} />
