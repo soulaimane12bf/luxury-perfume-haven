@@ -2371,7 +2371,6 @@ export default function AdminDashboard() {
                   value={categoryForm.slug}
                   onChange={(e) => setCategoryForm({ ...categoryForm, slug: e.target.value })}
                   placeholder="category-slug"
-                  disabled={!!editingCategory}
                 />
               </div>
 
