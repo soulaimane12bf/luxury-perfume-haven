@@ -50,14 +50,29 @@ type PaginationLinkProps = {
 } & Pick<ButtonProps, "size"> &
   React.ComponentProps<"a">;
 
+/*
+  Keep pagination link box dimensions stable between active/inactive states.
+  The UI applied different button variants which could change border/padding
+  and cause the row to reflow when toggling active state. To avoid layout
+  shift we enforce a consistent box model:
+    - fixed height (h-9)
+    - minimum width so digits don't reflow
+    - use box-border and border-2 on all links (inactive links use transparent border)
+    - center content with flex
+*/
 const PaginationLink = ({ className, isActive, size = "icon", ...props }: PaginationLinkProps) => (
   <a
     aria-current={isActive ? "page" : undefined}
     className={cn(
+      // preserve existing button styles but enforce stable sizing/layout
       buttonVariants({
         variant: isActive ? "outline" : "ghost",
         size,
       }),
+      // stable layout helpers
+      "h-9 min-w-[36px] flex items-center justify-center box-border border-2",
+      // make inactive borders transparent so visual change doesn't affect layout
+      !isActive && "border-transparent",
       className,
     )}
     {...props}
