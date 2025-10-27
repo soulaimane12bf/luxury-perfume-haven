@@ -13,7 +13,9 @@ const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
     // Ensure pagination sits above fixed floating elements (like WhatsApp bubble)
     // We avoid forcing extra bottom padding here; the admin hides floating bubbles
     // so the extra padding is not required. Keep high z-index so it's above fixed UI.
-    className={cn("mx-auto flex w-full justify-center relative z-60", className)}
+    // Use a sensible max-width and padding so the pagination never flows beyond
+    // the main content container. Keep it centered and above floating UI.
+    className={cn("mx-auto w-full max-w-screen-lg px-4 relative z-60", className)}
     {...props}
   />
 );
@@ -21,12 +23,13 @@ Pagination.displayName = "Pagination";
 
 const PaginationContent = React.forwardRef<HTMLUListElement, React.ComponentProps<"ul">>(
   ({ className, ...props }, ref) => (
-    // Keep pagination on a single line (no wrap) and allow horizontal scrolling
-    // when it overflows. This prevents controls from stacking line-under-line.
+    // Allow wrapping on very small screens and provide graceful overflow when
+    // necessary. This mirrors a robust pagination used by many frameworks
+    // (Angular/Bootstrap): centered, compact, and responsive.
     <ul
       ref={ref}
       className={cn(
-        "flex flex-row items-center gap-1 justify-center whitespace-nowrap overflow-x-auto px-2",
+        "flex flex-row flex-wrap items-center gap-2 justify-center overflow-x-auto md:overflow-visible px-2 py-2",
         className,
       )}
       {...props}
@@ -36,7 +39,9 @@ const PaginationContent = React.forwardRef<HTMLUListElement, React.ComponentProp
 PaginationContent.displayName = "PaginationContent";
 
 const PaginationItem = React.forwardRef<HTMLLIElement, React.ComponentProps<"li">>(({ className, ...props }, ref) => (
-  <li ref={ref} className={cn("", className)} {...props} />
+  // Inline-block ensures items respect container boundaries and wrap neatly
+  // instead of causing unexpected overflow.
+  <li ref={ref} className={cn("inline-block", className)} {...props} />
 ));
 PaginationItem.displayName = "PaginationItem";
 

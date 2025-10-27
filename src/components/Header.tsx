@@ -25,6 +25,23 @@ const Header = () => {
   const [isSidebarSearching, setIsSidebarSearching] = useState(false);
   const { getTotalItems, openCart } = useCart();
   const navigate = useNavigate();
+  const headerRef = (null as unknown) as React.RefObject<HTMLElement>;
+
+  // expose header height as a CSS variable so pages / toasts can offset themselves
+  useEffect(() => {
+    const setHeaderHeight = () => {
+      const el = document.querySelector('header');
+      if (el instanceof HTMLElement) {
+        const height = el.offsetHeight;
+        document.documentElement.style.setProperty('--header-height', `${height}px`);
+      }
+    };
+
+    // set initially and on resize (header may wrap/change height responsively)
+    setHeaderHeight();
+    window.addEventListener('resize', setHeaderHeight);
+    return () => window.removeEventListener('resize', setHeaderHeight);
+  }, []);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -151,14 +168,15 @@ const Header = () => {
                               className="w-full text-left p-3 rounded-lg hover:bg-gold/10 transition-colors border border-gray-100 hover:border-gold/30"
                             >
                               <div className="flex items-center gap-3">
-                                <img
-                                  src={product.image_urls?.[0] || product.image_url || '/placeholder-product.png'}
-                                  alt={product.name}
-                                  className="w-12 h-12 object-cover rounded-md flex-shrink-0"
-                                  onError={(e) => {
-                                    e.currentTarget.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20fill%3D%22%23f3f4f6%22%20width%3D%22100%22%20height%3D%22100%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%20fill%3D%22%239ca3af%22%20font-size%3D%2212%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fsvg%3E';
-                                  }}
-                                />
+                                                <img
+                                                  src={product.image_urls?.[0] || product.image_url || '/placeholder-product.png'}
+                                                  alt={product.name}
+                                                  loading="lazy"
+                                                  className="w-12 h-12 object-cover rounded-md flex-shrink-0"
+                                                  onError={(e) => {
+                                                    e.currentTarget.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20fill%3D%22%23f3f4f6%22%20width%3D%22100%22%20height%3D%22100%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%20fill%3D%22%239ca3af%22%20font-size%3D%2212%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fsvg%3E';
+                                                  }}
+                                                />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-gray-900 truncate">
                                     {product.name}

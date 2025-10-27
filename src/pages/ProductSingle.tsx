@@ -94,6 +94,7 @@ export default function ProductSingle() {
               <img
                 src={product.image_urls[selectedImage]}
                 alt={product.name}
+                loading="lazy"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 cursor-zoom-in"
               />
             </div>
@@ -109,6 +110,7 @@ export default function ProductSingle() {
                   <img 
                     src={url} 
                     alt={`${product.name} ${index + 1}`} 
+                    loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
                   />
                 </button>
