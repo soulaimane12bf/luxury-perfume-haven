@@ -26,6 +26,20 @@ interface FilterBarProps {
 
 export default function FilterBar({ filters, onFilterChange, brands }: FilterBarProps) {
   const [priceRange, setPriceRange] = useState([0, 5000]);
+  const [logoSrc, setLogoSrc] = useState<string | null>(null);
+
+  // Try to dynamically load a store sidebar logo if present. Graceful fallback if not.
+  useEffect(() => {
+    let mounted = true;
+    import('@/assets/images/sidebar-logo.png')
+      .then((m) => {
+        if (mounted && m && m.default) setLogoSrc(m.default as string);
+      })
+      .catch(() => {
+        // ignore — optional logo
+      });
+    return () => { mounted = false; };
+  }, []);
 
   const handleBrandToggle = (brand) => {
     const currentBrands = filters.brand ? filters.brand.split(',') : [];
@@ -58,18 +72,28 @@ export default function FilterBar({ filters, onFilterChange, brands }: FilterBar
   const hasActiveFilters = filters.brand || filters.type || filters.minPrice || filters.maxPrice || filters.best_selling;
 
   return (
-    <Card className="p-6 sticky top-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold">تصفية النتائج</h3>
+    <Card className="p-0 sticky top-4 overflow-hidden">
+      {/* Optional header with logo/title to match store sidebar design */}
+      <div className="p-4 border-b bg-gradient-to-b from-gray-50/5 to-transparent flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {logoSrc ? (
+            <img src={logoSrc} alt="logo" className="h-10 w-auto object-contain" />
+          ) : (
+            <div className="text-sm font-bold">تصفية المتجر</div>
+          )}
+        </div>
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
-            <X className="h-4 w-4 mr-1" />
-            مسح الكل
-          </Button>
+          <div className="pr-2">
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              <X className="h-4 w-4 mr-1" />
+              مسح الكل
+            </Button>
+          </div>
         )}
       </div>
 
-      <Separator className="my-4" />
+      <div className="p-6">
+        <Separator className="my-4" />
 
       {/* Sort By */}
       <div className="mb-6">
@@ -173,6 +197,7 @@ export default function FilterBar({ filters, onFilterChange, brands }: FilterBar
             <span>{priceRange[1]} درهم</span>
           </div>
         </div>
+      </div>
       </div>
     </Card>
   );

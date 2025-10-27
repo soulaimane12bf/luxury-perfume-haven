@@ -1,4 +1,4 @@
-import { Package, ShoppingCart, FolderTree, Star, User, LogOut, LayoutDashboard, TrendingUp, X, Images } from 'lucide-react';
+import { Package, ShoppingCart, FolderTree, Star, User, LogOut, LayoutDashboard, TrendingUp, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +18,6 @@ export default function AdminSidebar({ activeTab, onTabChange, onLogout, onClose
     { id: 'bestsellers', label: 'الأكثر مبيعاً', icon: TrendingUp, color: 'text-emerald-500' },
     { id: 'categories', label: 'الأقسام', icon: FolderTree, color: 'text-green-600' },
     { id: 'reviews', label: 'التقييمات', icon: Star, color: 'text-yellow-600' },
-    { id: 'sliders', label: 'الصور المتحركة', icon: Images, color: 'text-pink-600' },
     { id: 'profile', label: 'الملف الشخصي', icon: User, color: 'text-purple-600' },
   ];
 
@@ -26,7 +25,7 @@ export default function AdminSidebar({ activeTab, onTabChange, onLogout, onClose
     <div
       className={cn(
         'relative flex h-full w-64 flex-col bg-gradient-to-b from-gray-950 via-gray-900 to-black border-r border-amber-500/30 shadow-[0_0_30px_rgba(212,175,55,0.25)] transition-transform duration-300 ease-out overflow-hidden',
-        isMobile ? 'h-full rounded-r-3xl rounded-l-none' : 'h-screen',
+        isMobile ? 'h-full rounded-l-3xl rounded-r-none' : 'h-screen',
         className
       )}
     >
@@ -62,7 +61,7 @@ export default function AdminSidebar({ activeTab, onTabChange, onLogout, onClose
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
-          
+
           return (
             <button
               key={item.id}
