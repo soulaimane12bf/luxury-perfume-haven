@@ -14,7 +14,8 @@ export default function FloatingWhatsApp() {
   const location = useLocation();
   const [isAdminRoute, setIsAdminRoute] = useState(() => {
     const p = (location && location.pathname) || (typeof window !== 'undefined' ? window.location.pathname : '');
-    return p === '/admin' || p.startsWith('/admin/');
+    // Hide on admin routes and login route
+    return p === '/admin' || p.startsWith('/admin/') || p === '/login' || p.startsWith('/login');
   });
 
   useEffect(() => {
@@ -79,7 +80,7 @@ export default function FloatingWhatsApp() {
   useEffect(() => {
     const pathname = location?.pathname;
     if (!pathname) return;
-    setIsAdminRoute(pathname === '/admin' || pathname.startsWith('/admin/'));
+    setIsAdminRoute(pathname === '/admin' || pathname.startsWith('/admin/') || pathname === '/login' || pathname.startsWith('/login'));
   }, [location?.pathname]);
 
   const fallbackPhone = '212600000000';

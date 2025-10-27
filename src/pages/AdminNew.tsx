@@ -142,7 +142,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { isAuthenticated, token, loading: authLoading } = useAuth();
+  const { isAuthenticated, token, loading: authLoading, logout } = useAuth();
   
   const [products, setProducts] = useState<Product[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -922,7 +922,18 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    // Use central auth logout so all auth state is cleared consistently
+    try {
+      if (typeof logout === 'function') logout();
+    } catch (e) {
+      // fallback: clear token/admin directly
+      try {
+        localStorage.removeItem('token');
+        localStorage.removeItem('admin');
+      } catch (err) {
+        // ignore
+      }
+    }
     setActiveTabState('orders');
     closeSidebar();
     showAdminAlert({ title: 'تم تسجيل الخروج', text: 'إلى اللقاء!', icon: 'info', timer: 3000 });
@@ -2297,18 +2308,7 @@ export default function AdminDashboard() {
                     )}
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="product-type">النوع</Label>
-                  <select
-                    id="product-type"
-                    value={productForm.type}
-                    onChange={(e) => setProductForm({ ...productForm, type: e.target.value })}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="PRODUIT">PRODUIT</option>
-                    <option value="TESTEUR">TESTEUR</option>
-                  </select>
-                </div>
+                {/* Removed product type selector per admin request: keep type managed by backend/defaults */}
                 <div className="space-y-2">
                   <Label htmlFor="product-stock">المخزون</Label>
                   <Input
