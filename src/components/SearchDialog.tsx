@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Search, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,11 +17,27 @@ interface SearchDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Minimal shapes used by this dialog to avoid broad `any` and keep the file small
+interface ProductPreview {
+  id: string;
+  name: string;
+  brand?: string;
+  price?: number | string;
+  image_urls?: string[];
+  category?: string | number;
+}
+
+interface Category {
+  id: string | number;
+  slug: string;
+  name: string;
+}
+
 export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<ProductPreview[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all'); // stores category slug or 'all'
   const navigate = useNavigate();
 
@@ -38,23 +54,11 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
     fetchCategories();
   }, []);
 
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchQuery.trim().length >= 2 || (selectedCategory !== 'all' && searchQuery.trim().length === 0)) {
-        performSearch(searchQuery, selectedCategory);
-      } else if (searchQuery.trim().length < 2) {
-        setSearchResults([]);
-      }
-    }, 300); // 300ms debounce
-
-    return () => clearTimeout(timer);
-  }, [searchQuery, selectedCategory]);
-
-  const performSearch = async (query: string, categorySlug?: string) => {
+  // performSearch is stable (useCallback) so it can be referenced safely in effects
+  const performSearch = useCallback(async (query: string, categorySlug?: string) => {
     setIsSearching(true);
     try {
-      let products;
+      let products: unknown;
 
       if (query.trim().length >= 2) {
         // If we have a search query, use search API and then apply client-side smart filtering
@@ -62,7 +66,7 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
         const arr = Array.isArray(raw) ? raw : [];
 
         // Apply fuzzy/case-insensitive matching and optionally category filter
-        let filteredProducts = arr.filter((p) => productMatchesQuery(p, query));
+        let filteredProducts = (arr as any[]).filter((p) => productMatchesQuery(p, query));
         if (categorySlug && categorySlug !== 'all') {
           filteredProducts = filteredProducts.filter(product => String(product.category) === String(categorySlug));
         }
@@ -78,15 +82,38 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
         return;
       }
 
-      // Limit to 10 results
-      setSearchResults(Array.isArray(products) ? products.slice(0, 10) : []);
+      // Limit to 10 results and coerce to ProductPreview[] for the UI
+      const resultArr = Array.isArray(products) ? (products as any[]).slice(0, 10) : [];
+      setSearchResults(
+        resultArr.map((p) => ({
+          id: String(p.id),
+          name: p.name,
+          brand: p.brand,
+          price: p.price,
+          image_urls: Array.isArray(p.image_urls) ? p.image_urls : [],
+          category: p.category,
+        })) as ProductPreview[],
+      );
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
-  };
+  }, []);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim().length >= 2 || (selectedCategory !== 'all' && searchQuery.trim().length === 0)) {
+        performSearch(searchQuery, selectedCategory);
+      } else if (searchQuery.trim().length < 2) {
+        setSearchResults([]);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedCategory, performSearch]);
 
   const handleProductClick = (productId: string) => {
     navigate(`/product/${productId}`);
