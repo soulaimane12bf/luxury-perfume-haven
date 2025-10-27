@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ScrollToTopButton from '@/components/ScrollToTopButton';
 import { toast } from "sonner";
 import { HeroSlider } from "@/components/HeroSlider";
 import { BestSellers } from "@/components/BestSellers";
@@ -53,7 +54,7 @@ const Index = () => {
           try {
             const data = await productsApi.getAll({ category: cat.slug, limit: 4 });
             // productsApi returns an array for public requests
-            const prods = Array.isArray(data) ? data : (data.products || []);
+            const prods = Array.isArray(data) ? data : ((data as any).products || []);
             results[cat.slug] = prods;
           } catch (err) {
             console.error(`Failed to fetch products for category ${cat.slug}:`, err);
@@ -148,6 +149,7 @@ const Index = () => {
       </div> {/* Close main content wrapper */}
 
       <Footer />
+      <ScrollToTopButton />
     </div>
   );
 };

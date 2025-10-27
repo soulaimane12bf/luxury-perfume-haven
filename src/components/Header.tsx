@@ -240,7 +240,7 @@ const Header = () => {
           </Sheet>
 
           {/* Center: Logo */}
-          <Link to="/" className="flex flex-col items-center group flex-shrink-0">
+          <Link to="/" className="flex flex-col items-center group flex-shrink-0" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <div className="relative">
               <img 
                 src={cosmedLogo} 

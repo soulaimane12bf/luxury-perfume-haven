@@ -1,6 +1,7 @@
 import { useState, useEffect, Fragment } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import AdminNavbar from '@/components/AdminNavbar';
+import ScrollToTopButton from '@/components/ScrollToTopButton';
 import AdminProfile from '@/components/AdminProfile';
 import AdminSidebar from '@/components/AdminSidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -2566,6 +2567,7 @@ export default function AdminDashboard() {
           </DialogContent>
         </Dialog>
       </div>
+      <ScrollToTopButton />
     </div>
   );
 }
