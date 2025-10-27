@@ -126,11 +126,7 @@ export default function AdminProfile() {
         confirmPassword: '',
       });
     } catch (error: any) {
-      toast({
-        title: 'خطأ',
-        description: error.message || 'فشل في تغيير كلمة المرور',
-        variant: 'destructive',
-      });
+      showAdminAlert({ title: 'خطأ', text: error.message || 'فشل في تغيير كلمة المرور', icon: 'error', timer: 5000 });
     } finally {
       setChangingPassword(false);
     }

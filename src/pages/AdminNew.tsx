@@ -48,6 +48,7 @@ import {
 import { generateCustomerWhatsAppUrl } from '@/lib/whatsapp';
 import { productsApi, categoriesApi, reviewsApi, ordersApi, slidersApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import showAdminAlert from '@/lib/swal-admin';
 import { useAuth } from '@/hooks/use-auth';
 import { 
   Package, 
@@ -259,11 +260,7 @@ export default function AdminDashboard() {
     if (authLoading) return;
     
     if (!isAuthenticated || !token) {
-      toast({
-        title: 'غير مصرح',
-        description: 'يرجى تسجيل الدخول أولاً',
-        variant: 'destructive',
-      });
+      showAdminAlert({ title: 'غير مصرح', text: 'يرجى تسجيل الدخول أولاً', icon: 'error', timer: 5000 });
       navigate('/login');
     }
   }, [isAuthenticated, token, authLoading, navigate, toast]);
@@ -384,11 +381,7 @@ export default function AdminDashboard() {
       errorMessage = 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.';
     }
 
-    toast({
-      title: 'خطأ',
-      description: errorMessage,
-      variant: 'destructive',
-    });
+    showAdminAlert({ title: 'خطأ', text: errorMessage, icon: 'error', timer: 5000 });
 
     if (shouldLogout) {
       setTimeout(() => navigate('/login'), 1500);
@@ -706,11 +699,7 @@ export default function AdminDashboard() {
       // Validate required fields
       if (!productForm.type) {
         console.error('Type field is missing or null:', productForm.type);
-        toast({
-          title: 'خطأ',
-          description: 'نوع المنتج مطلوب',
-          variant: 'destructive',
-        });
+        showAdminAlert({ title: 'خطأ', text: 'نوع المنتج مطلوب', icon: 'error', timer: 5000 });
         return;
       }
       // Convert images to base64 or upload them
@@ -753,18 +742,10 @@ export default function AdminDashboard() {
 
       if (editingProduct) {
         await productsApi.update(editingProduct.id, productData);
-        toast({ 
-          title: '✅ نجح', 
-          description: 'تم تحديث المنتج بنجاح',
-          className: 'bg-green-50 border-green-200',
-        });
+        showAdminAlert({ title: '✅ نجح', text: 'تم تحديث المنتج بنجاح', icon: 'success', timer: 3000 });
       } else {
         await productsApi.create(productData);
-        toast({ 
-          title: '✅ نجح', 
-          description: 'تم إضافة المنتج بنجاح',
-          className: 'bg-green-50 border-green-200',
-        });
+        showAdminAlert({ title: '✅ نجح', text: 'تم إضافة المنتج بنجاح', icon: 'success', timer: 3000 });
       }
       
       setProductDialog(false);
@@ -777,11 +758,7 @@ export default function AdminDashboard() {
   const handleDeleteProduct = async (productId: string) => {
     try {
       await productsApi.delete(productId);
-      toast({ 
-        title: '✅ نجح', 
-        description: 'تم حذف المنتج',
-        className: 'bg-green-50 border-green-200',
-      });
+      showAdminAlert({ title: '✅ نجح', text: 'تم حذف المنتج', icon: 'success', timer: 3000 });
       await refreshTabData();
     } catch (error: any) {
       handleApiError(error, 'حذف المنتج');
@@ -792,11 +769,7 @@ export default function AdminDashboard() {
   const handleToggleBestSelling = async (productId: string) => {
     try {
       const result = await productsApi.toggleBestSelling(productId) as any;
-      toast({
-        title: '✅ نجح',
-        description: result.best_selling ? 'تمت الإضافة للأكثر مبيعاً' : 'تمت الإزالة من الأكثر مبيعاً',
-        className: 'bg-green-50 border-green-200',
-      });
+      showAdminAlert({ title: '✅ نجح', text: result.best_selling ? 'تمت الإضافة للأكثر مبيعاً' : 'تمت الإزالة من الأكثر مبيعاً', icon: 'success', timer: 3000 });
       // Update local lists so toggled product remains visible in the Best Sellers
       // tab (don't immediately remove it from the UI when the admin toggles it).
       setBestSellersProducts((prev) => prev.map((p) => p.id === productId ? { ...p, best_selling: result.best_selling } : p));
@@ -836,18 +809,10 @@ export default function AdminDashboard() {
         : categoryForm;
       if (editingCategory) {
         await categoriesApi.update(editingCategory.id, payload);
-        toast({ 
-          title: '✅ نجح', 
-          description: 'تم تحديث الفئة بنجاح',
-          className: 'bg-green-50 border-green-200',
-        });
+        showAdminAlert({ title: '✅ نجح', text: 'تم تحديث الفئة بنجاح', icon: 'success', timer: 3000 });
       } else {
         await categoriesApi.create(payload);
-        toast({ 
-          title: '✅ نجح', 
-          description: 'تم إضافة الفئة بنجاح',
-          className: 'bg-green-50 border-green-200',
-        });
+        showAdminAlert({ title: '✅ نجح', text: 'تم إضافة الفئة بنجاح', icon: 'success', timer: 3000 });
       }
       
       setCategoryDialog(false);
@@ -860,11 +825,7 @@ export default function AdminDashboard() {
   const handleDeleteCategory = async (categoryId: string) => {
     try {
       await categoriesApi.delete(categoryId);
-      toast({ 
-        title: '✅ نجح', 
-        description: 'تم حذف الفئة',
-        className: 'bg-green-50 border-green-200',
-      });
+      showAdminAlert({ title: '✅ نجح', text: 'تم حذف الفئة', icon: 'success', timer: 3000 });
       await refreshSpecificTab('categories');
     } catch (error: any) {
       handleApiError(error, 'حذف الفئة');
@@ -905,20 +866,12 @@ export default function AdminDashboard() {
     try {
       // Validate required fields
       if (!sliderImage && !editingSlider) {
-        toast({ 
-          title: '❌ خطأ', 
-          description: 'يرجى اختيار صورة للسلايدر',
-          variant: 'destructive',
-        });
+        showAdminAlert({ title: '❌ خطأ', text: 'يرجى اختيار صورة للسلايدر', icon: 'error', timer: 5000 });
         return;
       }
 
       if (!sliderForm.title) {
-        toast({ 
-          title: '❌ خطأ', 
-          description: 'يرجى إدخال عنوان السلايدر',
-          variant: 'destructive',
-        });
+        showAdminAlert({ title: '❌ خطأ', text: 'يرجى إدخال عنوان السلايدر', icon: 'error', timer: 5000 });
         return;
       }
 
@@ -943,18 +896,10 @@ export default function AdminDashboard() {
 
       if (editingSlider) {
         await slidersApi.update(editingSlider.id, formData);
-        toast({ 
-          title: '✅ نجح', 
-          description: 'تم تحديث السلايدر بنجاح',
-          className: 'bg-green-50 border-green-200',
-        });
+        showAdminAlert({ title: '✅ نجح', text: 'تم تحديث السلايدر بنجاح', icon: 'success', timer: 3000 });
       } else {
         await slidersApi.create(formData);
-        toast({ 
-          title: '✅ نجح', 
-          description: 'تم إضافة السلايدر بنجاح',
-          className: 'bg-green-50 border-green-200',
-        });
+        showAdminAlert({ title: '✅ نجح', text: 'تم إضافة السلايدر بنجاح', icon: 'success', timer: 3000 });
       }
       
       setSliderDialog(false);
@@ -968,11 +913,7 @@ export default function AdminDashboard() {
   const handleDeleteSlider = async (sliderId: string) => {
     try {
       await slidersApi.delete(sliderId);
-      toast({ 
-        title: '✅ نجح', 
-        description: 'تم حذف السلايدر',
-        className: 'bg-green-50 border-green-200',
-      });
+      showAdminAlert({ title: '✅ نجح', text: 'تم حذف السلايدر', icon: 'success', timer: 3000 });
       await refreshSpecificTab('sliders');
     } catch (error: any) {
       handleApiError(error, 'حذف السلايدر');
@@ -984,10 +925,7 @@ export default function AdminDashboard() {
     localStorage.removeItem('token');
     setActiveTabState('orders');
     closeSidebar();
-    toast({
-      title: 'تم تسجيل الخروج',
-      description: 'إلى اللقاء!',
-    });
+    showAdminAlert({ title: 'تم تسجيل الخروج', text: 'إلى اللقاء!', icon: 'info', timer: 3000 });
     navigate('/login');
   };
 
@@ -995,11 +933,7 @@ export default function AdminDashboard() {
   const handleApproveReview = async (reviewId: string) => {
     try {
       await reviewsApi.approve(reviewId);
-      toast({ 
-        title: '✅ نجح', 
-        description: 'تم الموافقة على التقييم',
-        className: 'bg-green-50 border-green-200',
-      });
+      showAdminAlert({ title: '✅ نجح', text: 'تم الموافقة على التقييم', icon: 'success', timer: 3000 });
       await refreshSpecificTab('reviews');
     } catch (error: any) {
       handleApiError(error, 'الموافقة على التقييم');
@@ -1009,11 +943,7 @@ export default function AdminDashboard() {
   const handleDeleteReview = async (reviewId: string) => {
     try {
       await reviewsApi.delete(reviewId);
-      toast({ 
-        title: '✅ نجح', 
-        description: 'تم حذف التقييم',
-        className: 'bg-green-50 border-green-200',
-      });
+      showAdminAlert({ title: '✅ نجح', text: 'تم حذف التقييم', icon: 'success', timer: 3000 });
       await refreshSpecificTab('reviews');
     } catch (error: any) {
       handleApiError(error, 'حذف التقييم');
@@ -1025,11 +955,7 @@ export default function AdminDashboard() {
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       await ordersApi.updateStatus(orderId, newStatus);
-      toast({
-        title: '✅ نجح',
-        description: 'تم تحديث حالة الطلب',
-        className: 'bg-green-50 border-green-200',
-      });
+      showAdminAlert({ title: '✅ نجح', text: 'تم تحديث حالة الطلب', icon: 'success', timer: 3000 });
       await refreshSpecificTab('orders');
     } catch (error: any) {
       handleApiError(error, 'تحديث حالة الطلب');
@@ -1039,11 +965,7 @@ export default function AdminDashboard() {
   const handleDeleteOrder = async (orderId: string) => {
     try {
       await ordersApi.delete(orderId);
-      toast({
-        title: '✅ نجح',
-        description: 'تم حذف الطلب',
-        className: 'bg-green-50 border-green-200',
-      });
+      showAdminAlert({ title: '✅ نجح', text: 'تم حذف الطلب', icon: 'success', timer: 3000 });
       await refreshSpecificTab('orders');
     } catch (error: any) {
       handleApiError(error, 'حذف الطلب');
