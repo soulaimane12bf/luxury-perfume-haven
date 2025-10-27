@@ -58,7 +58,8 @@ export default function Collection() {
   // Keep page in sync with query string for shareable URLs
   const pageParam = parseInt(searchParams.get('page') || '1', 10) || 1;
   const [page, setPage] = useState<number>(pageParam);
-  const [limit, setLimit] = useState<number>(parseInt(searchParams.get('limit') || '24', 10) || 24);
+  // Default page size changed to 20 to match available options
+  const [limit, setLimit] = useState<number>(parseInt(searchParams.get('limit') || '20', 10) || 20);
 
   // Use React Query hooks — include pagination params so public requests can be paginated
   const queryClient = useQueryClient();
@@ -274,8 +275,8 @@ export default function Collection() {
                           <option value="5">5</option>
                           <option value="10">10</option>
                           <option value="20">20</option>
-                          <option value="24">24</option>
-                          <option value="48">48</option>
+                          <option value="30">30</option>
+                          <option value="40">40</option>
                         </select>
                       </div>
                       <div className="text-sm text-muted-foreground">صفحة {page} من {totalPages}</div>
