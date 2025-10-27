@@ -1,5 +1,5 @@
 import { useParams, useSearchParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@/lib/hooks/useApi';
 import { productsApi } from '@/lib/api';
@@ -21,6 +21,13 @@ import { Filter } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useProducts, useBrands, useCategory } from '@/lib/hooks/useApi';
 
+type PaginatedResponse = {
+  products?: unknown[];
+  total?: number;
+  totalPages?: number;
+  page?: number;
+};
+
 export default function Collection() {
   const { category } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,15 +35,24 @@ export default function Collection() {
   // Prefer path param (/:category) but fall back to ?category= query param
   const resolvedCategory = category || searchParams.get('category') || undefined;
 
-  const filters = {
+  // Derive individual search param values so we can safely memoize the
+  // filters object and avoid causing effects to re-run every render.
+  const brandParam = searchParams.get('brand');
+  const typeParam = searchParams.get('type');
+  const minPriceParam = searchParams.get('minPrice');
+  const maxPriceParam = searchParams.get('maxPrice');
+  const bestSellingParam = searchParams.get('best_selling');
+  const sortParam = searchParams.get('sort') || 'newest';
+
+  const filters = useMemo(() => ({
     category: resolvedCategory,
-    brand: searchParams.get('brand'),
-    type: searchParams.get('type'),
-    minPrice: searchParams.get('minPrice'),
-    maxPrice: searchParams.get('maxPrice'),
-    best_selling: searchParams.get('best_selling'),
-    sort: searchParams.get('sort') || 'newest',
-  };
+    brand: brandParam,
+    type: typeParam,
+    minPrice: minPriceParam,
+    maxPrice: maxPriceParam,
+    best_selling: bestSellingParam,
+    sort: sortParam,
+  }), [resolvedCategory, brandParam, typeParam, minPriceParam, maxPriceParam, bestSellingParam, sortParam]);
 
   // Pagination state (defaults match backend default limit = 24)
   // Keep page in sync with query string for shareable URLs
@@ -56,16 +72,21 @@ export default function Collection() {
   // object { products, total, page, totalPages } when paginated requests are used.
   const products = Array.isArray(productsData)
     ? productsData
-    : (productsData && Array.isArray((productsData as any).products) ? (productsData as any).products : []);
+    : (productsData && Array.isArray((productsData as { products?: unknown }).products) ? (productsData as { products?: unknown }).products as unknown[] : []);
 
-  // Pagination metadata when available
-  const total = !Array.isArray(productsData) && productsData?.total ? Number(productsData.total) : undefined;
-  const totalPages = !Array.isArray(productsData) && productsData?.totalPages ? Number(productsData.totalPages) : undefined;
+  // Pagination metadata when available - narrow unknown response safely
+  let total: number | undefined = undefined;
+  let totalPages: number | undefined = undefined;
+  if (!Array.isArray(productsData) && typeof productsData === 'object' && productsData !== null) {
+    const pd = productsData as PaginatedResponse;
+    if (typeof pd.total !== 'undefined') total = Number(pd.total || 0);
+    if (typeof pd.totalPages !== 'undefined') totalPages = Number(pd.totalPages || 0);
+  }
   const brands = Array.isArray(brandsData) ? brandsData : [];
-  const categoryData = catData as any;
+  const categoryData = catData as { name?: string; description?: string } | undefined;
   const loading = productsLoading || brandsLoading;
 
-  const handleFilterChange = (key, value) => {
+  const handleFilterChange = (key: string, value: string | null) => {
     const newParams = new URLSearchParams(searchParams);
     
     if (value === null || value === '') {
@@ -89,7 +110,7 @@ export default function Collection() {
       p.set('category', category);
       setSearchParams(p, { replace: true });
     }
-  }, [category]);
+  }, [category, searchParams, setSearchParams]);
 
   // Keep page state in sync with URL when navigation happens externally
   useEffect(() => {
@@ -108,12 +129,13 @@ export default function Collection() {
       np.set('page', String(page));
       setSearchParams(np, { replace: true });
     }
-  }, [page]);
+  }, [page, searchParams, setSearchParams]);
+
 
   // If URL changes (back/forward), reflect it in page state
   useEffect(() => {
     if (pageParam !== page) setPage(pageParam);
-  }, [pageParam]);
+  }, [pageParam, page]);
 
   // Prefetch next page for snappier navigation
   useEffect(() => {
@@ -123,7 +145,7 @@ export default function Collection() {
       const key = QUERY_KEYS.products.list({ ...filters, page: nextPage, limit });
       queryClient.prefetchQuery({ queryKey: key, queryFn: () => productsApi.getAll({ ...filters, page: nextPage, limit }) });
     }
-  }, [page, totalPages, filters, limit]);
+  }, [page, totalPages, filters, limit, queryClient]);
 
   return (
     <>

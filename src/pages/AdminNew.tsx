@@ -110,6 +110,13 @@ type Review = {
   approved: boolean;
 };
 
+type PaginatedResponse = {
+  products?: unknown[];
+  total?: number;
+  totalPages?: number;
+  page?: number;
+};
+
 type DeleteTarget = {
   type: 'product' | 'category' | 'review' | 'order' | 'slider';
   id: string;
@@ -268,14 +275,14 @@ export default function AdminDashboard() {
       try {
         // Fetch lightweight paginated product meta + small lists for other entities in parallel
         setLoading(true);
-        const [productsPage, categoriesList, reviewsList, ordersList, bestSellersPage] = await Promise.all([
+        const [productsPage, categoriesList, reviewsList, ordersList, bestSellersPage] = (await Promise.all([
           productsApi.getAll({ page: 1, limit: 1 }).catch(() => ({ products: [], total: 0, totalPages: 1 })),
           categoriesApi.getAll().catch(() => []),
           reviewsApi.getAll().catch(() => []),
           ordersApi.getAll().catch(() => []),
           // get count of best selling products via filtered paginated request
           productsApi.getAll({ best_selling: true, page: 1, limit: 1 }).catch(() => ({ products: [], total: 0 })),
-        ]);
+  ])) as [PaginatedResponse, unknown[], unknown[], unknown[], PaginatedResponse];
 
         // Update product totals (server-provided)
         if (productsPage && typeof productsPage.total !== 'undefined') {
@@ -284,9 +291,9 @@ export default function AdminDashboard() {
         }
 
         // Populate other admin lists so stats derive correctly
-        if (Array.isArray(categoriesList) && categoriesList.length > 0) setCategories(categoriesList as any);
-        if (Array.isArray(reviewsList) && reviewsList.length > 0) setReviews(reviewsList as any);
-        if (Array.isArray(ordersList) && ordersList.length > 0) setOrders(ordersList as any);
+  if (Array.isArray(categoriesList) && categoriesList.length > 0) setCategories(categoriesList as unknown as Category[]);
+  if (Array.isArray(reviewsList) && reviewsList.length > 0) setReviews(reviewsList as unknown as Review[]);
+  if (Array.isArray(ordersList) && ordersList.length > 0) setOrders(ordersList as unknown as any[]);
 
         // Best sellers count from paginated meta
         if (bestSellersPage && typeof bestSellersPage.total !== 'undefined') {
@@ -443,15 +450,16 @@ export default function AdminDashboard() {
           break;
         case 'products':
           if (products.length === 0) {
-            const productsData = await productsApi.getAll({ page: productPage, limit: productLimit }).catch(() => ({ products: [] }));
+            const productsData = (await productsApi.getAll({ page: productPage, limit: productLimit }).catch(() => ({ products: [] }))) as PaginatedResponse | unknown;
             // If admin receives paginated response, it will include products + meta
-            if (productsData && productsData.products) {
-              setProducts(Array.isArray(productsData.products) ? productsData.products : []);
-              setProductTotal(Number(productsData.total || 0));
-              setProductTotalPages(Number(productsData.totalPages || 1));
+            if (productsData && typeof productsData === 'object' && 'products' in productsData) {
+              const pd = productsData as PaginatedResponse;
+              setProducts(Array.isArray(pd.products) ? (pd.products as any) : []);
+              setProductTotal(Number(pd.total || 0));
+              setProductTotalPages(Number(pd.totalPages || 1));
             } else {
-              const productsArray = Array.isArray(productsData) ? productsData : (productsData.products || []);
-              setProducts(Array.isArray(productsArray) ? productsArray : []);
+              const productsArray = Array.isArray(productsData) ? productsData : ([] as unknown[]);
+              setProducts(Array.isArray(productsArray) ? (productsArray as any) : []);
             }
           }
           break;
@@ -461,22 +469,24 @@ export default function AdminDashboard() {
           // page and also fetch a lightweight count of total best-selling items
           // to display the totals.
           if (bestSellersProducts.length === 0) {
-            const productsPage = await productsApi.getAll({ page: bestSellersPage, limit: bestSellersLimit }).catch(() => ({ products: [] }));
-            if (productsPage && productsPage.products) {
-              setBestSellersProducts(Array.isArray(productsPage.products) ? productsPage.products : []);
+            const productsPage = (await productsApi.getAll({ page: bestSellersPage, limit: bestSellersLimit }).catch(() => ({ products: [] }))) as PaginatedResponse | unknown;
+            if (productsPage && typeof productsPage === 'object' && 'products' in productsPage) {
+              const pp = productsPage as PaginatedResponse;
+              setBestSellersProducts(Array.isArray(pp.products) ? (pp.products as any) : []);
               // total here is total products; keep separate total for best-sellers count
-              setBestSellersTotalPages(Number(productsPage.totalPages || 1));
+              setBestSellersTotalPages(Number(pp.totalPages || 1));
             } else {
-              const arr = Array.isArray(productsPage) ? productsPage : (productsPage.products || []);
-              setBestSellersProducts(Array.isArray(arr) ? arr : []);
+              const arr = Array.isArray(productsPage) ? productsPage : ([] as unknown[]);
+              setBestSellersProducts(Array.isArray(arr) ? (arr as any) : []);
             }
 
             // Fetch only the meta count for best-selling products so we can show totals
             (async () => {
               try {
-                const bestCount = await productsApi.getAll({ best_selling: true, page: 1, limit: 1 }).catch(() => ({ total: 0 }));
-                if (bestCount && typeof bestCount.total !== 'undefined') {
-                  setBestSellersTotal(Number(bestCount.total || 0));
+                const bestCount = (await productsApi.getAll({ best_selling: true, page: 1, limit: 1 }).catch(() => ({ total: 0 }))) as PaginatedResponse | unknown;
+                if (bestCount && typeof bestCount === 'object' && 'total' in bestCount) {
+                  const bc = bestCount as PaginatedResponse;
+                  setBestSellersTotal(Number(bc.total || 0));
                 }
               } catch (e) {
                 // ignore
@@ -526,14 +536,15 @@ export default function AdminDashboard() {
       (async () => {
         try {
           setLoading(true);
-          const productsData = await productsApi.getAll({ page: productPage, limit: productLimit });
-          if (productsData && productsData.products) {
-            setProducts(Array.isArray(productsData.products) ? productsData.products : []);
-            setProductTotal(Number(productsData.total || 0));
-            setProductTotalPages(Number(productsData.totalPages || 1));
+            const productsData = (await productsApi.getAll({ page: productPage, limit: productLimit })) as any;
+          if (productsData && typeof productsData === 'object' && 'products' in productsData) {
+            const pd = productsData as PaginatedResponse;
+            setProducts(Array.isArray(pd.products) ? (pd.products as any) : []);
+            setProductTotal(Number(pd.total || 0));
+            setProductTotalPages(Number(pd.totalPages || 1));
           } else {
-            const productsArray = Array.isArray(productsData) ? productsData : (productsData.products || []);
-            setProducts(Array.isArray(productsArray) ? productsArray : []);
+            const productsArray = Array.isArray(productsData) ? productsData : ([] as unknown[]);
+            setProducts(Array.isArray(productsArray) ? (productsArray as any) : []);
           }
         } catch (error: any) {
           handleApiError(error, 'جلب المنتجات');
@@ -551,18 +562,19 @@ export default function AdminDashboard() {
         try {
           setLoading(true);
           // Load regular paginated products for admin view so toggled-off items remain visible
-          const productsPage = await productsApi.getAll({ page: bestSellersPage, limit: bestSellersLimit });
-          if (productsPage && productsPage.products) {
-            setBestSellersProducts(Array.isArray(productsPage.products) ? productsPage.products : []);
-            setBestSellersTotalPages(Number(productsPage.totalPages || 1));
+          const productsPage = (await productsApi.getAll({ page: bestSellersPage, limit: bestSellersLimit })) as any;
+          if (productsPage && typeof productsPage === 'object' && 'products' in productsPage) {
+            const pp = productsPage as PaginatedResponse;
+            setBestSellersProducts(Array.isArray(pp.products) ? (pp.products as any) : []);
+            setBestSellersTotalPages(Number(pp.totalPages || 1));
           } else {
-            const arr = Array.isArray(productsPage) ? productsPage : (productsPage.products || []);
-            setBestSellersProducts(Array.isArray(arr) ? arr : []);
+            const arr = Array.isArray(productsPage) ? productsPage : ([] as unknown[]);
+            setBestSellersProducts(Array.isArray(arr) ? (arr as any) : []);
           }
 
           // Also fetch best-sellers count meta separately
           try {
-            const bestCount = await productsApi.getAll({ best_selling: true, page: 1, limit: 1 });
+                const bestCount = (await productsApi.getAll({ best_selling: true, page: 1, limit: 1 })) as any;
             if (bestCount && typeof bestCount.total !== 'undefined') {
               setBestSellersTotal(Number(bestCount.total || 0));
               if (typeof bestCount.total !== 'undefined') setProductBestSellersCount(Number(bestCount.total || 0));
@@ -590,7 +602,7 @@ export default function AdminDashboard() {
       switch (tab) {
         case 'products':
           {
-            const productsData = await productsApi.getAll({ page: productPage, limit: productLimit });
+            const productsData = (await productsApi.getAll({ page: productPage, limit: productLimit })) as any;
             // Handle both new API format { products: [], total, page, totalPages }
             if (productsData && productsData.products) {
               setProducts(Array.isArray(productsData.products) ? productsData.products : []);
@@ -599,7 +611,7 @@ export default function AdminDashboard() {
               // also refresh best-sellers count (lightweight)
               (async () => {
                 try {
-                  const bestPage = await productsApi.getAll({ best_selling: true, page: 1, limit: 1 });
+                  const bestPage = (await productsApi.getAll({ best_selling: true, page: 1, limit: 1 })) as any;
                   if (bestPage && typeof bestPage.total !== 'undefined') setProductBestSellersCount(Number(bestPage.total || 0));
                 } catch (e) {
                   // ignore
@@ -613,7 +625,7 @@ export default function AdminDashboard() {
           break;
         case 'bestsellers':
           {
-            const bestData = await productsApi.getAll({ best_selling: true, page: bestSellersPage, limit: bestSellersLimit });
+            const bestData = (await productsApi.getAll({ best_selling: true, page: bestSellersPage, limit: bestSellersLimit })) as any;
             if (bestData && bestData.products) {
               setBestSellersProducts(Array.isArray(bestData.products) ? bestData.products : []);
               setBestSellersTotal(Number(bestData.total || 0));
