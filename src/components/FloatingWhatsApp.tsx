@@ -1,51 +1,33 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { X, Send, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function FloatingWhatsApp() {
   const [isOpen, setIsOpen] = useState(false);
-  // Keep the bubble on the left. Popup alignment differs by viewport:
-  // - desktop (>=768px): popup opens to the right of the bubble
-  // - mobile (<768px): popup opens to the left of the bubble
-  // We compute isMobile at render time and do not toggle side dynamically.
   const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
   const [phone, setPhone] = useState<string | null>(null);
   const [offsetBottom, setOffsetBottom] = useState<number>(0);
-  // Create portal element state before any early returns so Hooks order is
-  // consistent across renders (avoid calling Hooks after an early return).
   const [portalEl, setPortalEl] = useState<HTMLElement | null>(null);
 
-  // Hide the floating WhatsApp bubble on admin pages (any path containing
-  // /admin). Call hooks unconditionally to preserve hook ordering.
   const location = useLocation();
   const [isAdminRoute, setIsAdminRoute] = useState(() => {
-    // Prefer the runtime location when available; fall back to window when
-    // running in the browser before the router updates.
     const p = (location && location.pathname) || (typeof window !== 'undefined' ? window.location.pathname : '');
     return p === '/admin' || p.startsWith('/admin/');
   });
 
   useEffect(() => {
-  // keep existing pagination detection behavior
-
-    // Also check if pagination is present and adjust bubble bottom so it
-    // doesn't overlap page controls (runs on resize / scroll).
     const checkPagination = () => {
       try {
-        // Try several common selectors: the shared pagination uses
-        // nav[aria-label="pagination"], but some pages/components may use
-        // .pagination or a data attribute like [data-pagination].
         const selectors = ['nav[aria-label="pagination"]', '.pagination', '[data-pagination]'];
         const nodes = document.querySelectorAll(selectors.join(','));
 
         let found: Element | null = null;
         for (const n of Array.from(nodes)) {
           const el = n as Element;
-          // ensure element is visible and in the document flow
           if (!(el instanceof HTMLElement)) continue;
-          if (el.offsetParent === null) continue; // hidden
+          if (el.offsetParent === null) continue;
           const r = el.getBoundingClientRect();
           if (r.height <= 0) continue;
           found = el;
@@ -58,10 +40,7 @@ export default function FloatingWhatsApp() {
         }
 
         const rect = (found as HTMLElement).getBoundingClientRect();
-        const gap = 12; // px
-        // If pagination sits near the bottom of the viewport, raise the bubble
-        // above it by nav height + small gap. We consider "near bottom" when
-        // the bottom is within 80px of the viewport bottom.
+        const gap = 12;
         if (rect.bottom > window.innerHeight - 80) {
           setOffsetBottom(Math.ceil(rect.height + gap));
         } else {
@@ -72,9 +51,8 @@ export default function FloatingWhatsApp() {
       }
     };
 
-  window.addEventListener('resize', checkPagination);
+    window.addEventListener('resize', checkPagination);
     window.addEventListener('scroll', checkPagination, { passive: true });
-    // Run once initially
     checkPagination();
 
     return () => {
@@ -83,15 +61,9 @@ export default function FloatingWhatsApp() {
     };
   }, []);
 
-  // Render into a dedicated DOM node attached to document.body so that the
-  // fixed positioning is not affected by transformed ancestors (a common
-  // cause of 'jumping' when other UI pieces appear). We create the node on
-  // mount and clean up on unmount. This effect must run before any early
-  // returns so Hooks keep a stable ordering.
   useEffect(() => {
     if (typeof document === 'undefined') return undefined;
     const el = document.createElement('div');
-    // small identifying attribute for easier debugging
     el.setAttribute('data-floating-whatsapp-portal', 'true');
     document.body.appendChild(el);
     setPortalEl(el);
@@ -99,19 +71,18 @@ export default function FloatingWhatsApp() {
       try {
         if (el.parentNode) el.parentNode.removeChild(el);
       } catch (e) {
-        // ignore cleanup errors (element may already have been removed)
+        // ignore cleanup errors
       }
     };
   }, []);
 
-  // Update admin-route state when the router location changes.
   useEffect(() => {
     const pathname = location?.pathname;
     if (!pathname) return;
     setIsAdminRoute(pathname === '/admin' || pathname.startsWith('/admin/'));
   }, [location?.pathname]);
 
-  const fallbackPhone = '212600000000'; // used if contact endpoint is unavailable
+  const fallbackPhone = '212600000000';
   const message = 'مرحباً، أريد الاستفسار عن منتجاتكم';
 
   const handleClick = () => {
@@ -121,8 +92,6 @@ export default function FloatingWhatsApp() {
   };
 
   useEffect(() => {
-    // Fetch the public contact phone from the backend. If this fails,
-    // we'll continue to use the fallbackPhone so the feature remains usable.
     if (typeof window === 'undefined') return;
     let mounted = true;
     const formatPhoneClient = (raw) => {
@@ -160,72 +129,132 @@ export default function FloatingWhatsApp() {
     };
   }, []);
 
-  // If we're on an admin route, render nothing. This uses state derived from
-  // the router location so it updates immediately on SPA navigation.
   if (isAdminRoute) return null;
 
-  // Position the bubble on the left. Use a high z-index so it sits above the
-  // filter button. Popup alignment:
-  // - desktop: place popup to the right of the bubble
-  // - mobile: place popup to the left of the bubble
-  const popupAlignClass = isMobile ? 'left-0 -translate-x-0' : 'left-16';
-  const baseBottom = 24; // base bottom spacing in px
-
-  
+  const popupAlignClass = isMobile ? 'left-0 -translate-x-0' : 'left-20';
+  const baseBottom = 24;
 
   const inner = (
-    // Use a z-index that keeps the bubble above regular page content but
-    // below overlaying UI like Sheets/Drawers (SheetContent uses z-[200]).
-    // This ensures when the cart or mobile sidebar opens the WhatsApp bubble
-    // sits underneath them instead of overlapping.
     <div style={{ position: 'fixed', left: 24, bottom: `${baseBottom + offsetBottom}px`, zIndex: 120 }}>
+      {/* Luxury Popup Card */}
       {isOpen && (
-        <div className={`absolute bottom-20 ${popupAlignClass} bg-white/95 dark:bg-gray-900/95 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] p-6 w-80 mb-2 border border-gold/10 backdrop-blur-sm animate-in slide-in-from-bottom-4 duration-300`}>
-          <button
-            onClick={() => setIsOpen(false)}
-            aria-label="إغلاق"
-            className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors z-40"
-          >
-            <X className="h-5 w-5" />
-          </button>
-          <div className="flex items-center gap-3 mb-3 pr-10">
-            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center ring-2 ring-white/40 shadow-md">
-              <svg viewBox="0 0 32 32" className="h-7 w-7 text-white fill-current">
-                <path d="M16.002 0C7.164 0 0 7.162 0 16c0 2.834.74 5.494 2.036 7.8L.698 31.273l7.688-2.018C10.498 30.74 13.158 32 16.002 32c8.836 0 16-7.164 16-16s-7.164-16-16-16zm8.396 22.876c-.34.956-1.998 1.75-2.906 1.87-.752.096-1.732.136-2.792-.176-.644-.19-1.472-.442-2.532-.866-4.43-1.77-7.312-6.222-7.534-6.508-.22-.286-1.804-2.4-1.804-4.58 0-2.18 1.142-3.254 1.548-3.698.406-.444.888-.556 1.184-.556.296 0 .592.002.852.016.272.014.636-.104.996.76.366.878 1.25 3.054 1.36 3.276.11.222.184.48.036.766-.148.286-.222.464-.442.714-.22.25-.462.558-.66.75-.22.212-.448.442-.192.868.256.426 1.14 1.88 2.448 3.046 1.682 1.498 3.098 1.964 3.54 2.186.442.222.7.186.958-.11.258-.296 1.106-1.292 1.402-1.736.296-.444.592-.37.998-.222.406.148 2.586 1.22 3.028 1.442.442.222.736.332.842.518.106.186.106 1.072-.234 2.028z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-bold text-foreground">تواصل معنا</h3>
-              <p className="text-xs text-green-600 dark:text-green-400">متواجدون الآن</p>
+        <div className={`absolute bottom-24 ${popupAlignClass} w-80 mb-2 animate-in slide-in-from-bottom-4 duration-300`}>
+          {/* Glowing background effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-3xl blur-xl"></div>
+          
+          {/* Main card */}
+          <div className="relative bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-green-500/30 overflow-hidden">
+            {/* Gold accent bar */}
+            <div className="h-1 bg-gradient-to-r from-yellow-600 via-green-400 to-emerald-500"></div>
+            
+            <div className="p-6">
+              {/* Close button */}
+              <button
+                onClick={() => setIsOpen(false)}
+                aria-label="إغلاق"
+                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-all duration-300 z-40 hover:rotate-90 hover:scale-110 bg-white/5 rounded-full p-1.5 hover:bg-white/10"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              {/* Header with avatar and status */}
+              <div className="flex items-start gap-4 mb-5 pr-8">
+                <div className="relative">
+                  {/* Avatar with glow */}
+                  <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center ring-2 ring-green-400/30 shadow-lg shadow-green-500/50">
+                    <svg viewBox="0 0 32 32" className="h-8 w-8 text-white fill-current">
+                      <path d="M16.002 0C7.164 0 0 7.162 0 16c0 2.834.74 5.494 2.036 7.8L.698 31.273l7.688-2.018C10.498 30.74 13.158 32 16.002 32c8.836 0 16-7.164 16-16s-7.164-16-16-16zm8.396 22.876c-.34.956-1.998 1.75-2.906 1.87-.752.096-1.732.136-2.792-.176-.644-.19-1.472-.442-2.532-.866-4.43-1.77-7.312-6.222-7.534-6.508-.22-.286-1.804-2.4-1.804-4.58 0-2.18 1.142-3.254 1.548-3.698.406-.444.888-.556 1.184-.556.296 0 .592.002.852.016.272.014.636-.104.996.76.366.878 1.25 3.054 1.36 3.276.11.222.184.48.036.766-.148.286-.222.464-.442.714-.22.25-.462.558-.66.75-.22.212-.448.442-.192.868.256.426 1.14 1.88 2.448 3.046 1.682 1.498 3.098 1.964 3.54 2.186.442.222.7.186.958-.11.258-.296 1.106-1.292 1.402-1.736.296-.444.592-.37.998-.222.406.148 2.586 1.22 3.028 1.442.442.222.736.332.842.518.106.186.106 1.072-.234 2.028z" />
+                    </svg>
+                  </div>
+                  {/* Online indicator with pulse */}
+                  <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 bg-green-400 rounded-full border-2 border-gray-900 animate-pulse"></span>
+                </div>
+                
+                <div className="flex-1">
+                  <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                    متجر كوزميد
+                    <Sparkles className="h-4 w-4 text-yellow-400" />
+                  </h3>
+                  <p className="text-xs text-green-400 font-medium flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 bg-green-400 rounded-full animate-pulse"></span>
+                    متواجدون الآن
+                  </p>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-transparent via-green-500/30 to-transparent mb-4"></div>
+
+              {/* Message */}
+              <div className="mb-5 bg-gradient-to-br from-white/5 to-white/10 rounded-2xl p-4 border border-white/10">
+                <p className="text-sm text-gray-300 leading-relaxed text-center">
+                  هل لديك أي استفسار؟ تواصل معنا عبر واتساب
+                  <br />
+                  <span className="text-yellow-400 font-medium">وسنكون سعداء بمساعدتك</span>
+                </p>
+              </div>
+
+              {/* Action Button */}
+              <Button 
+                onClick={handleClick} 
+                className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white font-bold shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all duration-300 hover:scale-[1.02] rounded-xl group relative overflow-hidden"
+              >
+                {/* Button glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                
+                <span className="relative flex items-center justify-center gap-2">
+                  <Send className="h-5 w-5" />
+                  إرسال رسالة الآن
+                </span>
+              </Button>
+
+              {/* Footer badge */}
+              <div className="mt-4 text-center">
+                <p className="text-xs text-gray-500">
+                  🔒 محادثة مشفرة ومؤمنة
+                </p>
+              </div>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground mb-4 pr-10">هل لديك أي استفسار؟ تواصل معنا عبر واتساب وسنكون سعداء بمساعدتك</p>
-          <Button onClick={handleClick} className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold shadow-xl hover:shadow-2xl transition-all duration-300">
-            📱 إرسال رسالة
-          </Button>
         </div>
       )}
-      <Button
-        onClick={() => setIsOpen(!isOpen)}
-        className="h-16 w-16 rounded-full shadow-2xl bg-gradient-to-br from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-110 p-0 relative group ring-1 ring-white/10"
-        size="icon"
-        title="تواصل معنا عبر واتساب"
-      >
-        {isOpen ? (
-          <X className="h-8 w-8 text-white" />
-        ) : (
-          <svg viewBox="0 0 32 32" className="h-8 w-8 text-white fill-current group-hover:scale-110 transition-transform">
-            <path d="M16.002 0C7.164 0 0 7.162 0 16c0 2.834.74 5.494 2.036 7.8L.698 31.273l7.688-2.018C10.498 30.74 13.158 32 16.002 32c8.836 0 16-7.164 16-16s-7.164-16-16-16zm8.396 22.876c-.34.956-1.998 1.75-2.906 1.87-.752.096-1.732.136-2.792-.176-.644-.19-1.472-.442-2.532-.866-4.43-1.77-7.312-6.222-7.534-6.508-.22-.286-1.804-2.4-1.804-4.58 0-2.18 1.142-3.254 1.548-3.698.406-.444.888-.556 1.184-.556.296 0 .592.002.852.016.272.014.636-.104.996.76.366.878 1.25 3.054 1.36 3.276.11.222.184.48.036.766-.148.286-.222.464-.442.714-.22.25-.462.558-.66.75-.22.212-.448.442-.192.868.256.426 1.14 1.88 2.448 3.046 1.682 1.498 3.098 1.964 3.54 2.186.442.222.7.186.958-.11.258-.296 1.106-1.292 1.402-1.736.296-.444.592-.37.998-.222.406.148 2.586 1.22 3.028 1.442.442.222.736.332.842.518.106.186.106 1.072-.234 2.028z" />
-          </svg>
-        )}
-        <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full animate-ping"></span>
-        <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full"></span>
-      </Button>
+
+      {/* Floating Button */}
+      <div className="relative">
+        {/* Outer glow ring */}
+        <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full blur-xl opacity-50 animate-pulse"></div>
+        
+        {/* Button with premium styling */}
+        <Button
+          onClick={() => setIsOpen(!isOpen)}
+          className="relative h-16 w-16 rounded-full shadow-2xl bg-gradient-to-br from-green-400 via-green-500 to-emerald-600 hover:from-green-500 hover:to-emerald-700 transition-all duration-300 hover:scale-110 p-0 group ring-2 ring-green-400/50 hover:ring-green-300/70"
+          size="icon"
+          title="تواصل معنا عبر واتساب"
+        >
+          {/* Button content */}
+          <div className="relative z-10">
+            {isOpen ? (
+              <X className="h-8 w-8 text-white group-hover:rotate-90 transition-transform duration-300" />
+            ) : (
+              <svg viewBox="0 0 32 32" className="h-8 w-8 text-white fill-current group-hover:scale-110 transition-transform duration-300">
+                <path d="M16.002 0C7.164 0 0 7.162 0 16c0 2.834.74 5.494 2.036 7.8L.698 31.273l7.688-2.018C10.498 30.74 13.158 32 16.002 32c8.836 0 16-7.164 16-16s-7.164-16-16-16zm8.396 22.876c-.34.956-1.998 1.75-2.906 1.87-.752.096-1.732.136-2.792-.176-.644-.19-1.472-.442-2.532-.866-4.43-1.77-7.312-6.222-7.534-6.508-.22-.286-1.804-2.4-1.804-4.58 0-2.18 1.142-3.254 1.548-3.698.406-.444.888-.556 1.184-.556.296 0 .592.002.852.016.272.014.636-.104.996.76.366.878 1.25 3.054 1.36 3.276.11.222.184.48.036.766-.148.286-.222.464-.442.714-.22.25-.462.558-.66.75-.22.212-.448.442-.192.868.256.426 1.14 1.88 2.448 3.046 1.682 1.498 3.098 1.964 3.54 2.186.442.222.7.186.958-.11.258-.296 1.106-1.292 1.402-1.736.296-.444.592-.37.998-.222.406.148 2.586 1.22 3.028 1.442.442.222.736.332.842.518.106.186.106 1.072-.234 2.028z" />
+              </svg>
+            )}
+          </div>
+
+          {/* Notification badges */}
+          <span className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-br from-red-400 to-red-600 rounded-full animate-ping"></span>
+          <span className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-lg">
+            1
+          </span>
+
+          {/* Sparkle effect on hover */}
+          <Sparkles className="absolute top-1 right-1 h-3 w-3 text-yellow-300 opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity" />
+        </Button>
       </div>
-    );
+    </div>
+  );
 
-    // If portal element isn't ready yet (SSR or mount lag), render nothing.
-    if (!portalEl) return null;
-    return createPortal(inner, portalEl);
-
-  }
+  if (!portalEl) return null;
+  return createPortal(inner, portalEl);
+}
