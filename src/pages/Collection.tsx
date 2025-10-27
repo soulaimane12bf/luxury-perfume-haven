@@ -58,7 +58,7 @@ export default function Collection() {
   // Keep page in sync with query string for shareable URLs
   const pageParam = parseInt(searchParams.get('page') || '1', 10) || 1;
   const [page, setPage] = useState<number>(pageParam);
-  const [limit] = useState<number>(24);
+  const [limit, setLimit] = useState<number>(parseInt(searchParams.get('limit') || '24', 10) || 24);
 
   // Use React Query hooks — include pagination params so public requests can be paginated
   const queryClient = useQueryClient();
@@ -115,6 +115,17 @@ export default function Collection() {
     } else {
       setPage(p as number);
     }
+    // Scroll pagination into view so the user sees the top of the pagination
+    // controls after clicking on a page number (helpful on long lists/mobile).
+    try {
+      const nav = document.querySelector('nav[aria-label="pagination"]');
+      if (nav && typeof (nav as HTMLElement).scrollIntoView === 'function') {
+        (nav as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } catch (e) {
+      // ignore
+    }
+
     // Clear the flag after a short delay once the router and effects settle.
     window.setTimeout(() => { pageUpdatingRef.current = false; }, 800);
   };
@@ -235,6 +246,32 @@ export default function Collection() {
                 {/* Numbered pagination controls (show only when pagination metadata is present) */}
                 {totalPages && totalPages > 1 && (
                   <div className="mt-6">
+                    <div className="mb-3 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm text-muted-foreground">عرض لكل صفحة:</label>
+                        <select
+                          value={String(limit)}
+                          onChange={(e) => {
+                            const v = parseInt(e.target.value, 10) || 24;
+                            setLimit(v);
+                            // reset to first page when page size changes
+                            setPageGuarded(1);
+                            const np = new URLSearchParams(searchParams);
+                            np.set('limit', String(v));
+                            np.set('page', '1');
+                            setSearchParams(np, { replace: true });
+                          }}
+                          className="h-8 text-sm px-2 border rounded bg-background"
+                        >
+                          <option value="5">5</option>
+                          <option value="10">10</option>
+                          <option value="20">20</option>
+                          <option value="24">24</option>
+                          <option value="48">48</option>
+                        </select>
+                      </div>
+                      <div className="text-sm text-muted-foreground">صفحة {page} من {totalPages}</div>
+                    </div>
                     <Pagination>
                       <PaginationContent>
                         <PaginationItem>

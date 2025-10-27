@@ -29,7 +29,9 @@ const PaginationContent = React.forwardRef<HTMLUListElement, React.ComponentProp
     <ul
       ref={ref}
       className={cn(
-        "flex flex-row flex-wrap items-center gap-2 justify-center overflow-x-auto md:overflow-visible px-2 py-2",
+        // Prevent wrapping so pagination stays on a single line on small
+        // screens; allow horizontal scrolling when content overflows.
+        "flex flex-row flex-nowrap items-center gap-2 justify-center overflow-x-auto px-2 py-2",
         className,
       )}
       {...props}
