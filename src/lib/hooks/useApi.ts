@@ -5,7 +5,7 @@ import { productsApi, categoriesApi, reviewsApi, ordersApi } from '../api';
 export const QUERY_KEYS = {
   products: {
     all: ['products'] as const,
-    list: (filters: Record<string, any>) => ['products', 'list', filters] as const,
+    list: (filters: Record<string, string | number | boolean | null | undefined>) => ['products', 'list', filters] as const,
     detail: (id: string | number) => ['products', 'detail', id] as const,
     bestSelling: (limit: number) => ['products', 'best-selling', limit] as const,
     brands: ['products', 'brands'] as const,
@@ -26,7 +26,7 @@ export const QUERY_KEYS = {
 };
 
 // Products Hooks
-export function useProducts(filters: Record<string, any> = {}) {
+export function useProducts(filters: Record<string, string | number | boolean | null | undefined> = {}) {
   return useQuery({
     queryKey: QUERY_KEYS.products.list(filters),
     queryFn: () => productsApi.getAll(filters),
@@ -45,7 +45,7 @@ export function useProduct(id: string | number) {
 
 export function useBestSellingProducts(limit = 8, page?: number) {
   return useQuery({
-    queryKey: QUERY_KEYS.products.bestSelling(`${limit}:${page ?? 1}` as any),
+    queryKey: ['products', 'best-selling', limit, page ?? 1] as const,
     queryFn: () => productsApi.getBestSelling(limit, page),
     staleTime: 10 * 60 * 1000, // 10 minutes - best sellers don't change often
   });
@@ -127,7 +127,7 @@ export function useCreateProduct() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (product: any) => productsApi.create(product),
+    mutationFn: (product: unknown) => productsApi.create(product),
     onSuccess: () => {
       // Invalidate all product queries to refetch
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.products.all });
@@ -139,7 +139,7 @@ export function useUpdateProduct() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, data }: { id: string | number; data: any }) => 
+    mutationFn: ({ id, data }: { id: string | number; data: unknown }) => 
       productsApi.update(id, data),
     onSuccess: (_, variables) => {
       // Invalidate specific product and all product lists
@@ -175,7 +175,7 @@ export function useCreateOrder() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (orderData: any) => ordersApi.create(orderData),
+  mutationFn: (orderData: Parameters<typeof ordersApi.create>[0]) => ordersApi.create(orderData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.orders.all });
     },

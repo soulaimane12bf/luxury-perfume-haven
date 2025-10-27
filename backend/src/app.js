@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 import sequelize, { USING_IN_MEMORY_FALLBACK } from './config/database.js';
+import { DataTypes } from 'sequelize';
 import productRoutes from './routes/products.js';
 import categoryRoutes from './routes/categories.js';
 import reviewRoutes from './routes/reviews.js';
@@ -177,6 +178,34 @@ export async function initializeDatabase() {
     await withTimeout(sequelize.authenticate(), 15000, 'sequelize.authenticate');
     console.log('✓ Connected to the database');
 
+    // Ensure admin socials columns exist in the production DB. This is an
+    // idempotent, best-effort fix: if the columns are missing (caused by
+    // schema drift between deployments), we add them automatically so the
+    // code that reads/writes `instagram`/`facebook` won't cause SQL errors.
+    // This will only run when an external DB is configured (not the
+    // in-memory fallback) and SKIP_SYNC_ON_STARTUP is not enabled.
+    async function ensureAdminSocialColumns() {
+      if (USING_IN_MEMORY_FALLBACK) return;
+      if (process.env.SKIP_SYNC_ON_STARTUP === 'true') return;
+      try {
+        const qi = sequelize.getQueryInterface();
+        const desc = await qi.describeTable('admins');
+        if (!desc.instagram) {
+          console.log('⚙️  Adding missing column `instagram` to `admins`');
+          await qi.addColumn('admins', 'instagram', { type: DataTypes.STRING, allowNull: true });
+        }
+        if (!desc.facebook) {
+          console.log('⚙️  Adding missing column `facebook` to `admins`');
+          await qi.addColumn('admins', 'facebook', { type: DataTypes.STRING, allowNull: true });
+        }
+      } catch (e) {
+        // If the table doesn't exist yet or permission denied, warn and continue.
+        console.warn('Could not ensure admin social columns:', e && e.message ? e.message : e);
+      }
+    }
+
+    await ensureAdminSocialColumns();
+
     // Allow skipping sync/seed on startup (useful in production serverless).
     // If SKIP_SYNC_ON_STARTUP=true is set in the environment, we will
     // skip `sequelize.sync()` and seeding to avoid long cold-starts and
@@ -324,15 +353,17 @@ app.get('/api/health', async (req, res) => {
 // can display an up-to-date contact number without requiring authentication.
 app.get('/api/contact', async (req, res) => {
   try {
-    // Try to read the super-admin's phone from the DB if available.
+    // Try to read the super-admin's phone from the DB if available. Select
+    // only the `phone` attribute so we don't trigger SQL errors when other
+    // columns (instagram/facebook) are missing from older schemas.
     let phone = null;
     try {
-      const admin = await Admin.findOne({ where: { role: 'super-admin' } });
+      const admin = await Admin.findOne({ where: { role: 'super-admin' }, attributes: ['phone'] });
       if (admin && admin.phone) phone = admin.phone;
     } catch (e) {
       // DB might not be available (read-only endpoints should still work);
       // we'll ignore DB errors and fall back to env var.
-      console.warn('Contact endpoint: could not read admin from DB:', e.message || e);
+      console.warn('Contact endpoint: could not read admin phone from DB:', e.message || e);
     }
 
     if (!phone) {
@@ -378,7 +409,30 @@ app.get('/api/contact', async (req, res) => {
     };
 
     const normalized = formatPhoneForWa(phone);
-    return res.json({ phone: normalized });
+    // Also attempt to read socials from admin profile if available and return
+    // them only when the corresponding columns exist in the DB. This avoids
+    // SQL errors when the schema hasn't been migrated yet.
+    let instagram = null;
+    let facebook = null;
+    try {
+      const qi = sequelize.getQueryInterface();
+      const desc = await qi.describeTable('admins');
+      if (desc.instagram || desc.facebook) {
+        const admin = await Admin.findOne({
+          where: { role: 'super-admin' },
+          attributes: ['instagram', 'facebook']
+        });
+        if (admin) {
+          instagram = admin.instagram || null;
+          facebook = admin.facebook || null;
+        }
+      }
+    } catch (e) {
+      // ignore DB read errors here - endpoint should remain resilient
+      console.warn('Contact endpoint: could not read admin socials from DB:', e && e.message ? e.message : e);
+    }
+
+    return res.json({ phone: normalized, instagram, facebook });
   } catch (err) {
     console.error('Contact endpoint error:', err.message || err);
     return res.status(500).json({ error: 'internal_error', message: 'Failed to retrieve contact' });
@@ -386,7 +440,7 @@ app.get('/api/contact', async (req, res) => {
 });
 
 // Error handling middleware
-// eslint-disable-next-line no-unused-vars
+ 
 app.use((err, req, res, next) => {
   console.error(err.message || err);
   res.status(500).json({ message: 'Something went wrong!' });

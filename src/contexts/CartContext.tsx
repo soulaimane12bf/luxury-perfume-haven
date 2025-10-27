@@ -13,7 +13,7 @@ interface CartItem {
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: any, quantity?: number) => void;
+  addToCart: (product: ProductInput, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -22,6 +22,17 @@ interface CartContextType {
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
+}
+
+interface ProductInput {
+  id: string;
+  name: string;
+  brand?: string;
+  price: number;
+  image_urls?: string[];
+  image_url?: string;
+  type?: string;
+  stock?: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -37,7 +48,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
 
-  const addToCart = (product: any, quantity: number = 1) => {
+  const addToCart = (product: ProductInput, quantity: number = 1) => {
     setItems((currentItems) => {
       const existingItem = currentItems.find((item) => item.id === product.id);
       
@@ -54,12 +65,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         {
           id: product.id,
           name: product.name,
-          brand: product.brand,
+          brand: product.brand ?? '',
           price: product.price,
-          image_url: product.image_urls[0],
-          quantity: Math.min(quantity, product.stock),
-          type: product.type,
-          stock: product.stock,
+          image_url: (product.image_urls && product.image_urls[0]) || product.image_url || '',
+          quantity: Math.min(quantity, product.stock ?? quantity),
+          type: product.type ?? '',
+          stock: product.stock ?? quantity,
         },
       ];
     });

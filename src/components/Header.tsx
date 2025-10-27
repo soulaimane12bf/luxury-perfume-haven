@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, Search, Menu, Loader2, X, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { productMatchesQuery } from '@/lib/searchUtils';
 import { useCart } from "@/contexts/CartContext";
 import SearchDialog from "@/components/SearchDialog";
 import cosmedLogo from "@/assets/images/cosmed-logo.png";
+import sidebarLogo from "@/assets/images/sidebar-logo.png";
 
 type Category = {
   id: string;
@@ -63,6 +64,22 @@ const Header = () => {
     fetchCategories();
   }, []);
 
+  const performSidebarSearch = useCallback(async (query: string) => {
+    setIsSidebarSearching(true);
+    try {
+      // Fetch a larger set and then apply client-side fuzzy matching for smarter results
+      const raw = await productsApi.search(query, 20);
+      const arr: unknown[] = Array.isArray(raw) ? raw : [];
+      const filtered = arr.filter((p) => productMatchesQuery(p as ProductPreview, query)).slice(0, 8) as ProductPreview[];
+      setSidebarSearchResults(filtered);
+    } catch (error) {
+      console.error('Sidebar search error:', error);
+      setSidebarSearchResults([]);
+    } finally {
+      setIsSidebarSearching(false);
+    }
+  }, []);
+
   // Debounce sidebar search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -74,23 +91,9 @@ const Header = () => {
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timer);
-  }, [sidebarSearchQuery]);
+  }, [sidebarSearchQuery, performSidebarSearch]);
 
-  const performSidebarSearch = async (query: string) => {
-    setIsSidebarSearching(true);
-    try {
-      // Fetch a larger set and then apply client-side fuzzy matching for smarter results
-  const raw = await productsApi.search(query, 20);
-  const arr: unknown[] = Array.isArray(raw) ? raw : [];
-  const filtered = arr.filter((p) => productMatchesQuery(p as ProductPreview, query)).slice(0, 8) as ProductPreview[];
-  setSidebarSearchResults(filtered);
-    } catch (error) {
-      console.error('Sidebar search error:', error);
-      setSidebarSearchResults([]);
-    } finally {
-      setIsSidebarSearching(false);
-    }
-  };
+  
 
   const handleSidebarProductClick = (productId: string) => {
     navigate(`/product/${productId}`);
@@ -123,14 +126,14 @@ const Header = () => {
               </Button>
             </SheetTrigger>
             {/* Open client menu from the RIGHT so it doesn't conflict with admin sidebar */}
-            <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-gradient-to-b from-gray-950 via-gray-900 to-black border-l border-amber-500/30 p-0 z-[200]">
+            <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-white border-l-2 border-gold/30 p-0 z-[200]">
                 <div className="flex flex-col h-full">
-                {/* Logo/header at top */}
-                <div className="flex justify-center py-4 border-b border-amber-500/20 bg-gradient-to-b from-gray-900/60 to-transparent">
-                  <img 
-                    src={cosmedLogo} 
-                    alt="COSMED Logo" 
-                    className="h-14 w-auto object-contain"
+                {/* Logo/header at top (prefer sidebar-logo.png if present) */}
+                <div className="flex justify-center py-4 border-b border-gold/30 bg-gradient-to-b from-gold/5 to-transparent">
+                  <img
+                    src={sidebarLogo || cosmedLogo}
+                    alt="COSMED Logo"
+                    className="h-16 w-auto object-contain"
                   />
                 </div>
 
@@ -210,14 +213,14 @@ const Header = () => {
                 </div>
 
                 {/* Navigation Links */}
-                <nav className="flex flex-col gap-2 p-4 overflow-y-auto flex-1 text-white">
+                <nav className="flex flex-col gap-2 p-4 overflow-y-auto flex-1 text-gray-900">
                   <Link to="/" className="relative block py-3 px-4 rounded-lg hover:bg-amber-600/10 transition-colors">
-                    <ArrowLeft className="absolute left-3 top-3 w-4 h-4 text-amber-400" />
+                    <ArrowLeft className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                     <span className="ml-8 font-medium">الصفحة الرئيسية</span>
                   </Link>
 
                   <Link to="/best-sellers" className="relative block py-3 px-4 rounded-lg hover:bg-amber-600/10 transition-colors">
-                    <ArrowLeft className="absolute left-3 top-3 w-4 h-4 text-amber-400" />
+                    <ArrowLeft className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                     <span className="ml-8 font-medium">الأكثر مبيعاً</span>
                   </Link>
 
@@ -227,7 +230,7 @@ const Header = () => {
                       to={`/collection/${category.slug}`}
                       className="relative block py-3 px-4 rounded-lg hover:bg-amber-600/10 transition-colors"
                     >
-                      <ArrowLeft className="absolute left-3 top-3 w-4 h-4 text-amber-400" />
+                      <ArrowLeft className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                       <span className="ml-8 font-medium">{category.name}</span>
                     </Link>
                   ))}

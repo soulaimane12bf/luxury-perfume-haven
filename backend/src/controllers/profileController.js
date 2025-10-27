@@ -19,10 +19,10 @@ export const getProfile = async (req, res) => {
   }
 };
 
-// Update admin profile (username, email, phone, smtp credentials)
+// Update admin profile (username, email, phone, smtp credentials, socials)
 export const updateProfile = async (req, res) => {
   try {
-    const { username, email, phone, smtp_email, smtp_password } = req.body;
+    const { username, email, phone, smtp_email, smtp_password, instagram, facebook } = req.body;
     const admin = await Admin.findByPk(req.admin.id);
 
     if (!admin) {
@@ -50,6 +50,13 @@ export const updateProfile = async (req, res) => {
     // Update phone
     if (phone !== undefined) {
       admin.phone = phone;
+    }
+    // Update socials
+    if (instagram !== undefined) {
+      admin.instagram = instagram;
+    }
+    if (facebook !== undefined) {
+      admin.facebook = facebook;
     }
 
     // Update SMTP credentials

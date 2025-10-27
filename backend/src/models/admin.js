@@ -39,6 +39,16 @@ const Admin = sequelize.define('Admin', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  instagram: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Optional admin Instagram handle/URL'
+  },
+  facebook: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Optional admin Facebook handle/URL'
+  },
   role: {
     type: DataTypes.ENUM('admin', 'super-admin'),
     allowNull: false,

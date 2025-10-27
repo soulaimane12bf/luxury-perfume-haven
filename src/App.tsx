@@ -17,6 +17,14 @@ const Collection = lazy(() => import("./pages/Collection"));
 const BestSellers = lazy(() => import("./pages/BestSellers"));
 const Admin = lazy(() => import("./pages/AdminNew"));
 const Login = lazy(() => import("./pages/Login"));
+const About = lazy(() => import("./pages/About"));
+const Payment = lazy(() => import("./pages/Payment"));
+const Shipping = lazy(() => import("./pages/Shipping"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Refunds = lazy(() => import("./pages/Refunds"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Faq = lazy(() => import("./pages/Faq"));
 const ProtectedRoute = lazy(() => import("@/components/ProtectedRoute"));
 
 const queryClient = new QueryClient();
@@ -48,6 +56,14 @@ const App = () => (
                 <Route path="/collection/:category" element={<Collection />} />
                 <Route path="/collection" element={<Collection />} />
                 <Route path="/best-sellers" element={<BestSellers />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/payment" element={<Payment />} />
+                <Route path="/shipping" element={<Shipping />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/refunds" element={<Refunds />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/faq" element={<Faq />} />
                 <Route path="/login" element={<Login />} />
                 <Route
                   path="/admin"

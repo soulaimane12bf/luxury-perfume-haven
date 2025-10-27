@@ -61,6 +61,13 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
         onOpenAutoFocus={(e) => e.preventDefault()}
         {...props}
       >
+        {/* Accessibility: ensure a Title exists for screen readers. Many usages
+            render sheets without an explicit title, which triggers Radix's
+            runtime warning. Provide a visually-hidden title to satisfy the
+            requirement while keeping the UI unchanged. */}
+        <SheetHeader className="sr-only">
+          <SheetTitle>Panel</SheetTitle>
+        </SheetHeader>
         {children}
         <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none text-foreground dark:text-foreground">
           <X className="h-4 w-4" />

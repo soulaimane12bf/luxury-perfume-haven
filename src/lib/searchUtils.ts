@@ -40,7 +40,13 @@ export function fuzzyMatch(q: string, target: string, threshold = 0.35) {
 }
 
 // matches any of product name, brand, category fields
-export function productMatchesQuery(product: any, query: string) {
+interface ProductLike {
+  name?: string;
+  brand?: string;
+  category?: string;
+}
+
+export function productMatchesQuery(product: ProductLike | null | undefined, query: string) {
   if (!product || !query) return false;
   const q = String(query);
   if (fuzzyMatch(q, product.name || '')) return true;

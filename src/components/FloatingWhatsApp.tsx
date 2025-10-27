@@ -1,32 +1,34 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function FloatingWhatsApp() {
   const [isOpen, setIsOpen] = useState(false);
-  // On small screens we want the bubble on the LEFT (per request). On larger
-  // screens keep it on the right. isRight === true => bubble on right side.
-  const [isRight, setIsRight] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    return window.innerWidth >= 768; // desktop: right, mobile: left
-  });
+  // Keep the bubble on the left. Popup alignment differs by viewport:
+  // - desktop (>=768px): popup opens to the right of the bubble
+  // - mobile (<768px): popup opens to the left of the bubble
+  // We compute isMobile at render time and do not toggle side dynamically.
+  const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
   const [phone, setPhone] = useState<string | null>(null);
   const [offsetBottom, setOffsetBottom] = useState<number>(0);
+  // Create portal element state before any early returns so Hooks order is
+  // consistent across renders (avoid calling Hooks after an early return).
+  const [portalEl, setPortalEl] = useState<HTMLElement | null>(null);
 
-  // Hide the floating WhatsApp bubble on admin pages (any path containing /admin)
-  // Use React Router location so we react to SPA navigations without a full
-  // page refresh. An early return based on window.location prevents updates
-  // when the user navigates within the app, causing the behavior you reported.
-  const location = typeof window !== 'undefined' ? useLocation() : { pathname: '' };
+  // Hide the floating WhatsApp bubble on admin pages (any path containing
+  // /admin). Call hooks unconditionally to preserve hook ordering.
+  const location = useLocation();
   const [isAdminRoute, setIsAdminRoute] = useState(() => {
-    const p = typeof window !== 'undefined' ? window.location.pathname : '';
+    // Prefer the runtime location when available; fall back to window when
+    // running in the browser before the router updates.
+    const p = (location && location.pathname) || (typeof window !== 'undefined' ? window.location.pathname : '');
     return p === '/admin' || p.startsWith('/admin/');
   });
 
   useEffect(() => {
-    const onResize = () => setIsRight(window.innerWidth >= 768);
-    window.addEventListener('resize', onResize);
+  // keep existing pagination detection behavior
 
     // Also check if pagination is present and adjust bubble bottom so it
     // doesn't overlap page controls (runs on resize / scroll).
@@ -70,24 +72,44 @@ export default function FloatingWhatsApp() {
       }
     };
 
-    window.addEventListener('resize', checkPagination);
+  window.addEventListener('resize', checkPagination);
     window.addEventListener('scroll', checkPagination, { passive: true });
     // Run once initially
     checkPagination();
 
     return () => {
-      window.removeEventListener('resize', onResize);
       window.removeEventListener('resize', checkPagination);
       window.removeEventListener('scroll', checkPagination as EventListener);
     };
   }, []);
 
+  // Render into a dedicated DOM node attached to document.body so that the
+  // fixed positioning is not affected by transformed ancestors (a common
+  // cause of 'jumping' when other UI pieces appear). We create the node on
+  // mount and clean up on unmount. This effect must run before any early
+  // returns so Hooks keep a stable ordering.
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const el = document.createElement('div');
+    // small identifying attribute for easier debugging
+    el.setAttribute('data-floating-whatsapp-portal', 'true');
+    document.body.appendChild(el);
+    setPortalEl(el);
+    return () => {
+      try {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      } catch (e) {
+        // ignore cleanup errors (element may already have been removed)
+      }
+    };
+  }, []);
+
   // Update admin-route state when the router location changes.
   useEffect(() => {
-    if (!location || !location.pathname) return;
-    const p = location.pathname;
-    setIsAdminRoute(p === '/admin' || p.startsWith('/admin/'));
-  }, [location && location.pathname]);
+    const pathname = location?.pathname;
+    if (!pathname) return;
+    setIsAdminRoute(pathname === '/admin' || pathname.startsWith('/admin/'));
+  }, [location?.pathname]);
 
   const fallbackPhone = '212600000000'; // used if contact endpoint is unavailable
   const message = 'مرحباً، أريد الاستفسار عن منتجاتكم';
@@ -142,22 +164,17 @@ export default function FloatingWhatsApp() {
   // the router location so it updates immediately on SPA navigation.
   if (isAdminRoute) return null;
 
-  // container position depends on isRight. Use inline style to adjust bottom
-  // when pagination is present so the bubble doesn't cover pagination controls.
-  const containerClass = isRight ? 'fixed right-6 z-50' : 'fixed left-6 z-50';
-  // popup alignment: when bubble is on the right, popup aligns right (and grows leftwards);
-  // when bubble is on the left, popup aligns left (and grows rightwards).
-  // On small screens we prefer the popup to open centered above the bubble
-  // (avoids clipping when bubble is at the extreme left). On larger screens
-  // align the popup away from the edge depending on bubble side.
-  let popupAlignClass = isRight ? 'right-0' : 'left-0';
-  if (typeof window !== 'undefined' && window.innerWidth < 768) {
-    popupAlignClass = 'left-1/2 -translate-x-1/2';
-  }
+  // Position the bubble on the left. Use a high z-index so it sits above the
+  // filter button. Popup alignment:
+  // - desktop: place popup to the right of the bubble
+  // - mobile: place popup to the left of the bubble
+  const popupAlignClass = isMobile ? 'left-0 -translate-x-0' : 'left-16';
   const baseBottom = 24; // base bottom spacing in px
 
-  return (
-    <div className={containerClass} style={{ bottom: `${baseBottom + offsetBottom}px` }}>
+  
+
+  const inner = (
+    <div style={{ position: 'fixed', left: 24, bottom: `${baseBottom + offsetBottom}px`, zIndex: 9999 }}>
       {isOpen && (
         <div className={`absolute bottom-20 ${popupAlignClass} bg-white/95 dark:bg-gray-900/95 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] p-6 w-80 mb-2 border border-gold/10 backdrop-blur-sm animate-in slide-in-from-bottom-4 duration-300`}>
           <button
@@ -200,6 +217,11 @@ export default function FloatingWhatsApp() {
         <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full animate-ping"></span>
         <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full"></span>
       </Button>
-    </div>
-  );
-}
+      </div>
+    );
+
+    // If portal element isn't ready yet (SSR or mount lag), render nothing.
+    if (!portalEl) return null;
+    return createPortal(inner, portalEl);
+
+  }

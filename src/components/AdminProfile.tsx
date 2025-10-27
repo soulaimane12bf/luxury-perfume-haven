@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, User, Mail, Phone, Lock, Save } from 'lucide-react';
+import { Loader2, User, Mail, Phone, Lock, Save, Instagram, Facebook } from 'lucide-react';
 
 export default function AdminProfile() {
   const { toast } = useToast();
@@ -21,6 +21,8 @@ export default function AdminProfile() {
     phone: '',
     smtp_email: '',
     smtp_password: '',
+    instagram: '',
+    facebook: '',
   });
 
   // Password form state
@@ -45,6 +47,8 @@ export default function AdminProfile() {
         phone: data.phone || '',
         smtp_email: data.smtp_email || '',
         smtp_password: '', // Never load password from server
+        instagram: data.instagram || '',
+        facebook: data.facebook || '',
       });
     } catch (error: any) {
       toast({
@@ -80,6 +84,9 @@ export default function AdminProfile() {
         smtp_email: profile.smtp_email,
         // Only include smtp_password if user entered a new one
         ...(profile.smtp_password.trim() ? { smtp_password: profile.smtp_password } : {})
+        ,
+        instagram: profile.instagram,
+        facebook: profile.facebook,
       };
       
       await profileApi.updateProfile(updateData);
@@ -230,6 +237,38 @@ export default function AdminProfile() {
               <p className="text-xs text-muted-foreground">
                 رقم واتساب لتلقي إشعارات الطلبات (مع رمز الدولة، بدون +)
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="instagram">انستاغرام</Label>
+              <div className="flex gap-2 items-center">
+                <Instagram className="w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="instagram"
+                  type="text"
+                  value={profile.instagram}
+                  onChange={(e) => setProfile({ ...profile, instagram: e.target.value })}
+                  placeholder="https://instagram.com/yourprofile أو @handle"
+                  dir="ltr"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">رابط أو مُعرّف حساب انستاغرام ليظهر في الفوتر</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="facebook">فيسبوك</Label>
+              <div className="flex gap-2 items-center">
+                <Facebook className="w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="facebook"
+                  type="text"
+                  value={profile.facebook}
+                  onChange={(e) => setProfile({ ...profile, facebook: e.target.value })}
+                  placeholder="https://facebook.com/yourpage"
+                  dir="ltr"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">رابط صفحة فيسبوك لإظهاره في الفوتر</p>
             </div>
 
             <Separator className="my-4" />

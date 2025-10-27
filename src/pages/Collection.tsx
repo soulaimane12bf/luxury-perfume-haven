@@ -161,7 +161,8 @@ export default function Collection() {
                   تصفية
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-80 overflow-y-auto">
+              {/* Open the mobile sheet from the right to match the bottom-right trigger */}
+              <SheetContent side="right" className="w-80 overflow-y-auto">
                 <FilterBar 
                   filters={filters} 
                   onFilterChange={handleFilterChange}

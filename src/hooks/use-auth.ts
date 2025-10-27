@@ -22,11 +22,11 @@ export function useAuth() {
 	}, []);
 
 	const login = async (username: string, password: string) => {
-		const data = await authApi.login(username, password) as any;
-		console.log('[AUTH] Login successful:', { 
-			hasToken: !!data.token, 
+		const data = await authApi.login(username, password) as { token: string; admin: AdminUser };
+		console.log('[AUTH] Login successful:', {
+			hasToken: !!data.token,
 			tokenLength: data.token?.length,
-			admin: data.admin?.username 
+			admin: data.admin?.username,
 		});
 		localStorage.setItem('token', data.token);
 		localStorage.setItem('admin', JSON.stringify(data.admin));

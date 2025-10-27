@@ -3,21 +3,22 @@ const API_BASE_URL =
   (typeof window !== 'undefined' ? `${window.location.origin}/api` : '/api');
 
 // Simple in-memory cache with TTL
-const cache = new Map<string, { data: any; timestamp: number }>();
+type CachedEntry = { data: unknown; timestamp: number };
+const cache = new Map<string, CachedEntry>();
 const CACHE_TTL = 60000; // 1 minute for public data
 const ADMIN_CACHE_TTL = 10000; // 10 seconds for admin data
 
-const getCachedData = (key: string, ttl: number = CACHE_TTL) => {
+const getCachedData = <T = unknown>(key: string, ttl: number = CACHE_TTL): T | null => {
   const cached = cache.get(key);
   if (cached && Date.now() - cached.timestamp < ttl) {
     console.log(`[Cache HIT] ${key}`);
-    return cached.data;
+    return cached.data as T;
   }
   console.log(`[Cache MISS] ${key}`);
   return null;
 };
 
-const setCachedData = (key: string, data: any) => {
+const setCachedData = (key: string, data: unknown) => {
   cache.set(key, { data, timestamp: Date.now() });
 };
 
@@ -189,9 +190,11 @@ export const productsApi = {
       params.append('_t', Date.now().toString());
     }
     
-    const data = await apiCall(`${API_BASE_URL}/products?${params}`, {
+    const data: unknown = await apiCall(`${API_BASE_URL}/products?${params}`, {
       headers: isAdmin ? withAuth({ 'Cache-Control': 'no-cache' }) : {},
     }, 'جلب المنتجات') as any;
+    // `data` shape varies by endpoint and request params; treat as unknown and
+    // narrow below where needed to avoid `any` usage.
 
     // If the caller requested pagination (page or limit present) return the full
     // paginated response (products + meta). This allows public pages to request
@@ -204,7 +207,8 @@ export const productsApi = {
     }
 
     // For simple public list requests (no pagination) return only products array and cache it
-    const productsData = data.products || data;
+    const resp = data as { products?: unknown };
+    const productsData = resp.products ?? data;
     setCachedData(cacheKey, productsData);
     return productsData;
   },
@@ -252,9 +256,10 @@ export const productsApi = {
     params.append('limit', String(limit));
     const data = await apiCall(`${API_BASE_URL}/products/search?${params}`, {}, 'البحث عن المنتجات');
     // Normalize response: some backends return { products, total } while others return an array
-    const anyData = data as any;
-    if (Array.isArray(anyData)) return anyData;
-    if (Array.isArray(anyData?.products)) return anyData.products;
+    const resp: unknown = data;
+    if (Array.isArray(resp)) return resp as unknown[];
+    const maybeObj = resp as { products?: unknown };
+    if (Array.isArray(maybeObj?.products)) return maybeObj.products as unknown[];
     return [];
   },
 
@@ -392,8 +397,9 @@ export const reviewsApi = {
       return await apiCall(url, {
         headers: withAuth({ 'Cache-Control': 'no-cache' }),
       }, 'جلب جميع التقييمات');
-    } catch (error: any) {
-      if (error.isAuthError) {
+    } catch (error: unknown) {
+      const e = error as { isAuthError?: boolean };
+      if (e.isAuthError) {
         console.error('Unauthorized: Please login to view reviews');
       }
       return [];
@@ -431,8 +437,9 @@ export const ordersApi = {
       return await apiCall(url, {
         headers: withAuth({ 'Cache-Control': 'no-cache' }),
       }, 'جلب جميع الطلبات');
-    } catch (error: any) {
-      if (error.isAuthError) {
+    } catch (error: unknown) {
+      const e = error as { isAuthError?: boolean };
+      if (e.isAuthError) {
         console.error('Unauthorized: Please login to view orders');
       }
       return [];
@@ -495,6 +502,8 @@ export const profileApi = {
     username?: string;
     email?: string;
     phone?: string;
+    instagram?: string | null;
+    facebook?: string | null;
   }) => {
     return apiCall(`${API_BASE_URL}/profile`, {
       method: 'PATCH',

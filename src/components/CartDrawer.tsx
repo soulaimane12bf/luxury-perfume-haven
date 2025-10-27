@@ -8,7 +8,14 @@ import OrderForm from "@/components/OrderForm";
 const CartDrawer = () => {
   const { items, isOpen, closeCart, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
   const [orderFormOpen, setOrderFormOpen] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  interface OrderItem {
+    product_id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    image_url: string;
+  }
+  const [selectedItems, setSelectedItems] = useState<OrderItem[]>([]);
 
   const handleCheckout = () => {
     // Checkout all items
@@ -17,19 +24,19 @@ const CartDrawer = () => {
       name: item.name,
       price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
       quantity: item.quantity,
-      image_url: item.image_url,
+      image_url: item.image_url || '/placeholder-product.png',
     })));
     setOrderFormOpen(true);
   };
 
-  const handleCheckoutSingle = (item: any) => {
+  const handleCheckoutSingle = (item: { id: string; name: string; price: number | string; quantity: number; image_url?: string }) => {
     // Checkout single item
     setSelectedItems([{
       product_id: item.id,
       name: item.name,
       price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
       quantity: item.quantity,
-      image_url: item.image_url,
+      image_url: item.image_url || '/placeholder-product.png',
     }]);
     setOrderFormOpen(true);
   };
