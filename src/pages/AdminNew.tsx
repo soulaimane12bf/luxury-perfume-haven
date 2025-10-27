@@ -1232,6 +1232,30 @@ export default function AdminDashboard() {
                             <TableCell>
                               <div>
                                 <div className="font-medium">{order.customer_name}</div>
+                                {/* Small product preview: show up to 3 thumbnails and first product name */}
+                                {Array.isArray(order.items) && order.items.length > 0 && (
+                                  <div className="mt-1 flex items-center gap-3">
+                                    <div className="flex -space-x-2">
+                                      {order.items.slice(0, 3).map((it: any, i: number) => {
+                                        const src = it.image_url || it.image || (it.image_urls && it.image_urls[0]) || '';
+                                        return (
+                                          <img
+                                            key={i}
+                                            src={src}
+                                            alt={it.name || 'product'}
+                                            className="h-8 w-8 rounded object-cover border bg-white"
+                                          />
+                                        );
+                                      })}
+                                      {order.items.length > 3 && (
+                                        <div className="h-8 w-8 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs ml-1">+{order.items.length - 3}</div>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground max-w-[220px] truncate">
+                                      {order.items[0]?.name}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell className="font-bold text-primary">{order.total_amount} درهم</TableCell>
@@ -1303,12 +1327,24 @@ export default function AdminDashboard() {
                                     <div>
                                       <h4 className="font-semibold mb-2">المنتجات</h4>
                                       <div className="space-y-2">
-                                        {order.items.map((item: any, idx: number) => (
-                                          <div key={idx} className="text-sm flex justify-between">
-                                            <span>{item.name} (x{item.quantity})</span>
-                                            <span className="font-medium">{item.price * item.quantity} درهم</span>
-                                          </div>
-                                        ))}
+                                        {order.items.map((item: any, idx: number) => {
+                                          const img = item.image_url || item.image || (item.image_urls && item.image_urls[0]) || '';
+                                          return (
+                                            <div key={idx} className="flex items-center justify-between">
+                                              <div className="flex items-center gap-3 min-w-0">
+                                                <img src={img} alt={item.name} className="h-12 w-12 rounded object-cover flex-shrink-0 bg-white border" />
+                                                <div className="min-w-0">
+                                                  <div className="font-medium truncate">{item.name}</div>
+                                                  {item.variant && <div className="text-xs text-muted-foreground truncate">{item.variant}</div>}
+                                                </div>
+                                              </div>
+                                              <div className="text-right">
+                                                <div className="text-sm">x{item.quantity}</div>
+                                                <div className="font-medium">{item.price * item.quantity} درهم</div>
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
                                       </div>
                                       <div className="mt-2 pt-2 border-t">
                                         <div className="flex justify-between font-bold">
@@ -1358,9 +1394,22 @@ export default function AdminDashboard() {
                         
                         {!expandedOrders.has(order.id) && (
                           <div className="text-sm space-y-1">
-                            <div>📱 {order.customer_phone}</div>
-                            <div>📦 {order.items.length} منتج</div>
-                            <div className="font-bold text-primary">💰 {order.total_amount} درهم</div>
+                            <div className="flex items-center gap-3">
+                              <div className="flex -space-x-2">
+                                {order.items.slice(0,3).map((it: any, i: number) => {
+                                  const s = it.image_url || it.image || (it.image_urls && it.image_urls[0]) || '';
+                                  return (
+                                    <img key={i} src={s} alt={it.name} className="h-8 w-8 rounded object-cover border bg-white" />
+                                  );
+                                })}
+                                {order.items.length > 3 && <div className="h-8 w-8 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs">+{order.items.length - 3}</div>}
+                              </div>
+                              <div className="flex-1">
+                                <div>📱 {order.customer_phone}</div>
+                                <div className="text-xs text-muted-foreground">📦 {order.items.length} منتج</div>
+                              </div>
+                              <div className="font-bold text-primary">💰 {order.total_amount} درهم</div>
+                            </div>
                           </div>
                         )}
                         
@@ -1388,12 +1437,24 @@ export default function AdminDashboard() {
                             <div>
                               <h4 className="font-semibold text-sm mb-2">المنتجات</h4>
                               <div className="space-y-1">
-                                {order.items.map((item: any, idx: number) => (
-                                  <div key={idx} className="text-sm flex justify-between">
-                                    <span>{item.name} (x{item.quantity})</span>
-                                    <span className="font-medium">{item.price * item.quantity} درهم</span>
-                                  </div>
-                                ))}
+                                {order.items.map((item: any, idx: number) => {
+                                  const img = item.image_url || item.image || (item.image_urls && item.image_urls[0]) || '';
+                                  return (
+                                    <div key={idx} className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <img src={img} alt={item.name} className="h-12 w-12 rounded object-cover flex-shrink-0 bg-white border" />
+                                        <div className="min-w-0">
+                                          <div className="font-medium truncate">{item.name}</div>
+                                          {item.variant && <div className="text-xs text-muted-foreground truncate">{item.variant}</div>}
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="text-sm">x{item.quantity}</div>
+                                        <div className="font-medium">{item.price * item.quantity} درهم</div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                               <div className="mt-2 pt-2 border-t">
                                 <div className="flex justify-between font-bold text-sm">
