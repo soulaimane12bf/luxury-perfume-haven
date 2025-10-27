@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -47,7 +46,7 @@ export default function FilterBar({ filters, onFilterChange, brands }: FilterBar
     const newBrands = currentBrands.includes(brand)
       ? currentBrands.filter(b => b !== brand)
       : [...currentBrands, brand];
-    
+
     onFilterChange('brand', newBrands.length > 0 ? newBrands.join(',') : null);
   };
 
@@ -75,12 +74,12 @@ export default function FilterBar({ filters, onFilterChange, brands }: FilterBar
   return (
     <Card className="p-0 sticky top-4 overflow-hidden">
       {/* Optional header with logo/title to match store sidebar design */}
-      <div className="p-4 border-b bg-gradient-to-b from-gray-950 via-gray-900 to-black flex items-center justify-between">
+      <div className="p-4 border-b bg-gradient-to-b from-gray-50/5 to-transparent flex items-center justify-between">
         <div className="flex items-center gap-3">
           {logoSrc ? (
             <img src={logoSrc} alt="logo" className="h-10 w-auto object-contain" />
           ) : (
-            <div className="text-sm font-bold text-white">تصفية المتجر</div>
+            <div className="text-sm font-bold">تصفية المتجر</div>
           )}
         </div>
         {hasActiveFilters && (
@@ -93,9 +92,8 @@ export default function FilterBar({ filters, onFilterChange, brands }: FilterBar
         )}
       </div>
 
-      {/* Padded content area with contrasting background so form controls render correctly */}
-      <div className="p-6 bg-gradient-to-b from-transparent to-transparent text-white">
-        <Separator className="my-4 opacity-30" />
+      <div className="p-6">
+        <Separator className="my-4" />
 
       {/* Sort By */}
       <div className="mb-6">
@@ -113,22 +111,21 @@ export default function FilterBar({ filters, onFilterChange, brands }: FilterBar
         </Select>
       </div>
 
-        <Separator className="my-4" />
+      <Separator className="my-4" />
 
-        {/* Best Selling */}
-        <div className="mb-6 relative">
-          <ArrowLeft className="absolute left-3 top-3 w-4 h-4 text-amber-400 opacity-90" />
-          <div className="flex items-center space-x-2 space-x-reverse ml-6">
-            <Checkbox
-              id="best-selling"
-              checked={filters.best_selling === 'true'}
-              onCheckedChange={(checked) => onFilterChange('best_selling', checked ? 'true' : null)}
-            />
-            <Label htmlFor="best-selling" className="cursor-pointer text-white">
-              الأكثر مبيعاً فقط 🔥
-            </Label>
-          </div>
+      {/* Best Selling */}
+      <div className="mb-6">
+        <div className="flex items-center space-x-2 space-x-reverse">
+          <Checkbox
+            id="best-selling"
+            checked={filters.best_selling === 'true'}
+            onCheckedChange={(checked) => onFilterChange('best_selling', checked ? 'true' : null)}
+          />
+          <Label htmlFor="best-selling" className="cursor-pointer">
+            الأكثر مبيعاً فقط 🔥
+          </Label>
         </div>
+      </div>
 
       <Separator className="my-4" />
 
@@ -151,57 +148,34 @@ export default function FilterBar({ filters, onFilterChange, brands }: FilterBar
         </div>
       </div>
 
-        <Separator className="my-4" />
+      <Separator className="my-4" />
 
-        {/* Brand Filter */}
-        <div className="mb-6 relative">
-          <ArrowLeft className="absolute left-3 top-3 w-4 h-4 text-amber-400 opacity-90" />
-          <Label className="mb-3 block ml-6 text-white">العلامة التجارية</Label>
-          <div className="space-y-2 max-h-48 overflow-y-auto ml-6">
-            {brands.map((brand) => (
-              <div key={brand} className="flex items-center space-x-2 space-x-reverse">
-                <Checkbox
-                  id={`brand-${brand}`}
-                  checked={selectedBrands.includes(brand)}
-                  onCheckedChange={() => handleBrandToggle(brand)}
-                />
-                <Label htmlFor={`brand-${brand}`} className="cursor-pointer text-sm text-white">
-                  {brand}
-                </Label>
-              </div>
-            ))}
+      {/* Type Filter */}
+      <div className="mb-6">
+        <Label className="mb-3 block">النوع</Label>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2 space-x-reverse">
+            <Checkbox
+              id="type-produit"
+              checked={filters.type === 'PRODUIT'}
+              onCheckedChange={() => handleTypeToggle('PRODUIT')}
+            />
+            <Label htmlFor="type-produit" className="cursor-pointer text-sm">
+              PRODUIT (منتج أصلي)
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2 space-x-reverse">
+            <Checkbox
+              id="type-testeur"
+              checked={filters.type === 'TESTEUR'}
+              onCheckedChange={() => handleTypeToggle('TESTEUR')}
+            />
+            <Label htmlFor="type-testeur" className="cursor-pointer text-sm">
+              TESTEUR (تستر)
+            </Label>
           </div>
         </div>
-
-        <Separator className="my-4" />
-
-        {/* Type Filter */}
-        <div className="mb-6 relative">
-          <ArrowLeft className="absolute left-3 top-3 w-4 h-4 text-amber-400 opacity-90" />
-          <Label className="mb-3 block ml-6 text-white">النوع</Label>
-          <div className="space-y-2 ml-6">
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <Checkbox
-                id="type-produit"
-                checked={filters.type === 'PRODUIT'}
-                onCheckedChange={() => handleTypeToggle('PRODUIT')}
-              />
-              <Label htmlFor="type-produit" className="cursor-pointer text-sm text-white">
-                PRODUIT (منتج أصلي)
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <Checkbox
-                id="type-testeur"
-                checked={filters.type === 'TESTEUR'}
-                onCheckedChange={() => handleTypeToggle('TESTEUR')}
-              />
-              <Label htmlFor="type-testeur" className="cursor-pointer text-sm text-white">
-                TESTEUR (تستر)
-              </Label>
-            </div>
-          </div>
-        </div>
+      </div>
 
       <Separator className="my-4" />
 
