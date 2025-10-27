@@ -118,12 +118,18 @@ export default function Collection() {
     // Scroll pagination into view so the user sees the top of the pagination
     // controls after clicking on a page number (helpful on long lists/mobile).
     try {
-      const nav = document.querySelector('nav[aria-label="pagination"]');
-      if (nav && typeof (nav as HTMLElement).scrollIntoView === 'function') {
-        (nav as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const nav = document.querySelector('nav[aria-label="pagination"]') as HTMLElement | null;
+      // Respect the fixed header by reading the CSS var set by Header and
+      // scrolling so the pagination top sits below the header.
+      const headerHeightStr = getComputedStyle(document.documentElement).getPropertyValue('--header-height') || '';
+      const headerHeight = headerHeightStr ? parseInt(headerHeightStr, 10) : 0;
+      if (nav) {
+        const navTop = nav.getBoundingClientRect().top + window.scrollY;
+        const offset = Math.max(12, headerHeight || 12);
+        window.scrollTo({ top: Math.max(0, navTop - offset), behavior: 'smooth' });
       }
     } catch (e) {
-      // ignore
+      // ignore if anything goes wrong
     }
 
     // Clear the flag after a short delay once the router and effects settle.

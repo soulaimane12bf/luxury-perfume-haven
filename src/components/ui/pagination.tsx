@@ -72,7 +72,7 @@ const PaginationLink = ({ className, isActive, size = "icon", ...props }: Pagina
         size,
       }),
       // stable layout helpers
-      "h-9 min-w-[36px] flex items-center justify-center box-border border-2",
+      "h-9 min-w-[36px] flex items-center justify-center box-border border-2 rounded-md px-2 text-sm transition-colors",
       // make inactive borders transparent so visual change doesn't affect layout
       !isActive && "border-transparent",
       className,
@@ -82,20 +82,26 @@ const PaginationLink = ({ className, isActive, size = "icon", ...props }: Pagina
 );
 PaginationLink.displayName = "PaginationLink";
 
-const PaginationPrevious = ({ className, ...props }: React.ComponentProps<typeof PaginationLink>) => (
-  <PaginationLink aria-label="Go to previous page" size="default" className={cn("gap-1 pl-2.5", className)} {...props}>
-    <ChevronLeft className="h-4 w-4" />
-    <span>Previous</span>
-  </PaginationLink>
-);
+const PaginationPrevious = ({ children, className, ...props }: React.ComponentProps<typeof PaginationLink> & { children?: React.ReactNode }) => {
+  const isRtl = typeof document !== 'undefined' && document.dir === 'rtl';
+  return (
+    <PaginationLink aria-label="Go to previous page" size="default" className={cn("gap-1 pl-2.5", className)} {...props}>
+      {isRtl ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+      {children ?? 'Previous'}
+    </PaginationLink>
+  );
+};
 PaginationPrevious.displayName = "PaginationPrevious";
 
-const PaginationNext = ({ className, ...props }: React.ComponentProps<typeof PaginationLink>) => (
-  <PaginationLink aria-label="Go to next page" size="default" className={cn("gap-1 pr-2.5", className)} {...props}>
-    <span>Next</span>
-    <ChevronRight className="h-4 w-4" />
-  </PaginationLink>
-);
+const PaginationNext = ({ children, className, ...props }: React.ComponentProps<typeof PaginationLink> & { children?: React.ReactNode }) => {
+  const isRtl = typeof document !== 'undefined' && document.dir === 'rtl';
+  return (
+    <PaginationLink aria-label="Go to next page" size="default" className={cn("gap-1 pr-2.5", className)} {...props}>
+      {children ?? 'Next'}
+      {isRtl ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+    </PaginationLink>
+  );
+};
 PaginationNext.displayName = "PaginationNext";
 
 const PaginationEllipsis = ({ className, ...props }: React.ComponentProps<"span">) => (
