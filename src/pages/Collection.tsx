@@ -1,5 +1,5 @@
 import { useParams, useSearchParams } from 'react-router-dom';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@/lib/hooks/useApi';
 import { productsApi } from '@/lib/api';
@@ -97,9 +97,26 @@ export default function Collection() {
     
     setSearchParams(newParams);
     // Reset to first page when filters change
-    setPage(1);
+    // Use the guarded setter so we don't trigger a loop between URL and state
+    setPageGuarded(1);
     newParams.set('page', '1');
     setSearchParams(newParams, { replace: true });
+  };
+
+  // Guard against immediate loops where updating searchParams triggers a
+  // router update which briefly reports the old/default page. We mark when
+  // we're intentionally updating the page from UI actions and ignore the
+  // transient URL-driven updates while the flag is set.
+  const pageUpdatingRef = useRef(false);
+  const setPageGuarded = (p: number | ((prev: number) => number)) => {
+    pageUpdatingRef.current = true;
+    if (typeof p === 'function') {
+      setPage(p as (prev: number) => number);
+    } else {
+      setPage(p as number);
+    }
+    // Clear the flag after a short delay once the router and effects settle.
+    window.setTimeout(() => { pageUpdatingRef.current = false; }, 800);
   };
 
   // If the page was opened with a path param (/:category) ensure the query string is in sync
@@ -134,6 +151,7 @@ export default function Collection() {
 
   // If URL changes (back/forward), reflect it in page state
   useEffect(() => {
+    if (pageUpdatingRef.current) return;
     if (pageParam !== page) setPage(pageParam);
   }, [pageParam, page]);
 
@@ -221,12 +239,12 @@ export default function Collection() {
                       <PaginationContent>
                         <PaginationItem>
                           <PaginationPrevious
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setPage((p) => Math.max(1, p - 1));
-                            }}
-                          />
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setPageGuarded((p) => Math.max(1, (p as number) - 1));
+                              }}
+                            />
                         </PaginationItem>
 
                         {/* Compact pagination: show first, last, current +/- 2, with ellipses */}
@@ -250,11 +268,11 @@ export default function Collection() {
                                 <span className="px-2 py-1 text-sm text-muted-foreground">...</span>
                               </PaginationItem>
                             ) : (
-                              <PaginationItem key={pn}>
+                                <PaginationItem key={pn}>
                                 <PaginationLink
                                   href="#"
                                   isActive={pn === page}
-                                  onClick={(e) => { e.preventDefault(); setPage(Number(pn)); }}
+                                  onClick={(e) => { e.preventDefault(); setPageGuarded(Number(pn)); }}
                                 >
                                   {pn}
                                 </PaginationLink>
@@ -268,7 +286,7 @@ export default function Collection() {
                             href="#"
                             onClick={(e) => {
                               e.preventDefault();
-                              setPage((p) => Math.min(totalPages, p + 1));
+                              setPageGuarded((p) => Math.min(totalPages as number, (p as number) + 1));
                             }}
                           />
                         </PaginationItem>
