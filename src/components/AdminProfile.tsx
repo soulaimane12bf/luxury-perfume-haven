@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import showAdminAlert from '@/lib/swal-admin';
 import { Loader2, User, Mail, Phone, Lock, Save, Instagram, Facebook } from 'lucide-react';
 
 export default function AdminProfile() {
@@ -51,10 +52,11 @@ export default function AdminProfile() {
         facebook: data.facebook || '',
       });
     } catch (error: any) {
-      toast({
+      showAdminAlert({
         title: 'خطأ',
-        description: error.message || 'فشل في جلب البيانات',
-        variant: 'destructive',
+        text: error.message || 'فشل في جلب البيانات',
+        icon: 'error',
+        timer: 5000,
       });
     } finally {
       setLoading(false);
@@ -65,11 +67,7 @@ export default function AdminProfile() {
     e.preventDefault();
 
     if (!profile.username.trim() || !profile.email.trim()) {
-      toast({
-        title: 'خطأ',
-        description: 'الاسم والبريد الإلكتروني مطلوبان',
-        variant: 'destructive',
-      });
+      showAdminAlert({ title: 'خطأ', text: 'الاسم والبريد الإلكتروني مطلوبان', icon: 'error', timer: 5000 });
       return;
     }
 
@@ -90,18 +88,10 @@ export default function AdminProfile() {
       };
       
       await profileApi.updateProfile(updateData);
-      toast({
-        title: 'تم التحديث',
-        description: 'تم تحديث الملف الشخصي بنجاح',
-        className: 'bg-green-50 border-green-200',
-      });
+      showAdminAlert({ title: 'تم التحديث', text: 'تم تحديث الملف الشخصي بنجاح', icon: 'success', timer: 3000 });
       fetchProfile(); // Refresh profile
     } catch (error: any) {
-      toast({
-        title: 'خطأ',
-        description: error.message || 'فشل في تحديث الملف الشخصي',
-        variant: 'destructive',
-      });
+      showAdminAlert({ title: 'خطأ', text: error.message || 'فشل في تحديث الملف الشخصي', icon: 'error', timer: 5000 });
     } finally {
       setUpdating(false);
     }
@@ -111,40 +101,24 @@ export default function AdminProfile() {
     e.preventDefault();
 
     if (!passwordForm.currentPassword || !passwordForm.newPassword) {
-      toast({
-        title: 'خطأ',
-        description: 'جميع حقول كلمة المرور مطلوبة',
-        variant: 'destructive',
-      });
+      showAdminAlert({ title: 'خطأ', text: 'جميع حقول كلمة المرور مطلوبة', icon: 'error', timer: 5000 });
       return;
     }
 
     if (passwordForm.newPassword.length < 6) {
-      toast({
-        title: 'خطأ',
-        description: 'كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل',
-        variant: 'destructive',
-      });
+      showAdminAlert({ title: 'خطأ', text: 'كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل', icon: 'error', timer: 5000 });
       return;
     }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast({
-        title: 'خطأ',
-        description: 'كلمة المرور الجديدة وتأكيدها غير متطابقين',
-        variant: 'destructive',
-      });
+      showAdminAlert({ title: 'خطأ', text: 'كلمة المرور الجديدة وتأكيدها غير متطابقين', icon: 'error', timer: 5000 });
       return;
     }
 
     try {
       setChangingPassword(true);
       await profileApi.updatePassword(passwordForm.currentPassword, passwordForm.newPassword);
-      toast({
-        title: 'تم التغيير',
-        description: 'تم تغيير كلمة المرور بنجاح',
-        className: 'bg-green-50 border-green-200',
-      });
+      showAdminAlert({ title: 'تم التغيير', text: 'تم تغيير كلمة المرور بنجاح', icon: 'success', timer: 3000 });
       // Clear password form
       setPasswordForm({
         currentPassword: '',
