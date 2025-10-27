@@ -160,8 +160,7 @@ export default function OrderForm({ open, onOpenChange, items, totalAmount, onSu
                         alt={item.name}
                         className="w-full h-16 object-cover group-hover:scale-110 transition-transform duration-300"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                      <div className="absolute bottom-0 left-0 right-0 text-white text-[10px] font-bold p-1 text-center">
+                      <div className="absolute top-1 right-1 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                         ×{item.quantity}
                       </div>
                     </div>
