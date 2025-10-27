@@ -5,11 +5,14 @@ import { Button } from '@/components/ui/button';
 
 export default function FloatingWhatsApp() {
   const [isOpen, setIsOpen] = useState(false);
+  // On small screens we want the bubble on the LEFT (per request). On larger
+  // screens keep it on the right. isRight === true => bubble on right side.
   const [isRight, setIsRight] = useState(() => {
     if (typeof window === 'undefined') return true;
-    return window.innerWidth < 768; // tailwind md breakpoint
+    return window.innerWidth >= 768; // desktop: right, mobile: left
   });
   const [phone, setPhone] = useState<string | null>(null);
+  const [offsetBottom, setOffsetBottom] = useState<number>(0);
 
   // Hide the floating WhatsApp bubble on admin pages (any path containing /admin)
   // Use React Router location so we react to SPA navigations without a full
@@ -22,9 +25,61 @@ export default function FloatingWhatsApp() {
   });
 
   useEffect(() => {
-    const onResize = () => setIsRight(window.innerWidth < 768);
+    const onResize = () => setIsRight(window.innerWidth >= 768);
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+
+    // Also check if pagination is present and adjust bubble bottom so it
+    // doesn't overlap page controls (runs on resize / scroll).
+    const checkPagination = () => {
+      try {
+        // Try several common selectors: the shared pagination uses
+        // nav[aria-label="pagination"], but some pages/components may use
+        // .pagination or a data attribute like [data-pagination].
+        const selectors = ['nav[aria-label="pagination"]', '.pagination', '[data-pagination]'];
+        const nodes = document.querySelectorAll(selectors.join(','));
+
+        let found: Element | null = null;
+        for (const n of Array.from(nodes)) {
+          const el = n as Element;
+          // ensure element is visible and in the document flow
+          if (!(el instanceof HTMLElement)) continue;
+          if (el.offsetParent === null) continue; // hidden
+          const r = el.getBoundingClientRect();
+          if (r.height <= 0) continue;
+          found = el;
+          break;
+        }
+
+        if (!found) {
+          setOffsetBottom(0);
+          return;
+        }
+
+        const rect = (found as HTMLElement).getBoundingClientRect();
+        const gap = 12; // px
+        // If pagination sits near the bottom of the viewport, raise the bubble
+        // above it by nav height + small gap. We consider "near bottom" when
+        // the bottom is within 80px of the viewport bottom.
+        if (rect.bottom > window.innerHeight - 80) {
+          setOffsetBottom(Math.ceil(rect.height + gap));
+        } else {
+          setOffsetBottom(0);
+        }
+      } catch (e) {
+        setOffsetBottom(0);
+      }
+    };
+
+    window.addEventListener('resize', checkPagination);
+    window.addEventListener('scroll', checkPagination, { passive: true });
+    // Run once initially
+    checkPagination();
+
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('resize', checkPagination);
+      window.removeEventListener('scroll', checkPagination as EventListener);
+    };
   }, []);
 
   // Update admin-route state when the router location changes.
@@ -87,14 +142,22 @@ export default function FloatingWhatsApp() {
   // the router location so it updates immediately on SPA navigation.
   if (isAdminRoute) return null;
 
-  // container position depends on isRight
-  const containerClass = isRight ? 'fixed bottom-6 right-6 z-50' : 'fixed bottom-6 left-6 z-50';
+  // container position depends on isRight. Use inline style to adjust bottom
+  // when pagination is present so the bubble doesn't cover pagination controls.
+  const containerClass = isRight ? 'fixed right-6 z-50' : 'fixed left-6 z-50';
   // popup alignment: when bubble is on the right, popup aligns right (and grows leftwards);
   // when bubble is on the left, popup aligns left (and grows rightwards).
-  const popupAlignClass = isRight ? 'right-0' : 'left-0';
+  // On small screens we prefer the popup to open centered above the bubble
+  // (avoids clipping when bubble is at the extreme left). On larger screens
+  // align the popup away from the edge depending on bubble side.
+  let popupAlignClass = isRight ? 'right-0' : 'left-0';
+  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    popupAlignClass = 'left-1/2 -translate-x-1/2';
+  }
+  const baseBottom = 24; // base bottom spacing in px
 
   return (
-    <div className={containerClass}>
+    <div className={containerClass} style={{ bottom: `${baseBottom + offsetBottom}px` }}>
       {isOpen && (
         <div className={`absolute bottom-20 ${popupAlignClass} bg-white/95 dark:bg-gray-900/95 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] p-6 w-80 mb-2 border border-gold/10 backdrop-blur-sm animate-in slide-in-from-bottom-4 duration-300`}>
           <button
