@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, Search, Menu, Loader2, X } from "lucide-react";
+import { ShoppingCart, Search, Menu, Loader2, X, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -21,7 +21,15 @@ const Header = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState("");
-  const [sidebarSearchResults, setSidebarSearchResults] = useState<any[]>([]);
+  interface ProductPreview {
+    id: string;
+    name?: string;
+    brand?: string;
+    image_urls?: string[];
+    image_url?: string;
+    price?: number;
+  }
+  const [sidebarSearchResults, setSidebarSearchResults] = useState<ProductPreview[]>([]);
   const [isSidebarSearching, setIsSidebarSearching] = useState(false);
   const { getTotalItems, openCart } = useCart();
   const navigate = useNavigate();
@@ -72,10 +80,10 @@ const Header = () => {
     setIsSidebarSearching(true);
     try {
       // Fetch a larger set and then apply client-side fuzzy matching for smarter results
-      const raw = await productsApi.search(query, 20);
-      const arr = Array.isArray(raw) ? raw : [];
-      const filtered = arr.filter((p) => productMatchesQuery(p, query)).slice(0, 8);
-      setSidebarSearchResults(filtered);
+  const raw = await productsApi.search(query, 20);
+  const arr: unknown[] = Array.isArray(raw) ? raw : [];
+  const filtered = arr.filter((p) => productMatchesQuery(p as ProductPreview, query)).slice(0, 8) as ProductPreview[];
+  setSidebarSearchResults(filtered);
     } catch (error) {
       console.error('Sidebar search error:', error);
       setSidebarSearchResults([]);
@@ -106,7 +114,7 @@ const Header = () => {
 
       {/* Main Header */}
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between py-3">
+  <div className="flex items-center justify-between py-3 flex-nowrap">
           {/* Left: Menu (swapped) */}
           <Sheet>
             <SheetTrigger asChild>
@@ -115,14 +123,14 @@ const Header = () => {
               </Button>
             </SheetTrigger>
             {/* Open client menu from the RIGHT so it doesn't conflict with admin sidebar */}
-            <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-white border-l-2 border-gold/30 p-0 z-[200]">
+            <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-gradient-to-b from-gray-950 via-gray-900 to-black border-l border-amber-500/30 p-0 z-[200]">
                 <div className="flex flex-col h-full">
-                {/* Logo at top */}
-                <div className="flex justify-center py-4 border-b-2 border-gold/30 bg-gradient-to-b from-gold/5 to-transparent">
+                {/* Logo/header at top */}
+                <div className="flex justify-center py-4 border-b border-amber-500/20 bg-gradient-to-b from-gray-900/60 to-transparent">
                   <img 
                     src={cosmedLogo} 
                     alt="COSMED Logo" 
-                    className="h-16 w-auto object-contain"
+                    className="h-14 w-auto object-contain"
                   />
                 </div>
 
@@ -161,7 +169,7 @@ const Header = () => {
                         </div>
                       ) : sidebarSearchResults.length > 0 ? (
                         <div className="space-y-2">
-                          {sidebarSearchResults.map((product) => (
+                          {sidebarSearchResults.map((product: ProductPreview) => (
                             <button
                               key={product.id}
                               onClick={() => handleSidebarProductClick(product.id)}
@@ -202,26 +210,25 @@ const Header = () => {
                 </div>
 
                 {/* Navigation Links */}
-                <nav className="flex flex-col gap-2 p-4 overflow-y-auto flex-1">
-                  <Link
-                    to="/"
-                    className="text-base font-medium text-black hover:text-gold transition-all duration-300 py-2 px-4 rounded-lg hover:bg-gold/10 border-b border-gray-200"
-                  >
-                    الصفحة الرئيسية
+                <nav className="flex flex-col gap-2 p-4 overflow-y-auto flex-1 text-white">
+                  <Link to="/" className="relative block py-3 px-4 rounded-lg hover:bg-amber-600/10 transition-colors">
+                    <ArrowLeft className="absolute left-3 top-3 w-4 h-4 text-amber-400" />
+                    <span className="ml-8 font-medium">الصفحة الرئيسية</span>
                   </Link>
-                  <Link
-                    to="/best-sellers"
-                    className="text-base font-medium text-black hover:text-gold transition-all duration-300 py-2 px-4 rounded-lg hover:bg-gold/10 border-b border-gray-200"
-                  >
-                    الأكثر مبيعاً
+
+                  <Link to="/best-sellers" className="relative block py-3 px-4 rounded-lg hover:bg-amber-600/10 transition-colors">
+                    <ArrowLeft className="absolute left-3 top-3 w-4 h-4 text-amber-400" />
+                    <span className="ml-8 font-medium">الأكثر مبيعاً</span>
                   </Link>
+
                   {categories.map((category) => (
                     <Link
                       key={category.id}
                       to={`/collection/${category.slug}`}
-                      className="text-base font-medium text-black hover:text-gold transition-all duration-300 py-2 px-4 rounded-lg hover:bg-gold/10 border-b border-gray-200"
+                      className="relative block py-3 px-4 rounded-lg hover:bg-amber-600/10 transition-colors"
                     >
-                      {category.name}
+                      <ArrowLeft className="absolute left-3 top-3 w-4 h-4 text-amber-400" />
+                      <span className="ml-8 font-medium">{category.name}</span>
                     </Link>
                   ))}
                 </nav>
@@ -230,12 +237,12 @@ const Header = () => {
           </Sheet>
 
           {/* Center: Logo */}
-          <Link to="/" className="flex flex-col items-center group">
+          <Link to="/" className="flex flex-col items-center group flex-shrink-0">
             <div className="relative">
               <img 
                 src={cosmedLogo} 
                 alt="COSMED" 
-                className="h-8 md:h-12 w-auto object-contain transition-all duration-300 group-hover:scale-105"
+                className="h-8 md:h-12 w-auto object-contain transition-all duration-300 group-hover:scale-105 flex-shrink-0"
                 style={{
                   filter: 'drop-shadow(0 2px 8px rgba(234, 179, 8, 0.3))'
                 }}

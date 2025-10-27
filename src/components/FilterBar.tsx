@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -26,20 +26,6 @@ interface FilterBarProps {
 
 export default function FilterBar({ filters, onFilterChange, brands }: FilterBarProps) {
   const [priceRange, setPriceRange] = useState([0, 5000]);
-  const [logoSrc, setLogoSrc] = useState<string | null>(null);
-
-  // Try to dynamically load a store sidebar logo if present. Graceful fallback if not.
-  useEffect(() => {
-    let mounted = true;
-    import('@/assets/images/sidebar-logo.png')
-      .then((m) => {
-        if (mounted && m && m.default) setLogoSrc(m.default as string);
-      })
-      .catch(() => {
-        // ignore — optional logo
-      });
-    return () => { mounted = false; };
-  }, []);
 
   const handleBrandToggle = (brand) => {
     const currentBrands = filters.brand ? filters.brand.split(',') : [];
@@ -72,29 +58,18 @@ export default function FilterBar({ filters, onFilterChange, brands }: FilterBar
   const hasActiveFilters = filters.brand || filters.type || filters.minPrice || filters.maxPrice || filters.best_selling;
 
   return (
-    <Card className="p-0 sticky top-4 overflow-hidden">
-      {/* Optional header with logo/title to match store sidebar design */}
-      <div className="p-4 border-b bg-gradient-to-b from-gray-50/5 to-transparent flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {logoSrc ? (
-            <img src={logoSrc} alt="logo" className="h-10 w-auto object-contain" />
-          ) : (
-            <div className="text-sm font-bold">تصفية المتجر</div>
-          )}
+    <Card className="p-6 sticky top-4">
+      {/* Top: clear filters button */}
+      {hasActiveFilters && (
+        <div className="flex justify-end mb-2">
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            <X className="h-4 w-4 mr-1" />
+            مسح الكل
+          </Button>
         </div>
-        {hasActiveFilters && (
-          <div className="pr-2">
-            <Button variant="ghost" size="sm" onClick={clearFilters}>
-              <X className="h-4 w-4 mr-1" />
-              مسح الكل
-            </Button>
-          </div>
-        )}
-      </div>
+      )}
 
-      <div className="p-6">
-        <Separator className="my-4" />
-
+  <Separator className="my-4" />
       {/* Sort By */}
       <div className="mb-6">
         <Label className="mb-2 block">ترتيب حسب</Label>
@@ -197,7 +172,6 @@ export default function FilterBar({ filters, onFilterChange, brands }: FilterBar
             <span>{priceRange[1]} درهم</span>
           </div>
         </div>
-      </div>
       </div>
     </Card>
   );
