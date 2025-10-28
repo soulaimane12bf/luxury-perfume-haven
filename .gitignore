@@ -29,6 +29,14 @@ dist-ssr
 .env.local
 .env.*.local
 backend/.env
+
+# Trash folder for archived/test/unused files (do NOT commit)
+trash/
+trash/**
+
+# Explicitly ignore production env files (they were accidentally committed previously)
+.env.production
+
 backend/.env.local
 backend/.env.production
 
