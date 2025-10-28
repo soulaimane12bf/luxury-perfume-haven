@@ -100,12 +100,19 @@ export default function AdminSidebar({ activeTab, onTabChange, onLogout, onClose
       {/* Logout Button */}
       <div className="relative p-4 border-t border-amber-500/20">
         <Button
-          onClick={onLogout}
           variant="ghost"
           className="w-full justify-start gap-3 text-red-400 hover:text-red-300 hover:bg-red-500/10"
-          onClickCapture={() => {
+          onClick={() => {
+            // Close the mobile sidebar first if provided, then run the logout handler.
             if (isMobile && onClose) {
-              onClose();
+              try {
+                onClose();
+              } catch (e) {
+                // ignore
+              }
+            }
+            if (typeof onLogout === 'function') {
+              onLogout();
             }
           }}
         >
