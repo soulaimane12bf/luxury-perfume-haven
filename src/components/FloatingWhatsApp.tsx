@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { X, Send, Sparkles } from 'lucide-react';
@@ -8,8 +8,8 @@ export default function FloatingWhatsApp() {
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
   const [phone, setPhone] = useState<string | null>(null);
-  const [offsetBottom, setOffsetBottom] = useState<number>(0);
   const [portalEl, setPortalEl] = useState<HTMLElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   const location = useLocation();
   const [isAdminRoute, setIsAdminRoute] = useState(() => {
@@ -18,49 +18,9 @@ export default function FloatingWhatsApp() {
     return p === '/admin' || p.startsWith('/admin/') || p === '/login' || p.startsWith('/login');
   });
 
-  useEffect(() => {
-    const checkPagination = () => {
-      try {
-        const selectors = ['nav[aria-label="pagination"]', '.pagination', '[data-pagination]'];
-        const nodes = document.querySelectorAll(selectors.join(','));
-
-        let found: Element | null = null;
-        for (const n of Array.from(nodes)) {
-          const el = n as Element;
-          if (!(el instanceof HTMLElement)) continue;
-          if (el.offsetParent === null) continue;
-          const r = el.getBoundingClientRect();
-          if (r.height <= 0) continue;
-          found = el;
-          break;
-        }
-
-        if (!found) {
-          setOffsetBottom(0);
-          return;
-        }
-
-        const rect = (found as HTMLElement).getBoundingClientRect();
-        const gap = 12;
-        if (rect.bottom > window.innerHeight - 80) {
-          setOffsetBottom(Math.ceil(rect.height + gap));
-        } else {
-          setOffsetBottom(0);
-        }
-      } catch (e) {
-        setOffsetBottom(0);
-      }
-    };
-
-    window.addEventListener('resize', checkPagination);
-    window.addEventListener('scroll', checkPagination, { passive: true });
-    checkPagination();
-
-    return () => {
-      window.removeEventListener('resize', checkPagination);
-      window.removeEventListener('scroll', checkPagination as EventListener);
-    };
-  }, []);
+  // We intentionally avoid dynamically shifting the bubble up when the page
+  // changes (this caused jumpy behavior on collection pages). Instead keep a
+  // slightly higher base position and close the popup when clicking outside.
 
   useEffect(() => {
     if (typeof document === 'undefined') return undefined;
@@ -130,13 +90,41 @@ export default function FloatingWhatsApp() {
     };
   }, []);
 
+  // Close when clicking outside the floating container or when pressing Escape
+  useEffect(() => {
+    const handler = (ev: MouseEvent) => {
+      if (!isOpen) return;
+      const target = ev.target as Node | null;
+      if (!target) return;
+      // If click is inside the widget, do nothing
+      if (rootRef.current && rootRef.current.contains(target)) return;
+      // Otherwise close the popup
+      setIsOpen(false);
+    };
+
+    const onKey = (ev: KeyboardEvent) => {
+      if (!isOpen) return;
+      if (ev.key === 'Escape') setIsOpen(false);
+    };
+
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler, { passive: true });
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler as EventListener);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [isOpen]);
+
   if (isAdminRoute) return null;
 
   const popupAlignClass = isMobile ? 'left-0 -translate-x-0' : 'left-20';
-  const baseBottom = 24;
+  // Raised a bit to avoid overlapping filter buttons on collection pages
+  const baseBottom = 64;
 
   const inner = (
-    <div style={{ position: 'fixed', left: 24, bottom: `${baseBottom + offsetBottom}px`, zIndex: 120 }}>
+    <div ref={rootRef} style={{ position: 'fixed', left: 24, bottom: `${baseBottom}px`, zIndex: 120 }}>
       {/* Luxury Popup Card */}
       {isOpen && (
         <div className={`absolute bottom-24 ${popupAlignClass} w-80 mb-2 animate-in slide-in-from-bottom-4 duration-300`}>
@@ -227,6 +215,7 @@ export default function FloatingWhatsApp() {
         
         {/* Button with premium styling */}
         <Button
+          data-floating-whatsapp-button="true"
           onClick={() => setIsOpen(!isOpen)}
           className="relative h-16 w-16 rounded-full shadow-2xl bg-gradient-to-br from-green-400 via-green-500 to-emerald-600 hover:from-green-500 hover:to-emerald-700 transition-all duration-300 hover:scale-110 p-0 group ring-2 ring-green-400/50 hover:ring-green-300/70"
           size="icon"
