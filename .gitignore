@@ -29,6 +29,7 @@ dist-ssr
 .env.local
 .env.*.local
 backend/.env
+.vercel.env
 
 # Trash folder for archived/test/unused files (do NOT commit)
 trash/
