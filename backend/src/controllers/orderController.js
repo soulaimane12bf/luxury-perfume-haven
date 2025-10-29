@@ -27,28 +27,10 @@ const getAdminContactInfo = async () => {
   }
 };
 
-// Send email notification (with dynamic SMTP credentials)
+// Send email notification (tries SendGrid first if configured, otherwise falls back to SMTP via nodemailer)
 const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword) => {
-  try {
-    // Create transporter with admin's SMTP credentials and optimized settings
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: process.env.EMAIL_PORT || 587,
-      secure: false,
-      auth: {
-        user: smtpEmail,
-        pass: smtpPassword,
-      },
-      connectionTimeout: 10000, // 10 seconds timeout
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-      pool: true, // Use connection pooling
-      maxConnections: 5,
-      rateDelta: 20000,
-      rateLimit: 5,
-    });
-
-    const itemsHTML = order.items.map(item => `
+  // Build common HTML body
+  const itemsHTML = (order.items || []).map(item => `
       <tr>
         <td style="padding: 10px; border-bottom: 1px solid #eee;">
           <img src="${item.image_url || ''}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
@@ -59,54 +41,123 @@ const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword)
       </tr>
     `).join('');
 
-    const mailOptions = {
-      from: smtpEmail,
-      to: adminEmail,
-      subject: `طلب جديد - ${order.id}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; direction: rtl;">
-          <h2 style="color: #d4af37; text-align: center;">طلب جديد من متجر العطور</h2>
-          <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3>معلومات العميل</h3>
-            <p><strong>الاسم:</strong> ${order.customer_name}</p>
-            <p><strong>الهاتف:</strong> ${order.customer_phone}</p>
-            <p><strong>البريد الإلكتروني:</strong> ${order.customer_email || 'غير متوفر'}</p>
-            <p><strong>العنوان:</strong> ${order.customer_address}</p>
-            ${order.notes ? `<p><strong>ملاحظات:</strong> ${order.notes}</p>` : ''}
-          </div>
-          <div style="margin: 20px 0;">
-            <h3>تفاصيل الطلب</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="background: #f0f0f0;">
-                  <th style="padding: 10px; text-align: right;">صورة</th>
-                  <th style="padding: 10px; text-align: right;">المنتج</th>
-                  <th style="padding: 10px; text-align: right;">الكمية</th>
-                  <th style="padding: 10px; text-align: right;">السعر</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itemsHTML}
-              </tbody>
-            </table>
-          </div>
-          <div style="background: #d4af37; color: white; padding: 15px; text-align: center; border-radius: 8px; margin-top: 20px;">
-            <h3 style="margin: 0;">المجموع الكلي: ${order.total_amount} درهم</h3>
-          </div>
-          <p style="text-align: center; color: #666; margin-top: 20px;">
-            رقم الطلب: ${order.id}<br>
-            تاريخ الطلب: ${new Date(order.created_at).toLocaleString('ar-MA')}
-          </p>
+  const htmlBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; direction: rtl;">
+        <h2 style="color: #d4af37; text-align: center;">طلب جديد من متجر العطور</h2>
+        <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3>معلومات العميل</h3>
+          <p><strong>الاسم:</strong> ${order.customer_name}</p>
+          <p><strong>الهاتف:</strong> ${order.customer_phone}</p>
+          <p><strong>البريد الإلكتروني:</strong> ${order.customer_email || 'غير متوفر'}</p>
+          <p><strong>العنوان:</strong> ${order.customer_address}</p>
+          ${order.notes ? `<p><strong>ملاحظات:</strong> ${order.notes}</p>` : ''}
         </div>
-      `,
-    };
+        <div style="margin: 20px 0;">
+          <h3>تفاصيل الطلب</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #f0f0f0;">
+                <th style="padding: 10px; text-align: right;">صورة</th>
+                <th style="padding: 10px; text-align: right;">المنتج</th>
+                <th style="padding: 10px; text-align: right;">الكمية</th>
+                <th style="padding: 10px; text-align: right;">السعر</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHTML}
+            </tbody>
+          </table>
+        </div>
+        <div style="background: #d4af37; color: white; padding: 15px; text-align: center; border-radius: 8px; margin-top: 20px;">
+          <h3 style="margin: 0;">المجموع الكلي: ${order.total_amount} درهم</h3>
+        </div>
+        <p style="text-align: center; color: #666; margin-top: 20px;">
+          رقم الطلب: ${order.id}<br>
+          تاريخ الطلب: ${new Date(order.created_at).toLocaleString('ar-MA')}
+        </p>
+      </div>
+    `;
 
-    await transporter.sendMail(mailOptions);
-    console.log('✅ Email notification sent successfully to:', adminEmail);
-  } catch (error) {
-    console.error('❌ Error sending email:', error.message || error);
-    // Don't throw - let caller handle the error
+  // 1) Try SendGrid if API key is present
+  try {
+    if (process.env.SENDGRID_API_KEY) {
+      // Use SendGrid HTTP API directly to avoid adding SDK dependency
+      const https = await import('https');
+      const payload = JSON.stringify({
+        personalizations: [{ to: [{ email: adminEmail }] }],
+        from: { email: process.env.SENDGRID_FROM_EMAIL || smtpEmail || process.env.ADMIN_EMAIL || process.env.EMAIL_USER },
+        subject: `طلب جديد - ${order.id}`,
+        content: [{ type: 'text/html', value: htmlBody }],
+      });
+
+      const options = {
+        hostname: 'api.sendgrid.com',
+        path: '/v3/mail/send',
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload),
+        },
+      };
+
+      await new Promise((resolve, reject) => {
+        const req = https.request(options, (res) => {
+          let body = '';
+          res.on('data', (chunk) => (body += chunk));
+          res.on('end', () => {
+            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+              console.log('✅ Email notification sent via SendGrid to:', adminEmail);
+              resolve(null);
+            } else {
+              console.error('❌ SendGrid API error', res.statusCode, body);
+              reject(new Error(`SendGrid error: ${res.statusCode}`));
+            }
+          });
+        });
+
+        req.on('error', (err) => reject(err));
+        req.write(payload);
+        req.end();
+      });
+
+      return;
+    }
+  } catch (sgError) {
+    console.error('❌ SendGrid send error:', sgError && (sgError.message || JSON.stringify(sgError)));
+    // fall through to SMTP
   }
+
+  // 2) Fall back to SMTP via nodemailer when SMTP credentials are provided
+  try {
+    if (smtpEmail && smtpPassword) {
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: process.env.EMAIL_PORT || 587,
+        secure: false,
+        auth: {
+          user: smtpEmail,
+          pass: smtpPassword,
+        },
+        connectionTimeout: 10000,
+      });
+
+      const mailOptions = {
+        from: smtpEmail,
+        to: adminEmail,
+        subject: `طلب جديد - ${order.id}`,
+        html: htmlBody,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log('✅ Email notification sent via SMTP to:', adminEmail);
+      return;
+    }
+  } catch (smtpErr) {
+    console.error('❌ SMTP send error:', smtpErr && (smtpErr.message || smtpErr));
+  }
+
+  console.warn('⚠️ No email provider configured (SENDGRID_API_KEY or SMTP credentials). Skipping email send.');
 };
 
 // Get all orders (Admin only)

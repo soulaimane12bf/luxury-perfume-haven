@@ -121,7 +121,7 @@ export default function FloatingWhatsApp() {
 
   const popupAlignClass = isMobile ? 'left-0 -translate-x-0' : 'left-20';
   // Raised a bit to avoid overlapping filter buttons on collection pages
-  const baseBottom = 64;
+  const baseBottom = 40;
 
   const inner = (
     <div ref={rootRef} style={{ position: 'fixed', left: 24, bottom: `${baseBottom}px`, zIndex: 120 }}>

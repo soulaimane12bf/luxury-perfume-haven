@@ -8,8 +8,11 @@ interface Review {
   name: string;
   rating: number;
   comment: string;
-  date: string;
   approved: boolean;
+  created_at?: string;
+  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface ReviewListProps {
@@ -38,12 +41,21 @@ export default function ReviewList({ reviews }: ReviewListProps) {
                 <h4 className="font-semibold">{review.name}</h4>
                 <span className="text-xs text-muted-foreground">
                   {(() => {
+                    const dateSource =
+                      review.created_at ||
+                      review.createdAt ||
+                      review.updated_at ||
+                      review.updatedAt;
+                    if (!dateSource) return 'الآن';
                     try {
-                      if (!review.date) return 'الآن';
-                      const d = new Date(review.date);
-                      if (isNaN(d.getTime())) return 'الآن';
-                      return d.toLocaleDateString('ar-MA', { year: 'numeric', month: 'long', day: 'numeric' });
-                    } catch (e) {
+                      const parsed = new Date(dateSource);
+                      if (Number.isNaN(parsed.getTime())) return 'الآن';
+                      return parsed.toLocaleDateString('ar-MA', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      });
+                    } catch {
                       return 'الآن';
                     }
                   })()}

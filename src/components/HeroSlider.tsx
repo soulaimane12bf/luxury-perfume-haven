@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { slidersApi } from '@/lib/api';
 import { Button } from './ui/button';
@@ -237,10 +237,6 @@ export function HeroSlider() {
                 </div>
               </div>
 
-              {/* Debug Info */}
-              <div className="absolute top-4 left-4 bg-black/70 text-white text-xs px-3 py-1 rounded font-mono z-30">
-                Slide {index + 1} 
-              </div>
             </div>
           );
         })}
