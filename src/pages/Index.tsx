@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from '@/components/SEO';
 import ScrollToTopButton from '@/components/ScrollToTopButton';
 import { toast } from "sonner";
 import { HeroSlider } from "@/components/HeroSlider";
@@ -89,8 +90,13 @@ const Index = () => {
     { from: 'from-cyan-500', to: 'to-blue-600' },
   ];
 
+  const canonical = (typeof window !== 'undefined') ? window.location.origin + '/' : 'https://www.cosmedstores.com/';
+  const title = 'متجر العطور الفاخرة | Cosmed Stores';
+  const description = 'متجر العطور الأصلية الفاخرة - توصيل لجميع المدن';
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO title={title} description={description} canonical={canonical} jsonLd={{ '@context': 'https://schema.org', '@type': 'Store', name: 'Cosmed Stores', url: canonical, description }} />
       <Header />
 
       {/* Main content with padding for fixed header */}

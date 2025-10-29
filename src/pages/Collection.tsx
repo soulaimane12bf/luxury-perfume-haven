@@ -8,6 +8,7 @@ import { ProductGridSkeleton } from '@/components/ProductCardSkeleton';
 import FilterBar from '@/components/FilterBar';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import {
   Pagination,
@@ -187,6 +188,13 @@ export default function Collection() {
 
   return (
     <>
+      <SEO
+        title={categoryData?.name ? `${categoryData.name} — متجر العطور` : 'جميع المنتجات — متجر العطور'}
+        description={categoryData?.description || 'تصفح منتجاتنا الفاخرة'}
+        canonical={(() => {
+          try { return `${window.location.origin}/collection${resolvedCategory ? '/' + resolvedCategory : ''}`; } catch { return 'https://www.cosmedstores.com/collection'; }
+        })()}
+      />
       <Header />
       <div className="min-h-screen bg-background pt-28 md:pt-32">
         {/* Header */}
