@@ -241,62 +241,7 @@ export default function AdminProfile() {
               <p className="text-xs text-muted-foreground">رابط صفحة فيسبوك لإظهاره في الفوتر</p>
             </div>
 
-            <Separator className="my-4" />
-            
-            <div className="space-y-4 rounded-lg border p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
-              <h4 className="font-semibold text-sm flex items-center gap-2">
-                <Mail className="w-4 h-4 text-amber-600" />
-                <span>إعدادات إرسال البريد (SMTP)</span>
-                <span className="text-xs font-normal text-muted-foreground">(من أين تُرسل الرسائل)</span>
-              </h4>
-              <p className="text-xs text-muted-foreground">
-                حساب Gmail المستخدم لإرسال إشعارات الطلبات. يمكنك تحديثه دون تعديل الكود.
-              </p>
-              
-              <div className="space-y-2">
-                <Label htmlFor="smtp_email" className="flex items-center gap-2">
-                  <span>البريد الإلكتروني المرسل (Gmail)</span>
-                  <span className="text-xs font-normal text-muted-foreground">(الذي يرسل الرسائل)</span>
-                </Label>
-                <Input
-                  id="smtp_email"
-                  type="email"
-                  value={profile.smtp_email}
-                  onChange={(e) => setProfile({ ...profile, smtp_email: e.target.value })}
-                  placeholder="your-email@gmail.com"
-                  dir="ltr"
-                />
-                <p className="text-xs text-blue-600 dark:text-blue-400">
-                  📤 هذا البريد سيظهر كمُرسل في رسائل الطلبات
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="smtp_password">App Password (كلمة مرور التطبيق)</Label>
-                <Input
-                  id="smtp_password"
-                  type="password"
-                  value={profile.smtp_password}
-                  onChange={(e) => setProfile({ ...profile, smtp_password: e.target.value })}
-                  placeholder="xxxx xxxx xxxx xxxx (16 حرف) - اتركها فارغة للإبقاء على القديمة"
-                  dir="ltr"
-                />
-                <p className="text-xs text-amber-600 dark:text-amber-400">
-                  ⚠️ استخدم App Password وليس كلمة المرور العادية. 
-                  <a 
-                    href="https://myaccount.google.com/apppasswords" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="underline mr-1"
-                  >
-                    احصل عليها من هنا
-                  </a>
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  💡 ملاحظة: اترك الحقل فارغاً إذا كنت لا تريد تغيير كلمة المرور
-                </p>
-              </div>
-            </div>
+            {/* Removed SMTP email and app password section: now handled by Resend only */}
 
             <Button 
               type="submit" 

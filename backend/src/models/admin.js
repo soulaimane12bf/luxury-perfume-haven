@@ -25,16 +25,7 @@ const Admin = sequelize.define('Admin', {
     type: DataTypes.STRING,
     allowNull: true
   },
-  smtp_email: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    comment: 'Email account used to send notifications (SMTP)'
-  },
-  smtp_password: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    comment: 'App password for SMTP email'
-  },
+  // Removed smtp_email and smtp_password fields (no longer needed)
   password: {
     type: DataTypes.STRING,
     allowNull: false

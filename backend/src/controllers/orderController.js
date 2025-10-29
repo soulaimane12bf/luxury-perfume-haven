@@ -30,33 +30,29 @@ const _chooseFromAddress = (adminEmail, smtpEmail) => {
   return 'no-reply@cosmedstores.com';
 };
 
-// Get admin contact info and SMTP credentials from database
+// Get admin contact info (no SMTP)
 const getAdminContactInfo = async () => {
   try {
     const admin = await Admin.findOne({ 
       where: { role: 'super-admin' },
-      attributes: ['email', 'phone', 'smtp_email', 'smtp_password']
+      attributes: ['email', 'phone']
     });
     
     return {
       email: admin?.email || process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
       phone: admin?.phone || process.env.ADMIN_WHATSAPP || '212600000000',
-      smtp_email: admin?.smtp_email || process.env.EMAIL_USER,
-      smtp_password: admin?.smtp_password || process.env.EMAIL_PASS
     };
   } catch (error) {
     console.error('Error fetching admin info:', error);
     return {
       email: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
       phone: process.env.ADMIN_WHATSAPP || '212600000000',
-      smtp_email: process.env.EMAIL_USER,
-      smtp_password: process.env.EMAIL_PASS
     };
   }
 };
 
-// Send email notification (tries SendGrid first if configured, otherwise falls back to SMTP via nodemailer)
-const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword) => {
+// Send email notification (Resend only)
+const sendEmailNotification = async (order, adminEmail) => {
   // Build common HTML body
   const itemsHTML = (order.items || []).map(item => `
       <tr>
@@ -106,11 +102,11 @@ const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword)
       </div>
     `;
 
-  // 1) Try Resend if API key is present (recommended)
+  // Only use Resend
   try {
     if (process.env.RESEND_API_KEY) {
       const https = await import('https');
-      const fromAddress = _chooseFromAddress(adminEmail, smtpEmail);
+      const fromAddress = _chooseFromAddress(adminEmail);
       const payload = JSON.stringify({
         from: fromAddress,
         to: [adminEmail],
@@ -123,7 +119,6 @@ const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword)
         path: '/emails',
         method: 'POST',
         headers: {
-          // use sanitized key to avoid "Invalid character in header content" errors
           'Authorization': `Bearer ${RESEND_API_KEY_SAFE}`,
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(payload),
@@ -154,90 +149,9 @@ const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword)
     }
   } catch (resendErr) {
     console.error('❌ Resend send error:', resendErr && (resendErr.message || JSON.stringify(resendErr)));
-    // fall through to SendGrid / SMTP
   }
 
-  // 2) Try SendGrid if API key is present
-  try {
-  if (SENDGRID_API_KEY_SAFE) {
-      // Use SendGrid HTTP API directly to avoid adding SDK dependency
-      const https = await import('https');
-      const sendgridFrom = (_isValidEmail(SENDGRID_FROM_EMAIL_SAFE) ? SENDGRID_FROM_EMAIL_SAFE : ( _isValidEmail(smtpEmail) ? smtpEmail : _sanitize(process.env.ADMIN_EMAIL) || _sanitize(process.env.EMAIL_USER) )) || 'no-reply@cosmedstores.com';
-      const payload = JSON.stringify({
-        personalizations: [{ to: [{ email: adminEmail }] }],
-        from: { email: sendgridFrom },
-        subject: `طلب جديد - ${order.id}`,
-        content: [{ type: 'text/html', value: htmlBody }],
-      });
-
-      const options = {
-        hostname: 'api.sendgrid.com',
-        path: '/v3/mail/send',
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${SENDGRID_API_KEY_SAFE}`,
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(payload),
-        },
-      };
-
-      await new Promise((resolve, reject) => {
-        const req = https.request(options, (res) => {
-          let body = '';
-          res.on('data', (chunk) => (body += chunk));
-          res.on('end', () => {
-            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-              console.log('✅ Email notification sent via SendGrid to:', adminEmail);
-              resolve(null);
-            } else {
-              console.error('❌ SendGrid API error', res.statusCode, body);
-              reject(new Error(`SendGrid error: ${res.statusCode}`));
-            }
-          });
-        });
-
-        req.on('error', (err) => reject(err));
-        req.write(payload);
-        req.end();
-      });
-
-      return;
-    }
-  } catch (sgError) {
-    console.error('❌ SendGrid send error:', sgError && (sgError.message || JSON.stringify(sgError)));
-    // fall through to SMTP
-  }
-
-  // 2) Fall back to SMTP via nodemailer when SMTP credentials are provided
-  try {
-    if (smtpEmail && smtpPassword) {
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-        port: process.env.EMAIL_PORT || 587,
-        secure: false,
-        auth: {
-          user: smtpEmail,
-          pass: smtpPassword,
-        },
-        connectionTimeout: 10000,
-      });
-
-      const mailOptions = {
-        from: smtpEmail,
-        to: adminEmail,
-        subject: `طلب جديد - ${order.id}`,
-        html: htmlBody,
-      };
-
-      await transporter.sendMail(mailOptions);
-      console.log('✅ Email notification sent via SMTP to:', adminEmail);
-      return;
-    }
-  } catch (smtpErr) {
-    console.error('❌ SMTP send error:', smtpErr && (smtpErr.message || smtpErr));
-  }
-
-  console.warn('⚠️ No email provider configured (SENDGRID_API_KEY or SMTP credentials). Skipping email send.');
+  console.warn('⚠️ No Resend API key configured. Skipping email send.');
 };
 
 // Get all orders (Admin only)
@@ -279,7 +193,7 @@ export const createOrder = async (req, res) => {
 
     // Get admin contact info for notifications
     const adminInfo = await getAdminContactInfo();
-    
+
     // Create order (we'll update it with whatsapp_url after generation)
     const order = await Order.create({
       customer_name,
@@ -293,14 +207,12 @@ export const createOrder = async (req, res) => {
     });
 
     // Send email with short timeout (don't block too long, but ensure it's sent)
-    // Vercel serverless functions need to await async operations
     const emailSendPromise = (async () => {
       try {
-        const emailPromise = sendEmailNotification(order, adminInfo.email, adminInfo.smtp_email, adminInfo.smtp_password);
+        const emailPromise = sendEmailNotification(order, adminInfo.email);
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Email timeout')), 8000) // 8 second timeout
         );
-        
         await Promise.race([emailPromise, timeoutPromise]);
         console.log('✅ Email sent for order:', order.id);
       } catch (error) {
