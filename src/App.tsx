@@ -17,6 +17,8 @@ const Collection = lazy(() => import("./pages/Collection"));
 const BestSellers = lazy(() => import("./pages/BestSellers"));
 const Admin = lazy(() => import("./pages/AdminNew"));
 const Login = lazy(() => import("./pages/Login"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const About = lazy(() => import("./pages/About"));
 const Payment = lazy(() => import("./pages/Payment"));
 const Shipping = lazy(() => import("./pages/Shipping"));
@@ -65,6 +67,8 @@ const App = () => (
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/faq" element={<Faq />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route
                   path="/admin"
                   element={
