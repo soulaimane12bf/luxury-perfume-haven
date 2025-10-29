@@ -2,6 +2,11 @@ import Order from '../models/order.js';
 import Admin from '../models/admin.js';
 import nodemailer from 'nodemailer';
 
+// Sanitize environment-provided API keys (strip accidental surrounding quotes/newlines)
+const _sanitize = (v) => (typeof v === 'string' ? v.replace(/^\s*['\"]?|['\"]?\s*$/g, '').trim() : '');
+const RESEND_API_KEY_SAFE = _sanitize(process.env.RESEND_API_KEY);
+const SENDGRID_API_KEY_SAFE = _sanitize(process.env.SENDGRID_API_KEY);
+
 // Get admin contact info and SMTP credentials from database
 const getAdminContactInfo = async () => {
   try {
@@ -94,7 +99,8 @@ const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword)
         path: '/emails',
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          // use sanitized key to avoid "Invalid character in header content" errors
+          'Authorization': `Bearer ${RESEND_API_KEY_SAFE}`,
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(payload),
         },
@@ -129,7 +135,7 @@ const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword)
 
   // 2) Try SendGrid if API key is present
   try {
-    if (process.env.SENDGRID_API_KEY) {
+  if (SENDGRID_API_KEY_SAFE) {
       // Use SendGrid HTTP API directly to avoid adding SDK dependency
       const https = await import('https');
       const payload = JSON.stringify({
@@ -144,7 +150,7 @@ const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword)
         path: '/v3/mail/send',
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
+          'Authorization': `Bearer ${SENDGRID_API_KEY_SAFE}`,
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(payload),
         },
