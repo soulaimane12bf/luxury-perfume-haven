@@ -3,9 +3,32 @@ import Admin from '../models/admin.js';
 import nodemailer from 'nodemailer';
 
 // Sanitize environment-provided API keys (strip accidental surrounding quotes/newlines)
-const _sanitize = (v) => (typeof v === 'string' ? v.replace(/^\s*['\"]?|['\"]?\s*$/g, '').trim() : '');
+const _sanitize = (v) => (typeof v === 'string' ? v.replace(/^\s*[\'\"]?|[\'\"]?\s*$/g, '').trim() : '');
 const RESEND_API_KEY_SAFE = _sanitize(process.env.RESEND_API_KEY);
 const SENDGRID_API_KEY_SAFE = _sanitize(process.env.SENDGRID_API_KEY);
+const RESEND_FROM_EMAIL_SAFE = _sanitize(process.env.RESEND_FROM_EMAIL);
+const SENDGRID_FROM_EMAIL_SAFE = _sanitize(process.env.SENDGRID_FROM_EMAIL);
+
+// Basic validators for 'from' field accepted by Resend: email@domain or Name <email@domain>
+const _isValidEmail = (v) => {
+  if (!v || typeof v !== 'string') return false;
+  // allow formats like: Name <email@domain> or email@domain
+  const simpleEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const nameEmail = /^.+<[^\s@]+@[^\s@]+\.[^\s@]+>$/;
+  return simpleEmail.test(v) || nameEmail.test(v);
+};
+
+const _chooseFromAddress = (adminEmail, smtpEmail) => {
+  // prefer explicit RESEND_FROM_EMAIL, then SENDGRID_FROM_EMAIL, then smtp/admin envs
+  const candidates = [RESEND_FROM_EMAIL_SAFE, SENDGRID_FROM_EMAIL_SAFE, smtpEmail, adminEmail, _sanitize(process.env.EMAIL_USER)];
+  for (const c of candidates) {
+    if (c && _isValidEmail(c)) return c;
+    // also allow Name <email@domain> with optional quotes
+    if (c && _isValidEmail(c.replace(/^\"|\"$/g, ''))) return c.replace(/^\"|\"$/g, '');
+  }
+  // last resort: use a clearly valid no-reply
+  return 'no-reply@cosmedstores.com';
+};
 
 // Get admin contact info and SMTP credentials from database
 const getAdminContactInfo = async () => {
@@ -87,8 +110,9 @@ const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword)
   try {
     if (process.env.RESEND_API_KEY) {
       const https = await import('https');
+      const fromAddress = _chooseFromAddress(adminEmail, smtpEmail);
       const payload = JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || smtpEmail || process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
+        from: fromAddress,
         to: [adminEmail],
         subject: `طلب جديد - ${order.id}`,
         html: htmlBody,
@@ -138,9 +162,10 @@ const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword)
   if (SENDGRID_API_KEY_SAFE) {
       // Use SendGrid HTTP API directly to avoid adding SDK dependency
       const https = await import('https');
+      const sendgridFrom = (_isValidEmail(SENDGRID_FROM_EMAIL_SAFE) ? SENDGRID_FROM_EMAIL_SAFE : ( _isValidEmail(smtpEmail) ? smtpEmail : _sanitize(process.env.ADMIN_EMAIL) || _sanitize(process.env.EMAIL_USER) )) || 'no-reply@cosmedstores.com';
       const payload = JSON.stringify({
         personalizations: [{ to: [{ email: adminEmail }] }],
-        from: { email: process.env.SENDGRID_FROM_EMAIL || smtpEmail || process.env.ADMIN_EMAIL || process.env.EMAIL_USER },
+        from: { email: sendgridFrom },
         subject: `طلب جديد - ${order.id}`,
         content: [{ type: 'text/html', value: htmlBody }],
       });
