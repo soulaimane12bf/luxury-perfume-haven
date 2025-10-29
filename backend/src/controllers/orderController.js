@@ -78,7 +78,56 @@ const sendEmailNotification = async (order, adminEmail, smtpEmail, smtpPassword)
       </div>
     `;
 
-  // 1) Try SendGrid if API key is present
+  // 1) Try Resend if API key is present (recommended)
+  try {
+    if (process.env.RESEND_API_KEY) {
+      const https = await import('https');
+      const payload = JSON.stringify({
+        from: process.env.RESEND_FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || smtpEmail || process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
+        to: [adminEmail],
+        subject: `طلب جديد - ${order.id}`,
+        html: htmlBody,
+      });
+
+      const options = {
+        hostname: 'api.resend.com',
+        path: '/emails',
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload),
+        },
+      };
+
+      await new Promise((resolve, reject) => {
+        const req = https.request(options, (res) => {
+          let body = '';
+          res.on('data', (chunk) => (body += chunk));
+          res.on('end', () => {
+            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+              console.log('✅ Email notification sent via Resend to:', adminEmail);
+              resolve(null);
+            } else {
+              console.error('❌ Resend API error', res.statusCode, body);
+              reject(new Error(`Resend error: ${res.statusCode}`));
+            }
+          });
+        });
+
+        req.on('error', (err) => reject(err));
+        req.write(payload);
+        req.end();
+      });
+
+      return;
+    }
+  } catch (resendErr) {
+    console.error('❌ Resend send error:', resendErr && (resendErr.message || JSON.stringify(resendErr)));
+    // fall through to SendGrid / SMTP
+  }
+
+  // 2) Try SendGrid if API key is present
   try {
     if (process.env.SENDGRID_API_KEY) {
       // Use SendGrid HTTP API directly to avoid adding SDK dependency
