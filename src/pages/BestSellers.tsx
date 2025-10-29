@@ -15,8 +15,12 @@ import ProductCard from '@/components/ProductCard';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Sparkles } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 export default function BestSellers() {
+  const canonical = (typeof window !== 'undefined') ? window.location.href : 'https://www.cosmedstores.com/best-sellers';
+  const title = 'الأكثر مبيعاً | Cosmed Stores';
+  const description = 'اكتشف أفضل العطور الأكثر مبيعاً في Cosmed Stores.';
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,13 +39,14 @@ export default function BestSellers() {
         if (Array.isArray(data)) {
           setProducts(data);
           setTotalPages(null);
-        } else if (data && Array.isArray(data.products)) {
-          setProducts(data.products);
-          setTotalPages(Number(data.totalPages || 1));
-        } else {
-          setProducts([]);
-          setTotalPages(null);
-        }
+          } else if (data && typeof data === 'object' && Array.isArray((data as any).products)) {
+            const paginated = data as { products: any[]; totalPages?: number };
+            setProducts(paginated.products);
+            setTotalPages(Number(paginated.totalPages || 1));
+          } else {
+            setProducts([]);
+            setTotalPages(null);
+          }
       } catch (error) {
         console.error('Error fetching best sellers:', error);
       } finally {
@@ -77,6 +82,7 @@ export default function BestSellers() {
 
   return (
     <>
+      <SEO title={title} description={description} canonical={canonical} jsonLd={{ '@context': 'https://schema.org', '@type': 'WebPage', name: title, description }} />
       <Header />
       <div className="min-h-screen bg-background pt-24 md:pt-28">
         {/* Header */}
