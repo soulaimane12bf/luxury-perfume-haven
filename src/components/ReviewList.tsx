@@ -37,7 +37,16 @@ export default function ReviewList({ reviews }: ReviewListProps) {
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-semibold">{review.name}</h4>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(review.date).toLocaleDateString('ar-MA')}
+                  {(() => {
+                    try {
+                      if (!review.date) return 'الآن';
+                      const d = new Date(review.date);
+                      if (isNaN(d.getTime())) return 'الآن';
+                      return d.toLocaleDateString('ar-MA', { year: 'numeric', month: 'long', day: 'numeric' });
+                    } catch (e) {
+                      return 'الآن';
+                    }
+                  })()}
                 </span>
               </div>
               

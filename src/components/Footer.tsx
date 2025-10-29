@@ -167,7 +167,7 @@ const Footer = () => {
             <img 
               src={cosmedLogo} 
               alt="COSMED" 
-              className="h-16 w-auto object-contain"
+              className="h-10 sm:h-12 md:h-16 w-auto object-contain"
             />
           </div>
           <p className="text-sm text-foreground/70">

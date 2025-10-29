@@ -229,7 +229,7 @@ export function HeroSlider() {
                     <Button
                       size="lg"
                       onClick={() => handleButtonClick(slider.button_link)}
-                      className="bg-white hover:bg-gray-100 text-black px-10 md:px-16 py-4 md:py-6 text-lg md:text-2xl shadow-2xl font-semibold transition-all duration-150"
+                      className="bg-white hover:bg-gray-100 text-black px-12 md:px-20 py-5 md:py-8 text-xl md:text-3xl shadow-2xl font-semibold rounded-full transition-all duration-150"
                     >
                       {slider.button_text}
                     </Button>
@@ -252,21 +252,21 @@ export function HeroSlider() {
           <button
             onClick={goToPrev}
             disabled={isTransitioning}
-            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-30 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full p-3 md:p-5 shadow-2xl transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-30 border border-white/20 group"
+            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-30 bg-transparent hover:bg-white/10 text-white rounded-full p-2 md:p-4 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-30 border-none group"
             aria-label="Previous slide"
             type="button"
           >
-            <ChevronLeft className="w-6 h-6 md:w-10 md:h-10 group-hover:-translate-x-1 transition-transform" />
+            <ChevronLeft className="w-6 h-6 md:w-10 md:h-10 transition-transform" />
           </button>
           
           <button
             onClick={goToNext}
             disabled={isTransitioning}
-            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-30 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full p-3 md:p-5 shadow-2xl transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-30 border border-white/20 group"
+            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-30 bg-transparent hover:bg-white/10 text-white rounded-full p-2 md:p-4 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-30 border-none group"
             aria-label="Next slide"
             type="button"
           >
-            <ChevronRight className="w-6 h-6 md:w-10 md:h-10 group-hover:translate-x-1 transition-transform" />
+            <ChevronRight className="w-6 h-6 md:w-10 md:h-10 transition-transform" />
           </button>
         </>
       )}
