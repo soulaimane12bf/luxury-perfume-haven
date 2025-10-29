@@ -1,13 +1,66 @@
 import Admin from '../models/admin.js';
 import jwt from 'jsonwebtoken';
 import { Op } from 'sequelize';
+import resend from '../lib/resend.js';
+import crypto from 'crypto';
+// Password reset request
+export const requestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const admin = await Admin.findOne({ where: { email } });
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    // Generate a secure token
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = Date.now() + 1000 * 60 * 30; // 30 minutes
+    admin.reset_token = token;
+    admin.reset_token_expires = expires;
+    await admin.save();
+
+    // Build reset link (adjust frontend URL as needed)
+    const resetLink = `${process.env.FRONTEND_URL || 'https://cosmedstores.com'}/reset-password?token=${token}`;
+
+    // Send email via Resend
+    await resend.emails.send({
+      from: 'no-reply@cosmedstores.com',
+      to: admin.email,
+      subject: 'Password Reset Request',
+      html: `<p>Hello,</p><p>You requested a password reset. Click the link below to reset your password:</p><p><a href="${resetLink}">${resetLink}</a></p><p>This link will expire in 30 minutes.</p>`
+    });
+
+    return res.json({ message: 'Password reset email sent' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Password reset confirmation
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    const admin = await Admin.findOne({ where: { reset_token: token } });
+    if (!admin || !admin.reset_token_expires || Date.now() > admin.reset_token_expires) {
+      return res.status(400).json({ message: 'Invalid or expired token' });
+    }
+    admin.password = password;
+    admin.reset_token = null;
+    admin.reset_token_expires = null;
+    await admin.save();
+    return res.json({ message: 'Password has been reset' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // Login
 export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
-    // Standard DB-backed login only. No environment or DB-password fallbacks.
-    const admin = await Admin.findOne({ where: { username } });
+      // Allow login by username OR email for convenience.
+      const identifier = username && username.includes('@') ? { email: username } : { username };
+      const admin = await Admin.findOne({ where: identifier });
     if (!admin) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }

@@ -118,7 +118,7 @@ const Login = () => {
 										className="text-sm font-medium text-gray-300 flex items-center gap-2"
 									>
 										<User className="w-4 h-4 text-yellow-400" />
-										اسم المستخدم
+										اسم المستخدم أو البريد الإلكتروني
 									</Label>
 									<div className="relative">
 										<Input 
@@ -128,7 +128,7 @@ const Login = () => {
 											onChange={(e) => setUsername(e.target.value)}
 											onFocus={() => setFocusedField('username')}
 											onBlur={() => setFocusedField(null)}
-											placeholder="أدخل اسم المستخدم"
+											placeholder="أدخل اسم المستخدم أو البريد الإلكتروني"
 											required
 											disabled={loading}
 											className={`h-12 bg-gray-800/50 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-yellow-500/50 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-300 ${
@@ -137,34 +137,38 @@ const Login = () => {
 											autoFocus
 										/>
 									</div>
-								</div>
 
-								{/* Password Field */}
-								<div className="space-y-2">
-									<Label 
-										htmlFor="password" 
-										className="text-sm font-medium text-gray-300 flex items-center gap-2"
-									>
-										<Lock className="w-4 h-4 text-yellow-400" />
-										كلمة المرور
-									</Label>
-									<div className="relative">
-										<Input 
-											id="password"
-											type="password"
-											value={password}
-											onChange={(e) => setPassword(e.target.value)}
-											onFocus={() => setFocusedField('password')}
-											onBlur={() => setFocusedField(null)}
-											placeholder="أدخل كلمة المرور"
-											required
-											disabled={loading}
-											className={`h-12 bg-gray-800/50 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-yellow-500/50 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-300 ${
-												focusedField === 'password' ? 'shadow-lg shadow-yellow-500/10' : ''
-											}`}
-										/>
-									</div>
-								</div>
+												</div>
+
+												{/* Password Field */}
+												<div className="space-y-2">
+													<Label 
+														htmlFor="password" 
+														className="text-sm font-medium text-gray-300 flex items-center gap-2"
+													>
+														<Lock className="w-4 h-4 text-yellow-400" />
+														كلمة المرور
+													</Label>
+													<div className="relative">
+														<Input 
+															id="password"
+															type="password"
+															value={password}
+															onChange={(e) => setPassword(e.target.value)}
+															onFocus={() => setFocusedField('password')}
+															onBlur={() => setFocusedField(null)}
+															placeholder="أدخل كلمة المرور"
+															required
+															disabled={loading}
+															className={`h-12 bg-gray-800/50 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-yellow-500/50 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-300 ${
+																focusedField === 'password' ? 'shadow-lg shadow-yellow-500/10' : ''
+															}`}
+														/>
+													</div>
+													<div className="mt-2 text-right">
+														<Link to="/forgot-password" className="text-xs text-yellow-400 hover:underline">نسيت كلمة المرور؟</Link>
+													</div>
+												</div>
 
 								{/* Error Alert */}
 								{error && (
