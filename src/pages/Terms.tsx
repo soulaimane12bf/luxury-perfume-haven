@@ -1,9 +1,14 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 
 const Terms = () => {
+  const canonical = (typeof window !== 'undefined') ? window.location.href : 'https://www.cosmedstores.com/terms';
+  const title = 'شروط الاستخدام | Cosmed Stores';
+  const description = 'شروط الاستخدام لمتجر Cosmed Stores.';
   return (
     <>
+      <SEO title={title} description={description} canonical={canonical} jsonLd={{ '@context': 'https://schema.org', '@type': 'WebPage', name: title, description }} />
       <Header />
       <div className="min-h-screen bg-background pt-28 md:pt-32">
         <div className="container mx-auto px-4 py-16">

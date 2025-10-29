@@ -6,8 +6,13 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, AlertCircle, Lock, User, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import SEO from '@/components/SEO';
 
 const Login = () => {
+
+	const canonical = (typeof window !== 'undefined') ? window.location.href : 'https://www.cosmedstores.com/login';
+	const title = 'تسجيل الدخول | Cosmed Stores';
+	const description = 'تسجيل الدخول إلى حسابك في Cosmed Stores للوصول إلى الطلبات والخصومات.';
 	const [username, setUsername] = useState('')
 	const [password, setPassword] = useState('')
 	const [error, setError] = useState(null)
@@ -51,6 +56,7 @@ const Login = () => {
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black relative overflow-hidden">
+			<SEO title={title} description={description} canonical={canonical} jsonLd={{ '@context': 'https://schema.org', '@type': 'WebPage', name: title, description }} />
 			{/* Animated background elements */}
 			<div className="absolute inset-0 overflow-hidden">
 				<div className="absolute top-20 left-10 w-72 h-72 bg-yellow-600/10 rounded-full blur-3xl animate-pulse"></div>
