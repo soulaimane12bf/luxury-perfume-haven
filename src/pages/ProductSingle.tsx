@@ -9,6 +9,7 @@ import { useCart } from '@/contexts/CartContext';
 import OrderForm from '@/components/OrderForm';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 import ReviewForm from '../components/ReviewForm';
 import ReviewList from '../components/ReviewList';
 import { useProduct, useProductReviews } from '@/lib/hooks/useApi';
@@ -66,8 +67,29 @@ export default function ProductSingle() {
     return <div className="container py-20 text-center">Product not found</div>;
   }
 
+  const canonicalUrl = `${window.location.origin}/product/${product.id}`;
+  const pageTitle = `${product.name} — ${product.brand} | متجر العطور`;
+  const pageDescription = product.description || 'متجر العطور الأصلية الفاخرة - توصيل لجميع المدن';
+
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    image: product.image_urls || [],
+    description: product.description || '',
+    sku: product.sku || product.id,
+    brand: { '@type': 'Brand', name: product.brand || '' },
+    offers: {
+      '@type': 'Offer',
+      price: parseFloat(product.price || '0').toFixed(2),
+      priceCurrency: 'MAD',
+      availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    },
+  };
+
   return (
     <>
+      <SEO title={pageTitle} description={pageDescription} canonical={canonicalUrl} jsonLd={productJsonLd} />
       <Header />
       <div className="min-h-screen bg-background pt-28 md:pt-32">
         {/* Header Navigation */}

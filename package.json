@@ -16,6 +16,9 @@
     "preview": "vite preview",
     "test-api": "node scripts/test-api.js",
     "optimize-image": "node scripts/optimize-image.js"
+    ,
+    "sitemap:generate": "node scripts/generate-dynamic-sitemap.cjs",
+    "sitemap:ping": "node scripts/ping-sitemaps.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
