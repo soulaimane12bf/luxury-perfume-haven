@@ -29,6 +29,16 @@ export const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: 'Invalid token' });
     }
 
+    // If the admin has a token_invalid_before timestamp, ensure the token
+    // was issued after that time. JWT `iat` is in seconds; convert to ms.
+    if (admin.token_invalid_before) {
+      const tokenIatMs = (decoded.iat || 0) * 1000;
+      if (tokenIatMs <= Number(admin.token_invalid_before)) {
+        console.log('[AUTH MIDDLEWARE] Token was issued before token_invalid_before');
+        return res.status(401).json({ message: 'Token expired due to password change' });
+      }
+    }
+
     console.log('[AUTH MIDDLEWARE] Auth successful for:', admin.username);
     // Attach admin to request
     req.admin = admin;

@@ -62,6 +62,8 @@ export const resetPassword = async (req, res) => {
     admin.password = password;
     admin.reset_token = null;
     admin.reset_token_expires = null;
+    // Invalidate previously issued JWTs so other sessions are logged out
+    admin.token_invalid_before = Date.now();
     await admin.save();
     return res.json({ message: 'Password has been reset' });
   } catch (error) {
@@ -178,6 +180,8 @@ export const changePassword = async (req, res) => {
 
     // Update password
     admin.password = newPassword;
+    // Invalidate previously issued JWTs so other sessions are logged out
+    admin.token_invalid_before = Date.now();
     await admin.save();
 
     res.json({ message: 'Password changed successfully' });

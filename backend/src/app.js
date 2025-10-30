@@ -207,6 +207,12 @@ export async function initializeDatabase() {
           console.log('⚙️  Adding missing column `reset_token_expires` to `admins`');
           await qi.addColumn('admins', 'reset_token_expires', { type: DataTypes.BIGINT, allowNull: true });
         }
+        // Ensure token invalidation column exists so we can revoke JWTs issued
+        // before a password change or reset. This helps force logouts.
+        if (!desc.token_invalid_before) {
+          console.log('⚙️  Adding missing column `token_invalid_before` to `admins`');
+          await qi.addColumn('admins', 'token_invalid_before', { type: DataTypes.BIGINT, allowNull: true });
+        }
       } catch (e) {
         // If the table doesn't exist yet or permission denied, warn and continue.
         console.warn('Could not ensure admin social columns:', e && e.message ? e.message : e);

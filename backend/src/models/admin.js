@@ -53,6 +53,14 @@ const Admin = sequelize.define('Admin', {
     type: DataTypes.BIGINT,
     allowNull: true
   }
+  ,
+  // Timestamp (ms) indicating tokens issued before this time are invalid.
+  // Set this when the admin changes password or an admin reset occurs.
+  token_invalid_before: {
+    type: DataTypes.BIGINT,
+    allowNull: true,
+    comment: 'Invalidate tokens issued before this timestamp (ms)'
+  }
 }, {
   timestamps: true,
   createdAt: 'created_at',
