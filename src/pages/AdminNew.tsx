@@ -2124,7 +2124,7 @@ export default function AdminDashboard() {
 
                     {/* Total count: placed below pagination and styled as light text so it's readable on the background */}
                     <div className="px-4 py-2 bg-white/5">
-                      <div className="text-sm text-white/80">إجمالي المنتجات الأكثر مبيعاً: {bestSellersTotal}</div>
+                      <div className="text-sm text-black font-medium">إجمالي المنتجات الأكثر مبيعاً: {bestSellersTotal}</div>
                     </div>
                   </div>
                 )}
