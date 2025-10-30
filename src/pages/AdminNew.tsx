@@ -14,37 +14,38 @@ import { Badge } from '@/components/ui/badge';
 import { compressImage } from '@/lib/imageCompression';
 import { 
   Table, 
-                          {(() => {
-                            // Show up to 3 page numbers: current -1, current, current +1
-                            // Clamp to bounds [1, total]. This keeps the pagination compact
-                            // and provides consistent spacing on small screens.
-                            const pages: number[] = [];
-                            const current = productPage || 1;
-                            const computedFromTotal = Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)));
-                            let total = productTotalPages && productTotalPages > 0 ? productTotalPages : computedFromTotal;
-
-                            if (total <= 3) {
-                              for (let i = 1; i <= total; i++) pages.push(i);
-                            } else {
-                              let start = Math.max(1, current - 1);
-                              let end = Math.min(total, current + 1);
-                              if (start === 1) end = 3;
-                              if (end === total) start = Math.max(1, total - 2);
-                              for (let i = start; i <= end; i++) pages.push(i);
-                            }
-
-                            return pages.map((pn) => (
-                              <PaginationItem key={pn}>
-                                <PaginationLink
-                                  isActive={pn === productPage}
-                                  onClick={() => setProductPage(Number(pn))}
-                                  className="h-8 min-w-[28px] px-1 text-xs"
-                                >
-                                  {pn}
-                                </PaginationLink>
-                              </PaginationItem>
-                            ));
-                          })()}
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { generateCustomerWhatsAppUrl } from '@/lib/whatsapp';
 import { productsApi, categoriesApi, reviewsApi, ordersApi, slidersApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import showAdminAlert from '@/lib/swal-admin';
@@ -73,48 +74,74 @@ import {
   PaginationEllipsis,
 } from '@/components/ui/pagination';
 
+// Basic type definitions used in this admin page
+// These are intentionally minimal — expand as needed to match your backend contracts.
 type Product = {
   id: string;
   name: string;
-  brand: string;
-  price: string;
-  old_price?: string;
-  category: string;
+  brand?: string;
+  price?: number | string;
+  old_price?: number | string | null;
+  category?: string;
   type?: string;
-  size: string;
-  description: string;
-  notes: {
-    main_notes: string[];
-    top_notes: string[];
-  } | null;
-  image_urls: string[];
-  stock: number;
-  rating: string;
-  best_selling: boolean;
+  size?: string;
+  description?: string;
+  stock?: number | string;
+  image_urls?: string[];
+  best_selling?: boolean;
+  // any additional fields returned by your API can be added here
 };
 
 type Category = {
   id: string;
   name: string;
   slug: string;
-  description: string;
+  description?: string;
   image_url?: string;
 };
 
 type Review = {
   id: string;
-  product_id: string;
   name: string;
   rating: number;
-  comment: string;
-  approved: boolean;
+  comment?: string;
+  approved?: boolean;
+  product_id?: string;
 };
 
+type Order = {
+  id: string;
+  customer_name?: string;
+  customer_phone?: string;
+  customer_email?: string;
+  customer_address?: string;
+  shipping_address?: string;
+  city?: string;
+  items?: any[];
+  total_amount?: number;
+  status?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  // extend as needed
+};
+
+type Slider = {
+  id: string;
+  image_url?: string;
+  title?: string;
+  subtitle?: string;
+  button_text?: string;
+  button_link?: string;
+  order?: number;
+  active?: boolean;
+};
+
+// Add PaginatedResponse type definition
 type PaginatedResponse = {
-  products?: unknown[];
-  total?: number;
-  totalPages?: number;
-  page?: number;
+  products: Product[];
+  total: number;
+  totalPages: number;
 };
 
 type DeleteTarget = {
@@ -284,6 +311,56 @@ export default function AdminDashboard() {
       navigate('/login');
     }
   }, [isAuthenticated, token, authLoading, navigate, toast]);
+
+  // Pagination helpers (desktop full with ellipses, mobile condensed)
+  const generateDesktopPages = (current: number, total: number) => {
+    const pages: (number | 'e')[] = [];
+    const showEllipsisStart = current > 4;
+    const showEllipsisEnd = current < total - 3;
+
+    pages.push(1);
+
+    if (showEllipsisStart) {
+      pages.push('e');
+      for (let i = current - 2; i < current; i++) {
+        if (i > 1 && i < total) pages.push(i);
+      }
+    } else {
+      for (let i = 2; i < current; i++) {
+        if (i < total) pages.push(i);
+      }
+    }
+
+    if (current !== 1 && current !== total) pages.push(current);
+
+    if (showEllipsisEnd) {
+      for (let i = current + 1; i <= current + 2; i++) {
+        if (i > 1 && i < total) pages.push(i);
+      }
+      pages.push('e');
+    } else {
+      for (let i = current + 1; i < total; i++) {
+        pages.push(i);
+      }
+    }
+
+    if (total > 1) pages.push(total);
+    return pages;
+  };
+
+  const generateMobilePages = (current: number, total: number) => {
+    const pages: (number | 'e')[] = [];
+    pages.push(1);
+    if (current > 2) pages.push('e');
+    if (current > 1 && current < total) {
+      if (current > 2) pages.push(current - 1);
+      pages.push(current);
+      if (current < total - 1) pages.push(current + 1);
+    }
+    if (current < total - 1) pages.push('e');
+    if (total > 1) pages.push(total);
+    return pages;
+  };
 
   // When admin logs in, pre-fetch counts/stats so top cards show correct numbers
   useEffect(() => {
@@ -593,6 +670,8 @@ export default function AdminDashboard() {
     }
   }, [productPage, productLimit, activeTab]);
 
+  
+
   // Re-fetch best-sellers when its page or limit changes (only when bestsellers tab is active)
   useEffect(() => {
     if (activeTab === 'bestsellers') {
@@ -707,13 +786,15 @@ export default function AdminDashboard() {
         id: product.id,
         name: product.name,
         brand: product.brand,
-        price: product.price,
-        old_price: product.old_price || '',
+        // Ensure numeric values are converted to strings to match the form state types
+        price: product.price != null ? String(product.price) : '',
+        old_price: product.old_price != null ? String(product.old_price) : '',
         category: product.category,
         type: product.type || 'PRODUIT',
         size: product.size || '100ml',
         description: product.description || '',
-        stock: product.stock,
+        // stock can be number or string in form state; normalize to string for consistency
+        stock: product.stock != null ? String(product.stock) : '',
       });
       setExistingImageUrls(product.image_urls || []);
       setProductImages([]);
@@ -1756,49 +1837,64 @@ export default function AdminDashboard() {
                 {/* Pagination controls */}
                 {productTotalPages > 1 && (
                   <div className="w-full max-w-full px-2 py-3 bg-white/5 border-t mt-4 overflow-x-auto touch-pan-x scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-                    <div className="flex items-center gap-2 min-w-fit">
-                      <Pagination>
-                        <PaginationContent>
-                          <PaginationItem>
-                            <PaginationPrevious onClick={() => setProductPage((p) => Math.max(1, p - 1))} className="px-1 h-8 text-xs" aria-label="السابق">{''}</PaginationPrevious>
-                          </PaginationItem>
+                    {/* Desktop / Tablet: full/compact numeric pagination using helper generator */}
+                    <div className="hidden md:flex items-center justify-center gap-2">
+                      <nav className="flex items-center gap-2" aria-label="Pagination">
+                        <button
+                          onClick={() => setProductPage((p) => Math.max(1, p - 1))}
+                          disabled={(productPage || 1) === 1}
+                          className={`px-4 py-2 rounded font-medium transition-all ${((productPage || 1) === 1)
+                            ? 'bg-zinc-800 text-gray-600 cursor-not-allowed'
+                            : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
+                        >
+                          السابق
+                        </button>
 
-                          {/* Compact pagination: show only 3 numbers (current +/- 1) for spacing */}
-                          {(() => {
-                            const pages: number[] = [];
-                            const current = productPage || 1;
-                            const computedFromTotal = Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)));
-                            const total = productTotalPages && productTotalPages > 0 ? productTotalPages : computedFromTotal;
+                        <div className="flex items-center gap-1 mx-2">
+                          {generateDesktopPages(productPage || 1, (productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)))).map((pg, idx) => (
+                            typeof pg === 'string' ? (
+                              <span key={`e-${idx}`} className="px-3 py-2 text-gray-500">…</span>
+                            ) : (
+                              <button
+                                key={pg}
+                                onClick={() => setProductPage(Number(pg))}
+                                className={`min-w-[44px] px-4 py-2 rounded font-medium transition-all ${pg === productPage
+                                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/50'
+                                  : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
+                              >
+                                {pg}
+                              </button>
+                            )
+                          ))}
+                        </div>
 
-                            if (total <= 3) {
-                              for (let i = 1; i <= total; i++) pages.push(i);
-                            } else {
-                              let start = Math.max(1, current - 1);
-                              let end = Math.min(total, current + 1);
-                              if (start === 1) end = 3;
-                              if (end === total) start = Math.max(1, total - 2);
-                              for (let i = start; i <= end; i++) pages.push(i);
-                            }
-
-                            return pages.map((pn) => (
-                              <PaginationItem key={pn}>
-                                <PaginationLink
-                                  isActive={pn === productPage}
-                                  onClick={() => setProductPage(Number(pn))}
-                                  className="h-8 min-w-[28px] px-1 text-xs"
-                                >
-                                  {pn}
-                                </PaginationLink>
-                              </PaginationItem>
-                            ));
-                          })()}
-
-                          <PaginationItem>
-                            <PaginationNext onClick={() => setProductPage((p) => Math.min(productTotalPages, p + 1))} className="px-1 h-8 text-xs" aria-label="التالي">{''}</PaginationNext>
-                          </PaginationItem>
-                        </PaginationContent>
-                      </Pagination>
+                        <button
+                          onClick={() => setProductPage((p) => Math.min(((productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)))), p + 1))}
+                          disabled={(productPage || 1) === ((productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1))))}
+                          className={`px-4 py-2 rounded font-medium transition-all ${((productPage || 1) === ((productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)))))
+                            ? 'bg-zinc-800 text-gray-600 cursor-not-allowed'
+                            : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
+                        >
+                          التالي
+                        </button>
+                      </nav>
                     </div>
+
+                    {/* Mobile: compact Prev | current/total | Next */}
+                    <div className="md:hidden flex items-center justify-center gap-3">
+                      <button onClick={() => setProductPage((p) => Math.max(1, p - 1))} aria-label="السابق" className="px-3 py-2 rounded bg-zinc-800 text-white text-sm">
+                        السابق
+                      </button>
+                      <div className="px-4 py-2 bg-zinc-900 rounded text-sm font-medium">
+                        <span>{productPage}</span>
+                        <span className="mx-2 text-gray-400">/</span>
+                        <span>{(productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)))}</span>
+                      </div>
+                      <button onClick={() => setProductPage((p) => Math.min((productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1))), p + 1))} aria-label="التالي" className="px-3 py-2 rounded bg-zinc-800 text-white text-sm">
+                        التالي
+                      </button>
+                    </div>
+
                     <div className="text-sm text-muted mt-2">إجمالي المنتجات: {productTotal}</div>
                   </div>
                 )}
@@ -2121,51 +2217,64 @@ export default function AdminDashboard() {
                 {/* Pagination controls for Best Sellers */}
                 {bestSellersTotalPages > 1 && (
                   <div className="w-full overflow-x-auto bg-transparent mt-4 border-t">
-                    <div className="px-4 py-3 bg-white/5">
-                      <div className="flex items-center gap-1 min-w-0 text-sm">
-                        <Pagination>
-                          <PaginationContent>
-                            <PaginationItem>
-                              <PaginationPrevious onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))} className="px-1 h-8 text-xs" aria-label="السابق">{''}</PaginationPrevious>
-                            </PaginationItem>
+                    {/* Desktop / Tablet pagination */}
+                    <div className="hidden md:flex items-center justify-center px-4 py-3 bg-white/5">
+                      <nav className="flex items-center gap-2" aria-label="Best sellers pagination">
+                        <button
+                          onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))}
+                          disabled={(bestSellersPage || 1) === 1}
+                          className={`px-4 py-2 rounded font-medium transition-all ${((bestSellersPage || 1) === 1)
+                            ? 'bg-zinc-800 text-gray-600 cursor-not-allowed'
+                            : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
+                        >
+                          السابق
+                        </button>
 
-                            {(() => {
-                              const pages: number[] = [];
-                              const current = bestSellersPage || 1;
-                              const total = bestSellersTotalPages || 1;
+                        <div className="flex items-center gap-1 mx-2">
+                          {generateDesktopPages(bestSellersPage || 1, bestSellersTotalPages || Math.max(1, Math.ceil((bestSellersTotal || 0) / (bestSellersLimit || 1)))).map((pg, idx) => (
+                            typeof pg === 'string' ? (
+                              <span key={`e-b-${idx}`} className="px-3 py-2 text-gray-500">…</span>
+                            ) : (
+                              <button
+                                key={`b-${pg}`}
+                                onClick={() => setBestSellersPage(Number(pg))}
+                                className={`min-w-[44px] px-4 py-2 rounded font-medium transition-all ${pg === bestSellersPage
+                                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/50'
+                                  : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
+                              >
+                                {pg}
+                              </button>
+                            )
+                          ))}
+                        </div>
 
-                              if (total <= 3) {
-                                for (let i = 1; i <= total; i++) pages.push(i);
-                              } else {
-                                let start = Math.max(1, current - 1);
-                                let end = Math.min(total, current + 1);
-                                if (start === 1) end = 3;
-                                if (end === total) start = Math.max(1, total - 2);
-                                for (let i = start; i <= end; i++) pages.push(i);
-                              }
-
-                              return pages.map((pn) => (
-                                <PaginationItem key={`b-${pn}`}>
-                                  <PaginationLink
-                                    isActive={pn === bestSellersPage}
-                                    onClick={() => setBestSellersPage(Number(pn))}
-                                    className="h-8 min-w-[28px] px-1 text-xs"
-                                  >
-                                    {pn}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              ));
-                            })()}
-
-                            <PaginationItem>
-                              <PaginationNext onClick={() => setBestSellersPage((p) => Math.min(bestSellersTotalPages, p + 1))} className="px-1 h-8 text-xs" aria-label="التالي">{''}</PaginationNext>
-                            </PaginationItem>
-                          </PaginationContent>
-                        </Pagination>
-                      </div>
+                        <button
+                          onClick={() => setBestSellersPage((p) => Math.min((bestSellersTotalPages || 1), p + 1))}
+                          disabled={(bestSellersPage || 1) === (bestSellersTotalPages || 1)}
+                          className={`px-4 py-2 rounded font-medium transition-all ${((bestSellersPage || 1) === (bestSellersTotalPages || 1))
+                            ? 'bg-zinc-800 text-gray-600 cursor-not-allowed'
+                            : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
+                        >
+                          التالي
+                        </button>
+                      </nav>
                     </div>
 
-                    {/* Total count: placed below pagination and styled as light text so it's readable on the background */}
+                    {/* Mobile compact pagination */}
+                    <div className="md:hidden flex items-center justify-center gap-3 px-4 py-3 bg-white/5">
+                      <button onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))} aria-label="السابق" className="px-3 py-2 rounded bg-zinc-800 text-white text-sm">
+                        السابق
+                      </button>
+                      <div className="px-4 py-2 bg-zinc-900 rounded text-sm font-medium">
+                        <span>{bestSellersPage}</span>
+                        <span className="mx-2 text-gray-400">/</span>
+                        <span>{bestSellersTotalPages}</span>
+                      </div>
+                      <button onClick={() => setBestSellersPage((p) => Math.min((bestSellersTotalPages || 1), p + 1))} aria-label="التالي" className="px-3 py-2 rounded bg-zinc-800 text-white text-sm">
+                        التالي
+                      </button>
+                    </div>
+
                     <div className="px-4 py-2 bg-white/5">
                       <div className="text-sm text-black font-medium">إجمالي المنتجات الأكثر مبيعاً: {bestSellersTotal}</div>
                     </div>
