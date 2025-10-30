@@ -198,6 +198,15 @@ export async function initializeDatabase() {
           console.log('⚙️  Adding missing column `facebook` to `admins`');
           await qi.addColumn('admins', 'facebook', { type: DataTypes.STRING, allowNull: true });
         }
+        // Ensure password-reset columns exist so older databases don't break
+        if (!desc.reset_token) {
+          console.log('⚙️  Adding missing column `reset_token` to `admins`');
+          await qi.addColumn('admins', 'reset_token', { type: DataTypes.STRING, allowNull: true });
+        }
+        if (!desc.reset_token_expires) {
+          console.log('⚙️  Adding missing column `reset_token_expires` to `admins`');
+          await qi.addColumn('admins', 'reset_token_expires', { type: DataTypes.BIGINT, allowNull: true });
+        }
       } catch (e) {
         // If the table doesn't exist yet or permission denied, warn and continue.
         console.warn('Could not ensure admin social columns:', e && e.message ? e.message : e);
