@@ -378,6 +378,31 @@ export default function AdminDashboard() {
     navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
   }, [activeTab, location.pathname, location.search, navigate]);
 
+  // Handle browser back/forward so the app doesn't feel like it's "toggling"
+  // repeatedly between admin tabs. If the user navigates via history to a
+  // different admin tab (popstate) we prefer to send them to the login page
+  // rather than allow quick toggling between two admin tabs which is confusing.
+  useEffect(() => {
+    const onPopState = () => {
+      try {
+        const { pathname, search } = window.location;
+        if (pathname !== '/admin') return;
+        const params = new URLSearchParams(search);
+        const tab = params.get('tab') || DEFAULT_ADMIN_TAB;
+        if (tab !== activeTab) {
+          // Redirect to login to break toggle loop. Use replace so we don't
+          // create an extra history entry.
+          navigate('/login', { replace: true });
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [activeTab, navigate]);
+
   // Helper function to handle API errors
   const handleApiError = (error: any, operation: string) => {
     console.error(`Error during ${operation}:`, error);
