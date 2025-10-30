@@ -1658,6 +1658,47 @@ export default function AdminDashboard() {
                   ))}
                 </div>
 
+                {/* Mobile View - Cards */}
+                <div className="md:hidden space-y-3 p-4 overflow-x-hidden">
+                  {sliders.map((slider) => (
+                    <Card key={slider.id} className="p-3">
+                      <div className="flex flex-col">
+                        <img
+                          src={slider.image_url}
+                          alt={slider.title || 'Slider'}
+                          className="w-full h-40 object-cover rounded-md border bg-white"
+                        />
+                        <div className="mt-3">
+                          <div className="font-medium truncate">{slider.title || 'بدون عنوان'}</div>
+                          {slider.subtitle && (
+                            <div className="text-xs text-muted-foreground line-clamp-2">{slider.subtitle}</div>
+                          )}
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => openSliderDialog(slider)}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            تعديل
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="flex-1"
+                            onClick={() => openDeleteDialog({ type: 'slider' as any, id: slider.id, name: slider.title })}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            حذف
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
                 {/* Desktop View - Table */}
                 <div className="hidden md:block rounded-md border">
                   <Table>
@@ -1720,9 +1761,7 @@ export default function AdminDashboard() {
                       <Pagination>
                         <PaginationContent>
                           <PaginationItem>
-                            <PaginationPrevious onClick={() => setProductPage((p) => Math.max(1, p - 1))}>
-                              السابق
-                            </PaginationPrevious>
+                            <PaginationPrevious onClick={() => setProductPage((p) => Math.max(1, p - 1))} className="px-1 h-8 text-xs" aria-label="السابق">{''}</PaginationPrevious>
                           </PaginationItem>
 
                           {/* Compact pagination: show first, last, current +/- 2, with ellipses */}
@@ -1751,6 +1790,7 @@ export default function AdminDashboard() {
                                   <PaginationLink
                                     isActive={pn === productPage}
                                     onClick={() => setProductPage(Number(pn))}
+                                    className="h-8 min-w-[28px] px-1 text-xs"
                                   >
                                     {pn}
                                   </PaginationLink>
@@ -1760,9 +1800,7 @@ export default function AdminDashboard() {
                           })()}
 
                           <PaginationItem>
-                            <PaginationNext onClick={() => setProductPage((p) => Math.min(productTotalPages, p + 1))}>
-                              التالي
-                            </PaginationNext>
+                            <PaginationNext onClick={() => setProductPage((p) => Math.min(productTotalPages, p + 1))} className="px-1 h-8 text-xs" aria-label="التالي">{''}</PaginationNext>
                           </PaginationItem>
                         </PaginationContent>
                       </Pagination>
@@ -2090,12 +2128,13 @@ export default function AdminDashboard() {
                 {bestSellersTotalPages > 1 && (
                   <div className="w-full overflow-x-auto bg-transparent mt-4 border-t">
                     <div className="px-4 py-3 bg-white/5">
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-1 min-w-0 text-sm">
                         <Pagination>
                           <PaginationContent>
                             <PaginationItem>
-                              <PaginationPrevious onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))}>
-                                السابق
+                              <PaginationPrevious onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))} className="px-1 h-8 text-xs">
+                                <span className="sr-only">السابق</span>
+                                <span className="hidden sm:inline">السابق</span>
                               </PaginationPrevious>
                             </PaginationItem>
 
@@ -2118,6 +2157,7 @@ export default function AdminDashboard() {
                                     <PaginationLink
                                       isActive={pn === bestSellersPage}
                                       onClick={() => setBestSellersPage(Number(pn))}
+                                      className="h-8 min-w-[28px] px-1 text-xs"
                                     >
                                       {pn}
                                     </PaginationLink>
@@ -2127,9 +2167,7 @@ export default function AdminDashboard() {
                             })()}
 
                             <PaginationItem>
-                              <PaginationNext onClick={() => setBestSellersPage((p) => Math.min(bestSellersTotalPages, p + 1))}>
-                                التالي
-                              </PaginationNext>
+                              <PaginationNext onClick={() => setBestSellersPage((p) => Math.min(bestSellersTotalPages, p + 1))} className="px-1 h-8 text-xs" aria-label="التالي">{''}</PaginationNext>
                             </PaginationItem>
                           </PaginationContent>
                         </Pagination>
