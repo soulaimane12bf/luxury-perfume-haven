@@ -28,12 +28,11 @@ try {
   # Print success response as formatted JSON
   $response | ConvertTo-Json -Depth 5
 } catch {
-  if ($_.Exception.Response) {
+  if ($_.Exception.Response -and $_.Exception.Response.Content) {
     $r = $_.Exception.Response
-    $sr = New-Object System.IO.StreamReader($r.GetResponseStream())
-    $b = $sr.ReadToEnd()
+    $body = $r.Content.ReadAsStringAsync().Result
     Write-Output "HTTP_ERROR: $($r.StatusCode) $($r.StatusDescription)"
-    Write-Output $b
+    Write-Output $body
   } else {
     Write-Output "REQUEST_FAILED: $($_.Exception.Message)"
   }

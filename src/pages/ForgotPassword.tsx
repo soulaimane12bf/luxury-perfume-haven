@@ -75,6 +75,9 @@ const ForgotPassword = () => {
             disabled={loading}
             className="h-12 bg-gray-800/50 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-yellow-500/50 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-300"
           />
+          {maskedAdminEmail && (
+            <p className="text-xs text-gray-400">هل نسيت البريد؟ البريد المُسجّل يبدأ بـ: <strong className="text-yellow-400">{maskedAdminEmail}</strong></p>
+          )}
           {error && (
             <Alert className="bg-red-500/10 border-red-500/50 text-red-400 animate-in fade-in slide-in-from-top-2 duration-300">
               <AlertCircle className="h-4 w-4" />

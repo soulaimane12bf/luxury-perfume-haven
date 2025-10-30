@@ -44,6 +44,14 @@ const Admin = sequelize.define('Admin', {
     type: DataTypes.ENUM('admin', 'super-admin'),
     allowNull: false,
     defaultValue: 'admin'
+  },
+  reset_token: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  reset_token_expires: {
+    type: DataTypes.BIGINT,
+    allowNull: true
   }
 }, {
   timestamps: true,

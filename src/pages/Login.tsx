@@ -34,6 +34,7 @@ const Login = () => {
 	}, [authLoading, isAuthenticated, navigate, from])
 
 	useEffect(() => {
+		// Clear inline error when user edits fields so they can retry.
 		if (error) {
 			setError(null)
 		}
@@ -56,8 +57,17 @@ const Login = () => {
 				} else {
 					message = err.message || message
 				}
+			} else if (typeof err === 'string') {
+				message = err
 			}
+			// Set the error and move focus to the alert for accessibility
 			setError(message)
+			setTimeout(() => {
+				const el = document.getElementById('login-error-alert')
+				if (el) {
+					el.focus()
+				}
+			}, 50)
 		} finally {
 			setLoading(false)
 		}
@@ -181,7 +191,7 @@ const Login = () => {
 
 								{/* Error Alert */}
 								{error && (
-									<Alert className="bg-red-500/10 border-red-500/50 text-red-400 animate-in fade-in slide-in-from-top-2 duration-300">
+									<Alert id="login-error-alert" tabIndex={-1} role="alert" aria-live="assertive" className="bg-red-500/10 border-red-500/50 text-red-400 animate-in fade-in slide-in-from-top-2 duration-300">
 										<AlertCircle className="h-4 w-4" />
 										<AlertDescription className="text-sm">{error}</AlertDescription>
 									</Alert>

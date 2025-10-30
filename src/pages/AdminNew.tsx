@@ -143,6 +143,27 @@ export default function AdminDashboard() {
   const location = useLocation();
   const { toast } = useToast();
   const { isAuthenticated, token, loading: authLoading, logout } = useAuth();
+
+  // Auto logout on session end (token missing/invalid)
+  useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated || !token) {
+      showAdminAlert({ title: 'انتهت الجلسة', text: 'يرجى تسجيل الدخول مرة أخرى', icon: 'error', timer: 4000 });
+      if (typeof logout === 'function') logout();
+      navigate('/login');
+      return;
+    }
+    // Periodic check every 30 seconds
+    const interval = setInterval(() => {
+      const t = localStorage.getItem('token');
+      if (!t) {
+        showAdminAlert({ title: 'انتهت الجلسة', text: 'يرجى تسجيل الدخول مرة أخرى', icon: 'error', timer: 4000 });
+        if (typeof logout === 'function') logout();
+        navigate('/login');
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, token, authLoading, logout, navigate]);
   
   const [products, setProducts] = useState<Product[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1655,8 +1676,8 @@ export default function AdminDashboard() {
 
                 {/* Pagination controls */}
                 {productTotalPages > 1 && (
-                  <div className="flex items-center justify-between px-4 py-3 bg-white/5 border-t mt-4">
-                    <div className="flex items-center gap-2">
+                  <div className="w-full max-w-full px-2 py-3 bg-white/5 border-t mt-4 overflow-x-auto touch-pan-x scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+                    <div className="flex items-center gap-2 min-w-fit">
                       <Pagination>
                         <PaginationContent>
                           <PaginationItem>
@@ -1669,40 +1690,21 @@ export default function AdminDashboard() {
                           {(() => {
                             const pages: (number | 'e')[] = [];
                             const current = productPage || 1;
-                            // Ensure we use a sane total pages number: prefer server-provided
-                            // `productTotalPages`, but fall back to computing it from
-                            // `productTotal` and `productLimit` if something went wrong.
                             const computedFromTotal = Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)));
-                            // If the server mistakenly returned a raw product count in
-                            // productTotalPages (e.g. 144) detect it by comparing to
-                            // productTotal. If productTotalPages is larger than the
-                            // actual product count, use the computed pages instead.
                             let total = computedFromTotal;
                             if (productTotalPages && productTotalPages > 0) {
                               if (productTotal && productTotalPages > productTotal) {
-                                // server returned total products instead of pages — use computed
                                 total = computedFromTotal;
                               } else {
                                 total = productTotalPages;
                               }
                             }
                             const add = (n: number | 'e') => pages.push(n);
-
-                            // Always show first
                             add(1);
-
-                            // Show left ellipsis if needed
                             if (current - 3 > 1) add('e');
-
-                            // Show current-2..current+2
                             for (let i = Math.max(2, current - 2); i <= Math.min(total - 1, current + 2); i++) add(i);
-
-                            // Show right ellipsis if needed
                             if (current + 3 < total) add('e');
-
-                            // Always show last if > 1
                             if (total > 1) add(total);
-
                             return pages.map((pn, idx) => {
                               if (pn === 'e') return <PaginationItem key={`e-${idx}`}><PaginationEllipsis>…</PaginationEllipsis></PaginationItem>;
                               return (
@@ -1726,7 +1728,7 @@ export default function AdminDashboard() {
                         </PaginationContent>
                       </Pagination>
                     </div>
-                    <div className="text-sm text-muted">إجمالي المنتجات: {productTotal}</div>
+                    <div className="text-sm text-muted mt-2">إجمالي المنتجات: {productTotal}</div>
                   </div>
                 )}
               </CardContent>

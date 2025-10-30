@@ -15,8 +15,7 @@
     "test": "vitest",
     "preview": "vite preview",
     "test-api": "node scripts/test-api.js",
-    "optimize-image": "node scripts/optimize-image.js"
-    ,
+    "optimize-image": "node scripts/optimize-image.js",
     "sitemap:generate": "node scripts/generate-dynamic-sitemap.cjs",
     "sitemap:ping": "node scripts/ping-sitemaps.cjs"
   },
@@ -81,6 +80,7 @@
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^6.30.1",
     "recharts": "^2.15.4",
+    "resend": "^6.3.0",
     "sequelize": "^6.37.7",
     "sonner": "^1.7.4",
     "sqlite3": "^5.1.6",

@@ -1,7 +1,7 @@
 
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { login, register, verifyToken, changePassword, requestPasswordReset, resetPassword } from '../controllers/authController.js';
+import { login, register, verifyToken, changePassword, requestPasswordReset, resetPassword, getMaskedAdminEmail } from '../controllers/authController.js';
 import { authMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
