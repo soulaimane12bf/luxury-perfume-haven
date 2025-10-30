@@ -34,11 +34,15 @@ const Login = () => {
 	}, [authLoading, isAuthenticated, navigate, from])
 
 	useEffect(() => {
-		// Clear inline error when user edits fields so they can retry.
+		// Clear inline error only when the user edits the username or password.
+		// Previously this effect also depended on `error` which immediately
+		// cleared the error after it was set, preventing the alert from
+		// remaining visible. Keep the dependency list to username/password
+		// so the alert stays until the user changes the inputs.
 		if (error) {
 			setError(null)
 		}
-	}, [username, password, error])
+	}, [username, password])
 
 	const onSubmit = async (e) => {
 		e.preventDefault()
