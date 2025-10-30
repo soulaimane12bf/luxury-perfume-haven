@@ -214,6 +214,27 @@ export async function initializeDatabase() {
     }
 
     await ensureAdminSocialColumns();
+    // Ensure reset token columns even when SKIP_SYNC_ON_STARTUP=true so
+    // password reset features don't break on older DB schemas.
+    async function ensureResetTokenColumns() {
+      if (USING_IN_MEMORY_FALLBACK) return;
+      try {
+        const qi = sequelize.getQueryInterface();
+        const desc = await qi.describeTable('admins');
+        if (!desc.reset_token) {
+          console.log('⚙️  Adding missing column `reset_token` to `admins` (startup helper)');
+          await qi.addColumn('admins', 'reset_token', { type: DataTypes.STRING, allowNull: true });
+        }
+        if (!desc.reset_token_expires) {
+          console.log('⚙️  Adding missing column `reset_token_expires` to `admins` (startup helper)');
+          await qi.addColumn('admins', 'reset_token_expires', { type: DataTypes.BIGINT, allowNull: true });
+        }
+      } catch (e) {
+        console.warn('Could not ensure reset token columns:', e && e.message ? e.message : e);
+      }
+    }
+
+    await ensureResetTokenColumns();
 
     // Allow skipping sync/seed on startup (useful in production serverless).
     // If SKIP_SYNC_ON_STARTUP=true is set in the environment, we will
