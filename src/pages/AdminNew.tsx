@@ -14,38 +14,37 @@ import { Badge } from '@/components/ui/badge';
 import { compressImage } from '@/lib/imageCompression';
 import { 
   Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { generateCustomerWhatsAppUrl } from '@/lib/whatsapp';
+                          {(() => {
+                            // Show up to 3 page numbers: current -1, current, current +1
+                            // Clamp to bounds [1, total]. This keeps the pagination compact
+                            // and provides consistent spacing on small screens.
+                            const pages: number[] = [];
+                            const current = productPage || 1;
+                            const computedFromTotal = Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)));
+                            let total = productTotalPages && productTotalPages > 0 ? productTotalPages : computedFromTotal;
+
+                            if (total <= 3) {
+                              for (let i = 1; i <= total; i++) pages.push(i);
+                            } else {
+                              let start = Math.max(1, current - 1);
+                              let end = Math.min(total, current + 1);
+                              if (start === 1) end = 3;
+                              if (end === total) start = Math.max(1, total - 2);
+                              for (let i = start; i <= end; i++) pages.push(i);
+                            }
+
+                            return pages.map((pn) => (
+                              <PaginationItem key={pn}>
+                                <PaginationLink
+                                  isActive={pn === productPage}
+                                  onClick={() => setProductPage(Number(pn))}
+                                  className="h-8 min-w-[28px] px-1 text-xs"
+                                >
+                                  {pn}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ));
+                          })()}
 import { productsApi, categoriesApi, reviewsApi, ordersApi, slidersApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import showAdminAlert from '@/lib/swal-admin';
@@ -1764,39 +1763,34 @@ export default function AdminDashboard() {
                             <PaginationPrevious onClick={() => setProductPage((p) => Math.max(1, p - 1))} className="px-1 h-8 text-xs" aria-label="السابق">{''}</PaginationPrevious>
                           </PaginationItem>
 
-                          {/* Compact pagination: show first, last, current +/- 2, with ellipses */}
+                          {/* Compact pagination: show only 3 numbers (current +/- 1) for spacing */}
                           {(() => {
-                            const pages: (number | 'e')[] = [];
+                            const pages: number[] = [];
                             const current = productPage || 1;
                             const computedFromTotal = Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)));
-                            let total = computedFromTotal;
-                            if (productTotalPages && productTotalPages > 0) {
-                              if (productTotal && productTotalPages > productTotal) {
-                                total = computedFromTotal;
-                              } else {
-                                total = productTotalPages;
-                              }
+                            const total = productTotalPages && productTotalPages > 0 ? productTotalPages : computedFromTotal;
+
+                            if (total <= 3) {
+                              for (let i = 1; i <= total; i++) pages.push(i);
+                            } else {
+                              let start = Math.max(1, current - 1);
+                              let end = Math.min(total, current + 1);
+                              if (start === 1) end = 3;
+                              if (end === total) start = Math.max(1, total - 2);
+                              for (let i = start; i <= end; i++) pages.push(i);
                             }
-                            const add = (n: number | 'e') => pages.push(n);
-                            add(1);
-                            if (current - 3 > 1) add('e');
-                            for (let i = Math.max(2, current - 2); i <= Math.min(total - 1, current + 2); i++) add(i);
-                            if (current + 3 < total) add('e');
-                            if (total > 1) add(total);
-                            return pages.map((pn, idx) => {
-                              if (pn === 'e') return <PaginationItem key={`e-${idx}`}><PaginationEllipsis>…</PaginationEllipsis></PaginationItem>;
-                              return (
-                                <PaginationItem key={pn}>
-                                  <PaginationLink
-                                    isActive={pn === productPage}
-                                    onClick={() => setProductPage(Number(pn))}
-                                    className="h-8 min-w-[28px] px-1 text-xs"
-                                  >
-                                    {pn}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              );
-                            });
+
+                            return pages.map((pn) => (
+                              <PaginationItem key={pn}>
+                                <PaginationLink
+                                  isActive={pn === productPage}
+                                  onClick={() => setProductPage(Number(pn))}
+                                  className="h-8 min-w-[28px] px-1 text-xs"
+                                >
+                                  {pn}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ));
                           })()}
 
                           <PaginationItem>
@@ -2132,38 +2126,35 @@ export default function AdminDashboard() {
                         <Pagination>
                           <PaginationContent>
                             <PaginationItem>
-                              <PaginationPrevious onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))} className="px-1 h-8 text-xs">
-                                <span className="sr-only">السابق</span>
-                                <span className="hidden sm:inline">السابق</span>
-                              </PaginationPrevious>
+                              <PaginationPrevious onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))} className="px-1 h-8 text-xs" aria-label="السابق">{''}</PaginationPrevious>
                             </PaginationItem>
 
                             {(() => {
-                              const pages: (number | 'e')[] = [];
+                              const pages: number[] = [];
                               const current = bestSellersPage || 1;
                               const total = bestSellersTotalPages || 1;
-                              const add = (n: number | 'e') => pages.push(n);
 
-                              add(1);
-                              if (current - 3 > 1) add('e');
-                              for (let i = Math.max(2, current - 2); i <= Math.min(total - 1, current + 2); i++) add(i);
-                              if (current + 3 < total) add('e');
-                              if (total > 1) add(total);
+                              if (total <= 3) {
+                                for (let i = 1; i <= total; i++) pages.push(i);
+                              } else {
+                                let start = Math.max(1, current - 1);
+                                let end = Math.min(total, current + 1);
+                                if (start === 1) end = 3;
+                                if (end === total) start = Math.max(1, total - 2);
+                                for (let i = start; i <= end; i++) pages.push(i);
+                              }
 
-                              return pages.map((pn, idx) => {
-                                if (pn === 'e') return <PaginationItem key={`e-b-${idx}`}><PaginationEllipsis>…</PaginationEllipsis></PaginationItem>;
-                                return (
-                                  <PaginationItem key={`b-${pn}`}>
-                                    <PaginationLink
-                                      isActive={pn === bestSellersPage}
-                                      onClick={() => setBestSellersPage(Number(pn))}
-                                      className="h-8 min-w-[28px] px-1 text-xs"
-                                    >
-                                      {pn}
-                                    </PaginationLink>
-                                  </PaginationItem>
-                                );
-                              });
+                              return pages.map((pn) => (
+                                <PaginationItem key={`b-${pn}`}>
+                                  <PaginationLink
+                                    isActive={pn === bestSellersPage}
+                                    onClick={() => setBestSellersPage(Number(pn))}
+                                    className="h-8 min-w-[28px] px-1 text-xs"
+                                  >
+                                    {pn}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              ));
                             })()}
 
                             <PaginationItem>
