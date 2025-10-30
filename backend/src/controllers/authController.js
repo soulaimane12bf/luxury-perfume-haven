@@ -71,6 +71,22 @@ export const resetPassword = async (req, res) => {
   }
 };
 
+// Validate a reset token (used by frontend to avoid showing the form for
+// an expired/used token). Returns { valid: true } when token is valid.
+export const validateResetToken = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) return res.status(400).json({ valid: false, message: 'Token required' });
+    const admin = await Admin.findOne({ where: { reset_token: token } });
+    if (!admin || !admin.reset_token_expires || Date.now() > admin.reset_token_expires) {
+      return res.status(400).json({ valid: false, message: 'Invalid or expired token' });
+    }
+    return res.json({ valid: true });
+  } catch (error) {
+    return res.status(500).json({ valid: false, message: error.message });
+  }
+};
+
 // Login
 export const login = async (req, res) => {
   try {

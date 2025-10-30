@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -14,6 +14,29 @@ const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
 
+  // On mount, validate the token with the backend. If invalid/expired, redirect
+  // to /forgot-password (or login) and show an error.
+  useEffect(() => {
+    (async () => {
+      if (!token) {
+        setError('رمز إعادة التعيين مفقود. يرجى طلب إعادة تعيين كلمة المرور.');
+        setTimeout(() => navigate('/forgot-password', { replace: true }), 1800);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/auth/validate-reset-token?token=${encodeURIComponent(token)}`);
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          setError(d.message || 'رمز إعادة التعيين غير صالح أو منتهي.');
+          setTimeout(() => navigate('/forgot-password', { replace: true }), 1800);
+        }
+      } catch (err) {
+        setError('فشل التحقق من الرمز. حاول مرة أخرى.');
+        setTimeout(() => navigate('/forgot-password', { replace: true }), 1800);
+      }
+    })();
+  }, [token, navigate]);
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -27,8 +50,12 @@ const ResetPassword = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'حدث خطأ ما');
-      setSuccess('تم تعيين كلمة مرور جديدة بنجاح. يمكنك الآن تسجيل الدخول.');
-      setTimeout(() => navigate('/login'), 2500);
+  setSuccess('تم تعيين كلمة مرور جديدة بنجاح. سيتم تحويلك إلى صفحة تسجيل الدخول.');
+  // Mark the token as used in session storage so revisiting the same URL
+  // client-side will redirect immediately. The backend also clears the
+  // token server-side, so this is a UX improvement.
+  try { sessionStorage.setItem(`reset_used:${token}`, '1'); } catch (e) {}
+  setTimeout(() => navigate('/login', { replace: true }), 1600);
     } catch (err) {
       setError(err.message);
     } finally {

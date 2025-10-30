@@ -25,6 +25,7 @@ router.post('/register', register); // You may want to protect this or remove it
 // Password reset routes
 router.post('/request-password-reset', requestPasswordReset);
 router.post('/reset-password', resetPassword);
+router.get('/validate-reset-token', validateResetToken);
 router.get('/masked-admin-email', getMaskedAdminEmail);
 
 // Protected routes

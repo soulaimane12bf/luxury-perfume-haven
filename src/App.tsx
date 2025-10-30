@@ -58,8 +58,8 @@ const App = () => (
                   // `useLocation` must be used inside the Router; define here so
                   // the hook is available at render time.
                   const location = useLocation();
-                  // Hide the bubble on the forgot-password screen
-                  if (location.pathname === '/forgot-password') return null;
+                  // Hide the bubble on the forgot-password and reset-password screens
+                  if (location.pathname === '/forgot-password' || location.pathname === '/reset-password') return null;
                   return <FloatingWhatsApp />;
                 };
                 return <FloatingWhatsAppConditional />;
