@@ -823,6 +823,20 @@ export default function AdminDashboard() {
       // Refresh main products list to keep global state consistent, but avoid
       // refetching the bestsellers list which would remove the toggled item.
       await refreshSpecificTab('products');
+
+      // Also refresh the lightweight best-sellers count so the displayed total
+      // (إجمالي المنتجات الأكثر مبيعاً) updates immediately after toggling.
+      try {
+        const bestCount = (await productsApi.getAll({ best_selling: true, page: 1, limit: 1 }).catch(() => ({ total: 0 }))) as PaginatedResponse | unknown;
+        if (bestCount && typeof bestCount === 'object' && 'total' in bestCount) {
+          const bc = bestCount as PaginatedResponse;
+          setBestSellersTotal(Number(bc.total || 0));
+          // Keep the top-card count in sync too
+          setProductBestSellersCount(Number(bc.total || 0));
+        }
+      } catch (e) {
+        // ignore non-critical count refresh errors
+      }
     } catch (error: any) {
       handleApiError(error, 'تحديث حالة الأكثر مبيعاً');
     }
