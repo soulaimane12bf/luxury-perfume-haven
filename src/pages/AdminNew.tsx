@@ -1878,13 +1878,6 @@ export default function AdminDashboard() {
                           التالي
                         </button>
                       </nav>
-
-                      {/* Current / Total indicator (desktop/tablet) */}
-                      <div className="ml-3 text-sm text-gray-300 hidden md:flex items-center">
-                        <span className="font-medium text-white">{productPage}</span>
-                        <span className="mx-1 text-gray-400">/</span>
-                        <span className="text-gray-300">{(productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)))}</span>
-                      </div>
                     </div>
 
                     {/* Mobile: compact Prev | current/total | Next */}
@@ -2265,13 +2258,6 @@ export default function AdminDashboard() {
                           التالي
                         </button>
                       </nav>
-
-                      {/* Current / Total indicator (desktop/tablet) for Best Sellers */}
-                      <div className="ml-3 text-sm text-gray-300 hidden md:flex items-center">
-                        <span className="font-medium text-white">{bestSellersPage}</span>
-                        <span className="mx-1 text-gray-400">/</span>
-                        <span className="text-gray-300">{bestSellersTotalPages || Math.max(1, Math.ceil((bestSellersTotal || 0) / (bestSellersLimit || 1)))}</span>
-                      </div>
                     </div>
 
                     {/* Mobile compact pagination */}
