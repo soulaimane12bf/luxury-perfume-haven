@@ -2075,52 +2075,56 @@ export default function AdminDashboard() {
                 {/* Pagination controls for Best Sellers */}
                 {bestSellersTotalPages > 1 && (
                   <div className="w-full overflow-x-auto bg-transparent mt-4 border-t">
-                    <div className="flex items-center justify-between px-4 py-3 bg-white/5">
+                    <div className="px-4 py-3 bg-white/5">
                       <div className="flex items-center gap-2 min-w-0">
-                      <Pagination>
-                        <PaginationContent>
-                          <PaginationItem>
-                            <PaginationPrevious onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))}>
-                              السابق
-                            </PaginationPrevious>
-                          </PaginationItem>
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))}>
+                                السابق
+                              </PaginationPrevious>
+                            </PaginationItem>
 
-                          {(() => {
-                            const pages: (number | 'e')[] = [];
-                            const current = bestSellersPage || 1;
-                            const total = bestSellersTotalPages || 1;
-                            const add = (n: number | 'e') => pages.push(n);
+                            {(() => {
+                              const pages: (number | 'e')[] = [];
+                              const current = bestSellersPage || 1;
+                              const total = bestSellersTotalPages || 1;
+                              const add = (n: number | 'e') => pages.push(n);
 
-                            add(1);
-                            if (current - 3 > 1) add('e');
-                            for (let i = Math.max(2, current - 2); i <= Math.min(total - 1, current + 2); i++) add(i);
-                            if (current + 3 < total) add('e');
-                            if (total > 1) add(total);
+                              add(1);
+                              if (current - 3 > 1) add('e');
+                              for (let i = Math.max(2, current - 2); i <= Math.min(total - 1, current + 2); i++) add(i);
+                              if (current + 3 < total) add('e');
+                              if (total > 1) add(total);
 
-                            return pages.map((pn, idx) => {
-                              if (pn === 'e') return <PaginationItem key={`e-b-${idx}`}><PaginationEllipsis>…</PaginationEllipsis></PaginationItem>;
-                              return (
-                                <PaginationItem key={`b-${pn}`}>
-                                  <PaginationLink
-                                    isActive={pn === bestSellersPage}
-                                    onClick={() => setBestSellersPage(Number(pn))}
-                                  >
-                                    {pn}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              );
-                            });
-                          })()}
+                              return pages.map((pn, idx) => {
+                                if (pn === 'e') return <PaginationItem key={`e-b-${idx}`}><PaginationEllipsis>…</PaginationEllipsis></PaginationItem>;
+                                return (
+                                  <PaginationItem key={`b-${pn}`}>
+                                    <PaginationLink
+                                      isActive={pn === bestSellersPage}
+                                      onClick={() => setBestSellersPage(Number(pn))}
+                                    >
+                                      {pn}
+                                    </PaginationLink>
+                                  </PaginationItem>
+                                );
+                              });
+                            })()}
 
-                          <PaginationItem>
-                            <PaginationNext onClick={() => setBestSellersPage((p) => Math.min(bestSellersTotalPages, p + 1))}>
-                              التالي
-                            </PaginationNext>
-                          </PaginationItem>
-                        </PaginationContent>
-                      </Pagination>
+                            <PaginationItem>
+                              <PaginationNext onClick={() => setBestSellersPage((p) => Math.min(bestSellersTotalPages, p + 1))}>
+                                التالي
+                              </PaginationNext>
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
                       </div>
-                      <div className="text-sm text-muted">إجمالي المنتجات الأكثر مبيعاً: {bestSellersTotal}</div>
+                    </div>
+
+                    {/* Total count: placed below pagination and styled as light text so it's readable on the background */}
+                    <div className="px-4 py-2 bg-white/5">
+                      <div className="text-sm text-white/80">إجمالي المنتجات الأكثر مبيعاً: {bestSellersTotal}</div>
                     </div>
                   </div>
                 )}
