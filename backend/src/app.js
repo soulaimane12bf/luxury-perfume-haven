@@ -235,6 +235,11 @@ export async function initializeDatabase() {
           console.log('⚙️  Adding missing column `reset_token_expires` to `admins` (startup helper)');
           await qi.addColumn('admins', 'reset_token_expires', { type: DataTypes.BIGINT, allowNull: true });
         }
+        // Ensure token invalidation column exists as well even when SKIP_SYNC_ON_STARTUP
+        if (!desc.token_invalid_before) {
+          console.log('⚙️  Adding missing column `token_invalid_before` to `admins` (startup helper)');
+          await qi.addColumn('admins', 'token_invalid_before', { type: DataTypes.BIGINT, allowNull: true });
+        }
       } catch (e) {
         console.warn('Could not ensure reset token columns:', e && e.message ? e.message : e);
       }
