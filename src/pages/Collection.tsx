@@ -10,14 +10,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-} from '@/components/ui/pagination';
+import PaginationResponsive from '@/components/PaginationResponsive';
 import { Filter } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useProducts, useBrands, useCategory } from '@/lib/hooks/useApi';
@@ -289,63 +282,7 @@ export default function Collection() {
                       </div>
                       <div className="text-sm text-muted-foreground">صفحة {page} من {totalPages}</div>
                     </div>
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setPageGuarded((p) => Math.max(1, (p as number) - 1));
-                              }}
-                            />
-                        </PaginationItem>
-
-                        {/* Compact pagination: show first, last, current +/- 2, with ellipses */}
-                        {(() => {
-                          const pages: (number | '...')[] = [];
-                          const delta = 2;
-                          const left = Math.max(1, page - delta);
-                          const right = Math.min(totalPages, page + delta);
-
-                          if (left > 1) pages.push(1);
-                          if (left > 2) pages.push('...');
-
-                          for (let p = left; p <= right; p++) pages.push(p);
-
-                          if (right < totalPages - 1) pages.push('...');
-                          if (right < totalPages) pages.push(totalPages);
-
-                          return pages.map((pn, idx) => (
-                            pn === '...' ? (
-                              <PaginationItem key={`e-${idx}`}>
-                                <span className="px-2 py-1 text-sm text-muted-foreground">...</span>
-                              </PaginationItem>
-                            ) : (
-                                <PaginationItem key={pn}>
-                                <PaginationLink
-                                  href="#"
-                                  isActive={pn === page}
-                                  onClick={(e) => { e.preventDefault(); setPageGuarded(Number(pn)); }}
-                                >
-                                  {pn}
-                                </PaginationLink>
-                              </PaginationItem>
-                            )
-                          ));
-                        })()}
-
-                        <PaginationItem>
-                          <PaginationNext
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setPageGuarded((p) => Math.min(totalPages as number, (p as number) + 1));
-                            }}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
+                    <PaginationResponsive current={page} total={totalPages as number} onChange={(p) => setPageGuarded(p)} ariaLabel="Collection pagination" />
                   </div>
                 )}
               </>

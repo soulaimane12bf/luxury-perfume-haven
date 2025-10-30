@@ -64,15 +64,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationEllipsis,
-} from '@/components/ui/pagination';
+import PaginationResponsive from '@/components/PaginationResponsive';
 
 // Basic type definitions used in this admin page
 // These are intentionally minimal — expand as needed to match your backend contracts.
@@ -312,55 +304,7 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, token, authLoading, navigate, toast]);
 
-  // Pagination helpers (desktop full with ellipses, mobile condensed)
-  const generateDesktopPages = (current: number, total: number) => {
-    const pages: (number | 'e')[] = [];
-    const showEllipsisStart = current > 4;
-    const showEllipsisEnd = current < total - 3;
-
-    pages.push(1);
-
-    if (showEllipsisStart) {
-      pages.push('e');
-      for (let i = current - 2; i < current; i++) {
-        if (i > 1 && i < total) pages.push(i);
-      }
-    } else {
-      for (let i = 2; i < current; i++) {
-        if (i < total) pages.push(i);
-      }
-    }
-
-    if (current !== 1 && current !== total) pages.push(current);
-
-    if (showEllipsisEnd) {
-      for (let i = current + 1; i <= current + 2; i++) {
-        if (i > 1 && i < total) pages.push(i);
-      }
-      pages.push('e');
-    } else {
-      for (let i = current + 1; i < total; i++) {
-        pages.push(i);
-      }
-    }
-
-    if (total > 1) pages.push(total);
-    return pages;
-  };
-
-  const generateMobilePages = (current: number, total: number) => {
-    const pages: (number | 'e')[] = [];
-    pages.push(1);
-    if (current > 2) pages.push('e');
-    if (current > 1 && current < total) {
-      if (current > 2) pages.push(current - 1);
-      pages.push(current);
-      if (current < total - 1) pages.push(current + 1);
-    }
-    if (current < total - 1) pages.push('e');
-    if (total > 1) pages.push(total);
-    return pages;
-  };
+  // Pagination is handled by the reusable `PaginationResponsive` component
 
   // When admin logs in, pre-fetch counts/stats so top cards show correct numbers
   useEffect(() => {
@@ -1837,63 +1781,12 @@ export default function AdminDashboard() {
                 {/* Pagination controls */}
                 {productTotalPages > 1 && (
                   <div className="w-full max-w-full px-2 py-3 bg-white/5 border-t mt-4 overflow-x-auto touch-pan-x scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-                    {/* Desktop / Tablet: full/compact numeric pagination using helper generator */}
-                    <div className="hidden md:flex items-center justify-center gap-2">
-                      <nav className="flex items-center gap-2" aria-label="Pagination">
-                        <button
-                          onClick={() => setProductPage((p) => Math.max(1, p - 1))}
-                          disabled={(productPage || 1) === 1}
-                          className={`px-4 py-2 rounded font-medium transition-all ${((productPage || 1) === 1)
-                            ? 'bg-zinc-800 text-gray-600 cursor-not-allowed'
-                            : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
-                        >
-                          السابق
-                        </button>
-
-                        <div className="flex items-center gap-1 mx-2">
-                          {generateDesktopPages(productPage || 1, (productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)))).map((pg, idx) => (
-                            typeof pg === 'string' ? (
-                              <span key={`e-${idx}`} className="px-3 py-2 text-gray-500">…</span>
-                            ) : (
-                              <button
-                                key={pg}
-                                onClick={() => setProductPage(Number(pg))}
-                                className={`min-w-[44px] px-4 py-2 rounded font-medium transition-all ${pg === productPage
-                                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/50'
-                                  : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
-                              >
-                                {pg}
-                              </button>
-                            )
-                          ))}
-                        </div>
-
-                        <button
-                          onClick={() => setProductPage((p) => Math.min(((productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)))), p + 1))}
-                          disabled={(productPage || 1) === ((productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1))))}
-                          className={`px-4 py-2 rounded font-medium transition-all ${((productPage || 1) === ((productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)))))
-                            ? 'bg-zinc-800 text-gray-600 cursor-not-allowed'
-                            : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
-                        >
-                          التالي
-                        </button>
-                      </nav>
-                    </div>
-
-                    {/* Mobile: compact Prev | current/total | Next */}
-                    <div className="md:hidden flex items-center justify-center gap-3">
-                      <button onClick={() => setProductPage((p) => Math.max(1, p - 1))} aria-label="السابق" className="px-3 py-2 rounded bg-zinc-800 text-white text-sm">
-                        السابق
-                      </button>
-                      <div className="px-4 py-2 bg-zinc-900 rounded text-sm font-medium">
-                        <span>{productPage}</span>
-                        <span className="mx-2 text-gray-400">/</span>
-                        <span>{(productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)))}</span>
-                      </div>
-                      <button onClick={() => setProductPage((p) => Math.min((productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1))), p + 1))} aria-label="التالي" className="px-3 py-2 rounded bg-zinc-800 text-white text-sm">
-                        التالي
-                      </button>
-                    </div>
+                    <PaginationResponsive
+                      current={productPage || 1}
+                      total={(productTotalPages && productTotalPages > 0) ? productTotalPages : Math.max(1, Math.ceil((productTotal || 0) / (productLimit || 1)))}
+                      onChange={(p) => setProductPage(p)}
+                      ariaLabel="Products pagination"
+                    />
 
                     <div className="text-sm text-muted mt-2">إجمالي المنتجات: {productTotal}</div>
                   </div>
@@ -2217,62 +2110,13 @@ export default function AdminDashboard() {
                 {/* Pagination controls for Best Sellers */}
                 {bestSellersTotalPages > 1 && (
                   <div className="w-full overflow-x-auto bg-transparent mt-4 border-t">
-                    {/* Desktop / Tablet pagination */}
-                    <div className="hidden md:flex items-center justify-center px-4 py-3 bg-white/5">
-                      <nav className="flex items-center gap-2" aria-label="Best sellers pagination">
-                        <button
-                          onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))}
-                          disabled={(bestSellersPage || 1) === 1}
-                          className={`px-4 py-2 rounded font-medium transition-all ${((bestSellersPage || 1) === 1)
-                            ? 'bg-zinc-800 text-gray-600 cursor-not-allowed'
-                            : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
-                        >
-                          السابق
-                        </button>
-
-                        <div className="flex items-center gap-1 mx-2">
-                          {generateDesktopPages(bestSellersPage || 1, bestSellersTotalPages || Math.max(1, Math.ceil((bestSellersTotal || 0) / (bestSellersLimit || 1)))).map((pg, idx) => (
-                            typeof pg === 'string' ? (
-                              <span key={`e-b-${idx}`} className="px-3 py-2 text-gray-500">…</span>
-                            ) : (
-                              <button
-                                key={`b-${pg}`}
-                                onClick={() => setBestSellersPage(Number(pg))}
-                                className={`min-w-[44px] px-4 py-2 rounded font-medium transition-all ${pg === bestSellersPage
-                                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/50'
-                                  : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
-                              >
-                                {pg}
-                              </button>
-                            )
-                          ))}
-                        </div>
-
-                        <button
-                          onClick={() => setBestSellersPage((p) => Math.min((bestSellersTotalPages || 1), p + 1))}
-                          disabled={(bestSellersPage || 1) === (bestSellersTotalPages || 1)}
-                          className={`px-4 py-2 rounded font-medium transition-all ${((bestSellersPage || 1) === (bestSellersTotalPages || 1))
-                            ? 'bg-zinc-800 text-gray-600 cursor-not-allowed'
-                            : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
-                        >
-                          التالي
-                        </button>
-                      </nav>
-                    </div>
-
-                    {/* Mobile compact pagination */}
-                    <div className="md:hidden flex items-center justify-center gap-3 px-4 py-3 bg-white/5">
-                      <button onClick={() => setBestSellersPage((p) => Math.max(1, p - 1))} aria-label="السابق" className="px-3 py-2 rounded bg-zinc-800 text-white text-sm">
-                        السابق
-                      </button>
-                      <div className="px-4 py-2 bg-zinc-900 rounded text-sm font-medium">
-                        <span>{bestSellersPage}</span>
-                        <span className="mx-2 text-gray-400">/</span>
-                        <span>{bestSellersTotalPages}</span>
-                      </div>
-                      <button onClick={() => setBestSellersPage((p) => Math.min((bestSellersTotalPages || 1), p + 1))} aria-label="التالي" className="px-3 py-2 rounded bg-zinc-800 text-white text-sm">
-                        التالي
-                      </button>
+                    <div className="px-4 py-3 bg-white/5">
+                      <PaginationResponsive
+                        current={bestSellersPage || 1}
+                        total={bestSellersTotalPages || Math.max(1, Math.ceil((bestSellersTotal || 0) / (bestSellersLimit || 1)))}
+                        onChange={(p) => setBestSellersPage(p)}
+                        ariaLabel="Best sellers pagination"
+                      />
                     </div>
 
                     <div className="px-4 py-2 bg-white/5">

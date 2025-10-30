@@ -3,14 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@/lib/hooks/useApi';
 import { productsApi } from '@/lib/api';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-} from '@/components/ui/pagination';
+import PaginationResponsive from '@/components/PaginationResponsive';
 import ProductCard from '@/components/ProductCard';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -115,47 +108,10 @@ export default function BestSellers() {
                 ))}
               </div>
 
-              {/* Numbered pagination for best sellers when available */}
+              {/* Responsive pagination for best sellers */}
               {totalPages && totalPages > 1 && (
                 <div className="mt-6">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setPage((p) => Math.max(1, p - 1));
-                          }}
-                        />
-                      </PaginationItem>
-
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pn) => (
-                        <PaginationItem key={pn}>
-                          <PaginationLink
-                            href="#"
-                            isActive={pn === page}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setPage(pn);
-                            }}
-                          >
-                            {pn}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-
-                      <PaginationItem>
-                        <PaginationNext
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setPage((p) => Math.min(totalPages, p + 1));
-                          }}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+                  <PaginationResponsive current={page} total={totalPages} onChange={(p) => setPage(p)} ariaLabel="Best sellers pagination" />
                 </div>
               )}
             </>
