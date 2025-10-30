@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import CartDrawer from "@/components/CartDrawer";
@@ -50,7 +50,21 @@ const App = () => (
           <Sonner />
           <CartDrawer />
           <BrowserRouter>
-            <FloatingWhatsApp />
+            {/* Only show the WhatsApp floating bubble on routes other than /forgot-password */}
+            {/* Define a small component inside the Router so it can access `useLocation()` */}
+            {
+              (() => {
+                const FloatingWhatsAppConditional = () => {
+                  // `useLocation` must be used inside the Router; define here so
+                  // the hook is available at render time.
+                  const location = useLocation();
+                  // Hide the bubble on the forgot-password screen
+                  if (location.pathname === '/forgot-password') return null;
+                  return <FloatingWhatsApp />;
+                };
+                return <FloatingWhatsAppConditional />;
+              })()
+            }
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
