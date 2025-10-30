@@ -47,7 +47,16 @@ const Login = () => {
 			await login(username, password)
 			// login sets auth state in hook; navigate will happen in the effect above
 		} catch (err) {
-			const message = err instanceof Error ? err.message : 'اسم المستخدم أو كلمة المرور غير صحيحة'
+			let message = 'اسم المستخدم أو كلمة المرور غير صحيحة'
+			if (err instanceof Error) {
+				// Prefer a friendly message for 401 responses
+				// @ts-ignore
+				if ((err as any).status === 401) {
+					message = 'اسم المستخدم أو كلمة المرور غير صحيحة'
+				} else {
+					message = err.message || message
+				}
+			}
 			setError(message)
 		} finally {
 			setLoading(false)

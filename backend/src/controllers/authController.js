@@ -36,6 +36,21 @@ export const requestPasswordReset = async (req, res) => {
   }
 };
 
+// Return masked admin email so frontend can show a hint without exposing full address
+export const getMaskedAdminEmail = async (req, res) => {
+  try {
+    const admin = await Admin.findOne({ where: { role: 'super-admin' } });
+    if (!admin || !admin.email) return res.status(404).json({ message: 'Admin email not configured' });
+    const email = admin.email;
+    const [local, domain] = email.split('@');
+    const firstTwo = local.slice(0, 2);
+    const masked = `${firstTwo}*****@${domain}`;
+    return res.json({ masked });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 // Password reset confirmation
 export const resetPassword = async (req, res) => {
   try {
