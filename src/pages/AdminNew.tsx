@@ -1602,7 +1602,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 {/* Mobile View - Cards */}
-                <div className="md:hidden space-y-3 p-4">
+                <div className="md:hidden space-y-3 p-4 overflow-x-hidden">
                   {filteredProducts.map((product) => (
                     <Card key={product.id} className="p-4">
                       <div className="flex gap-3">
@@ -2074,8 +2074,9 @@ export default function AdminDashboard() {
 
                 {/* Pagination controls for Best Sellers */}
                 {bestSellersTotalPages > 1 && (
-                  <div className="flex items-center justify-between px-4 py-3 bg-white/5 border-t mt-4">
-                    <div className="flex items-center gap-2">
+                  <div className="w-full overflow-x-auto bg-transparent mt-4 border-t">
+                    <div className="flex items-center justify-between px-4 py-3 bg-white/5">
+                      <div className="flex items-center gap-2 min-w-0">
                       <Pagination>
                         <PaginationContent>
                           <PaginationItem>
@@ -2118,8 +2119,9 @@ export default function AdminDashboard() {
                           </PaginationItem>
                         </PaginationContent>
                       </Pagination>
+                      </div>
+                      <div className="text-sm text-muted">إجمالي المنتجات الأكثر مبيعاً: {bestSellersTotal}</div>
                     </div>
-                    <div className="text-sm text-muted">إجمالي المنتجات الأكثر مبيعاً: {bestSellersTotal}</div>
                   </div>
                 )}
                   </CardContent>

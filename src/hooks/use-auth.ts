@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { authApi } from '@/lib/api';
+import showAdminAlert from '@/lib/swal-admin';
 
 type AdminUser = {
 	id: number;
@@ -32,9 +33,13 @@ export function useAuth() {
 				const expMs = getTokenExpiryMs(t);
 				if (expMs) scheduleLogoutAt(expMs);
 			} catch (err) {
-				// Token is invalid on the server; clear local session
+				// Token is invalid on the server; show an alert and clear local session
 				console.log('[AUTH] Stored token invalid, logging out');
+				try {
+					showAdminAlert({ title: 'انتهت الجلسة', text: 'تم إنهاء الجلسة. يرجى تسجيل الدخول مرة أخرى.', icon: 'error', timer: 3500 });
+				} catch (e) {}
 				logout();
+				try { window.location.href = '/login'; } catch (e) {}
 			}
 		})();
 	}, []);
@@ -95,6 +100,9 @@ export function useAuth() {
 		}
 		const id = window.setTimeout(() => {
 			console.log('[AUTH] Token expired based on exp claim, logging out');
+			try {
+				showAdminAlert({ title: 'انتهت الجلسة', text: 'انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى.', icon: 'error', timer: 3000 });
+			} catch (e) {}
 			logout();
 			// force a page navigation to login if app is still on admin
 			try { window.location.href = '/login'; } catch {};
