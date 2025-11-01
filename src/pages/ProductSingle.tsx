@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -102,12 +102,6 @@ export default function ProductSingle() {
 
   const averageRating = averageRatingSource ? Number(averageRatingSource.toFixed(1)) : 0;
   const ratingCount = reviewRatings.length > 0 ? reviewRatings.length : reviews.length;
-  const productForCart = {
-    ...product,
-    id: String(product.id),
-    price: numericPrice,
-    stock: numericStock ?? undefined,
-  };
 
   useEffect(() => {
     if (numericStock === null) return;
@@ -310,7 +304,12 @@ export default function ProductSingle() {
                 onClick={() => {
                   if (isOutOfStock) return;
                   addToCart(
-                    productForCart,
+                    {
+                      ...product,
+                      id: String(product.id),
+                      price: numericPrice,
+                      stock: numericStock ?? undefined,
+                    },
                     Math.max(1, Math.min(quantity, numericStock ?? quantity))
                   );
                 }}
