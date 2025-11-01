@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -64,6 +65,16 @@ export function ProductDialog({
   onClose,
   onSave,
 }: ProductDialogProps) {
+  useEffect(() => {
+    if (!open || !productForm.category || categories.length === 0) return;
+    const hasSlug = categories.some((category) => category.slug === productForm.category);
+    if (hasSlug) return;
+    const matching = categories.find((category) => category.id === productForm.category);
+    if (matching) {
+      setProductForm((prev) => ({ ...prev, category: matching.slug }));
+    }
+  }, [categories, open, productForm.category, setProductForm]);
+
   return (
     <Dialog open={open} onOpenChange={(value) => (!value ? onClose() : undefined)}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -119,7 +130,7 @@ export function ProductDialog({
                   <option disabled>جاري تحميل الفئات...</option>
                 ) : (
                   categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
+                    <option key={cat.id} value={cat.slug}>
                       {cat.name}
                     </option>
                   ))
@@ -224,4 +235,3 @@ export function ProductDialog({
     </Dialog>
   );
 }
-

@@ -1,4 +1,5 @@
 import Product from '../models/product.js';
+import Category from '../models/category.js';
 import sequelize from '../config/database.js';
 import { Op } from 'sequelize';
 
@@ -13,16 +14,30 @@ export const getAllProducts = async (req, res) => {
       res.set('Cache-Control', 'public, max-age=300, s-maxage=300, stale-while-revalidate=60');
     }
     
-  const { category, brand, minPrice, maxPrice, type, best_selling, sort } = req.query;
+    const { category, brand, minPrice, maxPrice, type, best_selling, sort } = req.query;
 
-  // Pagination: support page & limit query parameters
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = Math.min(parseInt(req.query.limit, 10) || 24, 100); // cap at 100
-  const offset = (page - 1) * limit;
+    // Pagination: support page & limit query parameters
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 24, 100); // cap at 100
+    const offset = (page - 1) * limit;
     
     let where = {};
     
-    if (category) where.category = category;
+    if (category) {
+      const normalizedCategory = String(category).trim();
+      if (normalizedCategory.length > 0) {
+        const categoryValues = [normalizedCategory];
+        const matchingCategory = await Category.findOne({
+          where: { slug: normalizedCategory },
+          attributes: ['id', 'slug'],
+          raw: true,
+        });
+        if (matchingCategory?.id && matchingCategory.id !== normalizedCategory) {
+          categoryValues.push(matchingCategory.id);
+        }
+        where.category = categoryValues.length > 1 ? { [Op.in]: categoryValues } : normalizedCategory;
+      }
+    }
     if (type) where.type = type;
     if (best_selling) where.best_selling = best_selling === 'true';
     

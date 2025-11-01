@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Star, Minus, Plus, ShoppingCart, ArrowLeft, ShoppingBag, MessageCircle } from 'lucide-react';
+import { Star, Minus, Plus, ShoppingCart, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import OrderForm from '@/components/OrderForm';
 import Header from '@/components/Header';
@@ -29,6 +29,7 @@ type ProductDetail = {
   brand?: string;
   sku?: string;
   category?: string;
+  best_selling?: boolean;
 };
 
 const isProductDetail = (value: unknown): value is ProductDetail => {
@@ -56,26 +57,6 @@ export default function ProductSingle() {
   
   const loading = productLoading || reviewsLoading;
 
-  // Calculate discount percentage if old_price exists
-  const currentPrice = product ? Number(product.price ?? 0) : 0;
-  const oldPriceValue = product?.old_price;
-  const oldPrice = oldPriceValue !== undefined && oldPriceValue !== null ? Number(oldPriceValue) : null;
-  const discountPercentage = oldPrice && oldPrice > currentPrice
-    ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100)
-    : null;
-
-  // Debug logging
-  if (product) {
-    console.log('Product data:', {
-      name: product.name,
-      price: product.price,
-      old_price: product.old_price,
-      currentPrice,
-      oldPrice,
-      discountPercentage
-    });
-  }
-
   const handleReviewSubmit = async () => {
     // Invalidate reviews query to refetch
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.reviews.byProduct(id!) });
@@ -92,6 +73,24 @@ export default function ProductSingle() {
   const canonicalUrl = `${window.location.origin}/product/${product.id}`;
   const pageTitle = `${product.name} — ${product.brand} | متجر العطور`;
   const pageDescription = product.description || 'متجر العطور الأصلية الفاخرة - توصيل لجميع المدن';
+  const numericPrice = typeof product.price === 'number' ? product.price : Number(product.price ?? 0);
+  const numericStock = typeof product.stock === 'number' ? product.stock : undefined;
+  const isOutOfStock = numericStock !== undefined && numericStock <= 0;
+  const oldPriceValue = product.old_price;
+  const oldPrice = oldPriceValue !== undefined && oldPriceValue !== null ? Number(oldPriceValue) : null;
+  const currentPrice = numericPrice;
+  const discountPercentage = oldPrice && oldPrice > currentPrice
+    ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100)
+    : null;
+
+  console.log('Product data:', {
+    name: product.name,
+    price: product.price,
+    old_price: product.old_price,
+    currentPrice,
+    oldPrice,
+    discountPercentage
+  });
 
   const rating = typeof product.rating === 'number' ? product.rating : 0;
 
@@ -105,9 +104,9 @@ export default function ProductSingle() {
     brand: { '@type': 'Brand', name: product.brand || '' },
     offers: {
       '@type': 'Offer',
-      price: parseFloat(product.price || '0').toFixed(2),
+      price: numericPrice.toFixed(2),
       priceCurrency: 'MAD',
-      availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      availability: isOutOfStock ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
     },
   };
 
@@ -225,12 +224,12 @@ export default function ProductSingle() {
               ) : (
                 <p className="text-4xl font-bold text-primary">{currentPrice.toFixed(2)} درهم</p>
               )}
-              {product.stock === 0 ? (
+              {isOutOfStock ? (
                 <Badge variant="destructive" className="mt-2 text-sm">
                   نفذ من المخزون
                 </Badge>
-              ) : product.stock && product.stock < 10 && (
-                <p className="text-sm text-red-500 mt-1">بقي {product.stock} فقط في المخزون!</p>
+              ) : numericStock !== undefined && numericStock < 10 && (
+                <p className="text-sm text-red-500 mt-1">بقي {numericStock} فقط في المخزون!</p>
               )}
             </div>
 
@@ -251,7 +250,12 @@ export default function ProductSingle() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  onClick={() =>
+                    setQuantity((prev) => {
+                      if (numericStock === undefined) return prev + 1;
+                      return Math.min(numericStock, prev + 1);
+                    })
+                  }
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -264,7 +268,7 @@ export default function ProductSingle() {
               <Button 
                 size="lg" 
                 className="w-full text-lg bg-primary hover:bg-primary/90" 
-                disabled={product.stock === 0}
+                disabled={isOutOfStock}
                 onClick={() => setOrderFormOpen(true)}
               >
                 <ShoppingBag className="mr-2 h-5 w-5" />
@@ -276,8 +280,12 @@ export default function ProductSingle() {
                 size="lg" 
                 variant="outline"
                 className="w-full text-lg" 
-                disabled={product.stock === 0}
-                onClick={() => addToCart(product, quantity)}
+                disabled={isOutOfStock}
+                onClick={() => addToCart({ 
+                  ...product, 
+                  id: String(product.id),
+                  price: numericPrice
+                }, quantity)}
               >
                 <ShoppingCart className="mr-2 h-5 w-5" />
                 أضف إلى السلة
@@ -304,7 +312,7 @@ export default function ProductSingle() {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
-              <ReviewForm productId={product.id} onSuccess={handleReviewSubmit} />
+              <ReviewForm productId={String(product.id)} onSuccess={handleReviewSubmit} />
             </div>
             <div>
               <ReviewList reviews={reviews} />
@@ -319,13 +327,13 @@ export default function ProductSingle() {
       open={orderFormOpen}
       onOpenChange={setOrderFormOpen}
       items={[{
-        product_id: product.id,
+        product_id: String(product.id),
         name: product.name,
-        price: parseFloat(product.price),
+        price: numericPrice,
         quantity,
         image_url: product.image_urls[0],
       }]}
-      totalAmount={parseFloat(product.price) * quantity}
+      totalAmount={numericPrice * quantity}
       onSuccess={() => {
         // Optionally navigate or show success message
       }}
