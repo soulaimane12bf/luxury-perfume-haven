@@ -21,11 +21,16 @@ const Login = lazyWithRetry(() => import("./pages/Login"), 'Login');
 const ForgotPassword = lazyWithRetry(() => import("./pages/ForgotPassword"), 'ForgotPassword');
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"), 'ResetPassword');
 const About = lazyWithRetry(() => import("./pages/About"), 'About');
+const AboutUs = lazyWithRetry(() => import("./pages/AboutUs"), 'AboutUs');
 const Payment = lazyWithRetry(() => import("./pages/Payment"), 'Payment');
 const Shipping = lazyWithRetry(() => import("./pages/Shipping"), 'Shipping');
+const ShippingPolicy = lazyWithRetry(() => import("./pages/ShippingPolicy"), 'ShippingPolicy');
 const Terms = lazyWithRetry(() => import("./pages/Terms"), 'Terms');
+const TermsOfService = lazyWithRetry(() => import("./pages/TermsOfService"), 'TermsOfService');
 const Refunds = lazyWithRetry(() => import("./pages/Refunds"), 'Refunds');
+const ReturnPolicy = lazyWithRetry(() => import("./pages/ReturnPolicy"), 'ReturnPolicy');
 const Privacy = lazyWithRetry(() => import("./pages/Privacy"), 'Privacy');
+const PrivacyPolicy = lazyWithRetry(() => import("./pages/PrivacyPolicy"), 'PrivacyPolicy');
 const Contact = lazyWithRetry(() => import("./pages/Contact"), 'Contact');
 const Faq = lazyWithRetry(() => import("./pages/Faq"), 'Faq');
 const ProtectedRoute = lazyWithRetry(() => import("@/components/ProtectedRoute"), 'ProtectedRoute');
@@ -74,11 +79,16 @@ const App = () => (
                 <Route path="/collection" element={<Collection />} />
                 <Route path="/best-sellers" element={<BestSellers />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/about-us" element={<AboutUs />} />
                 <Route path="/payment" element={<Payment />} />
                 <Route path="/shipping" element={<Shipping />} />
+                <Route path="/shipping-policy" element={<ShippingPolicy />} />
                 <Route path="/terms" element={<Terms />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
                 <Route path="/refunds" element={<Refunds />} />
+                <Route path="/return-policy" element={<ReturnPolicy />} />
                 <Route path="/privacy" element={<Privacy />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/faq" element={<Faq />} />
                 <Route path="/login" element={<Login />} />
