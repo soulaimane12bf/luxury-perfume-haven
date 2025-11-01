@@ -225,7 +225,11 @@ export default function ProductSingle() {
               ) : (
                 <p className="text-4xl font-bold text-primary">{currentPrice.toFixed(2)} درهم</p>
               )}
-              {product.stock < 10 && (
+              {product.stock === 0 ? (
+                <Badge variant="destructive" className="mt-2 text-sm">
+                  نفذ من المخزون
+                </Badge>
+              ) : product.stock && product.stock < 10 && (
                 <p className="text-sm text-red-500 mt-1">بقي {product.stock} فقط في المخزون!</p>
               )}
             </div>

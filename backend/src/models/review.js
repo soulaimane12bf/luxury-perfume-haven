@@ -32,6 +32,21 @@ const Review = sequelize.define('Review', {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false
+  },
+  images: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    defaultValue: []
+  },
+  likes: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0
+  },
+  dislikes: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0
   }
 }, {
   timestamps: true,

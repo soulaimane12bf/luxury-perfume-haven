@@ -407,10 +407,13 @@ export const reviewsApi = {
   },
 
   create: async (review: unknown) => {
+    // Check if review is FormData (with images) or regular object
+    const isFormData = review instanceof FormData;
+    
     return apiCall(`${API_BASE_URL}/reviews`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(review),
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' },
+      body: isFormData ? review : JSON.stringify(review),
     }, 'إنشاء تقييم جديد');
   },
 
@@ -426,6 +429,20 @@ export const reviewsApi = {
       method: 'DELETE',
       headers: withAuth(),
     }, 'حذف التقييم');
+  },
+
+  like: async (id: string | number) => {
+    return apiCall(`${API_BASE_URL}/reviews/${id}/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    }, 'إعجاب بالتقييم');
+  },
+
+  dislike: async (id: string | number) => {
+    return apiCall(`${API_BASE_URL}/reviews/${id}/dislike`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    }, 'عدم إعجاب بالتقييم');
   },
 };
 

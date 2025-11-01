@@ -275,6 +275,7 @@ export default function AdminDashboard() {
         setSliderForm={setSliderForm}
         sliderImage={sliderImage}
         setSliderImage={setSliderImage}
+        categories={categories}
         onClose={() => setSliderDialog(false)}
         onSave={handleSaveSlider}
       />

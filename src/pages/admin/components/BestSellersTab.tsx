@@ -35,11 +35,11 @@ export function BestSellersTab({
       <CardHeader className="p-4 md:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <CardTitle className="text-lg md:text-xl">الأكثر مبيعاً</CardTitle>
-            <CardDescription className="text-xs md:text-sm">إدارة حالة المنتجات الأكثر مبيعاً</CardDescription>
+            <CardTitle className="text-lg md:text-xl">إدارة الأكثر مبيعاً</CardTitle>
+            <CardDescription className="text-xs md:text-sm">تفعيل أو إلغاء حالة الأكثر مبيعاً لجميع المنتجات</CardDescription>
           </div>
           <div className="text-sm text-muted-foreground">
-            إجمالي المنتجات الأكثر مبيعاً: <span className="font-semibold text-primary">{total}</span>
+            إجمالي المنتجات: <span className="font-semibold text-primary">{total}</span>
           </div>
         </div>
       </CardHeader>

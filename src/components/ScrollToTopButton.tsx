@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import { ArrowUp } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 export default function ScrollToTopButton() {
   const [visible, setVisible] = useState(false);
+  const location = useLocation();
+
+  // Hide button on homepage (where slider is shown)
+  const shouldHideButton = location.pathname === '/';
 
   useEffect(() => {
     const onScroll = () => {
@@ -13,7 +18,8 @@ export default function ScrollToTopButton() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  if (!visible) return null;
+  // Don't show if on homepage or if not scrolled enough
+  if (!visible || shouldHideButton) return null;
 
   return (
     <button

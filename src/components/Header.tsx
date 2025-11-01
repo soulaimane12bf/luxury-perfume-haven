@@ -140,63 +140,62 @@ const Header = () => {
                 {/* Search Input - With Results */}
                 <div className="px-4 py-4 border-b border-gray-200">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-amber-500" />
                     <Input
-                      type="search"
+                      type="text"
                       placeholder="ابحث عن المنتجات..."
                       value={sidebarSearchQuery}
                       onChange={(e) => setSidebarSearchQuery(e.target.value)}
-                      className="pl-10 pr-10 h-10 border-gray-300 focus:border-gold focus:ring-gold"
+                      className="pr-10 pl-10 h-12 border-2 border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 text-right placeholder:text-gray-400 font-medium"
                       autoComplete="off"
-                      data-autofocus="false"
                     />
                     {sidebarSearchQuery && (
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-6"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-red-50 rounded-full transition-colors group"
                         onClick={clearSidebarSearch}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4 text-gray-400 group-hover:text-red-500 transition-colors" />
                       </Button>
                     )}
                   </div>
 
                   {/* Search Results */}
                   {(sidebarSearchResults.length > 0 || isSidebarSearching) && (
-                    <div className="mt-3 max-h-64 overflow-y-auto border-t border-gray-200 pt-3">
+                    <div className="mt-4 max-h-64 overflow-y-auto rounded-xl border-2 border-amber-100 bg-white">
                       {isSidebarSearching ? (
-                        <div className="text-center py-4 text-gray-500">
-                          <Loader2 className="h-5 w-5 animate-spin mx-auto mb-1" />
-                          <p className="text-sm">جاري البحث...</p>
+                        <div className="text-center py-6 text-gray-500">
+                          <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-amber-500" />
+                          <p className="text-sm font-medium">جاري البحث...</p>
                         </div>
                       ) : sidebarSearchResults.length > 0 ? (
-                        <div className="space-y-2">
+                        <div className="divide-y divide-amber-100">
                           {sidebarSearchResults.map((product: ProductPreview) => (
                             <button
                               key={product.id}
                               onClick={() => handleSidebarProductClick(product.id)}
-                              className="w-full text-left p-3 rounded-lg hover:bg-gold/10 transition-colors border border-gray-100 hover:border-gold/30"
+                              className="w-full text-right p-3 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 transition-all group"
                             >
                               <div className="flex items-center gap-3">
-                                                <img
-                                                  src={product.image_urls?.[0] || product.image_url || '/placeholder-product.png'}
-                                                  alt={product.name}
-                                                  loading="lazy"
-                                                  className="w-12 h-12 object-cover rounded-md flex-shrink-0"
-                                                  onError={(e) => {
-                                                    e.currentTarget.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20fill%3D%22%23f3f4f6%22%20width%3D%22100%22%20height%3D%22100%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%20fill%3D%22%239ca3af%22%20font-size%3D%2212%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fsvg%3E';
-                                                  }}
-                                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-gray-900 truncate">
+                                <img
+                                  src={product.image_urls?.[0] || product.image_url || '/placeholder-product.png'}
+                                  alt={product.name}
+                                  loading="lazy"
+                                  className="w-14 h-14 object-cover rounded-lg flex-shrink-0 border-2 border-amber-100 group-hover:border-amber-300 transition-colors"
+                                  onError={(e) => {
+                                    e.currentTarget.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20fill%3D%22%23f3f4f6%22%20width%3D%22100%22%20height%3D%22100%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%20fill%3D%22%239ca3af%22%20font-size%3D%2212%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fsvg%3E';
+                                  }}
+                                />
+                                <div className="flex-1 min-w-0 text-right">
+                                  <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-amber-700 transition-colors">
                                     {product.name}
                                   </p>
-                                  <p className="text-xs text-gray-500 truncate">
+                                  <p className="text-xs text-gray-500 truncate mt-0.5">
                                     {product.brand || 'علامة تجارية غير محددة'}
                                   </p>
-                                  <p className="text-sm font-semibold text-gold">
-                                    {product.price ? `${product.price} ريال` : 'السعر غير محدد'}
+                                  <p className="text-sm font-bold text-amber-600 mt-1">
+                                    {product.price ? `${product.price} د.م` : 'السعر غير محدد'}
                                   </p>
                                 </div>
                               </div>

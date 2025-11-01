@@ -1,5 +1,6 @@
 import Review from '../models/review.js';
 import Product from '../models/product.js';
+import { put } from '@vercel/blob';
 
 // Get reviews by product
 export const getReviewsByProduct = async (req, res) => {
@@ -9,9 +10,20 @@ export const getReviewsByProduct = async (req, res) => {
         product_id: req.params.productId, 
         is_approved: true 
       },
-      order: [['created_at', 'DESC']]
+      order: [['likes', 'DESC'], ['created_at', 'DESC']]
     });
-    res.json(reviews);
+    
+    // Transform to match frontend expectations
+    const transformedReviews = reviews.map(review => {
+      const data = review.toJSON();
+      return {
+        ...data,
+        name: data.customer_name,
+        approved: data.is_approved
+      };
+    });
+    
+    res.json(transformedReviews);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -21,7 +33,18 @@ export const getReviewsByProduct = async (req, res) => {
 export const getAllReviews = async (req, res) => {
   try {
     const reviews = await Review.findAll({ order: [['created_at', 'DESC']] });
-    res.json(reviews);
+    
+    // Transform to match frontend expectations
+    const transformedReviews = reviews.map(review => {
+      const data = review.toJSON();
+      return {
+        ...data,
+        name: data.customer_name, // Map customer_name to name for frontend
+        approved: data.is_approved // Map is_approved to approved for frontend
+      };
+    });
+    
+    res.json(transformedReviews);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -31,6 +54,7 @@ export const getAllReviews = async (req, res) => {
 export const createReview = async (req, res) => {
   try {
     const { product_id, name, rating, comment } = req.body;
+    const files = req.files || [];
     
     // Check if product exists
     const product = await Product.findOne({ where: { id: product_id } });
@@ -38,12 +62,27 @@ export const createReview = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
     
+    // Upload images to Vercel Blob if provided
+    const imageUrls = [];
+    if (files && files.length > 0) {
+      for (const file of files.slice(0, 3)) { // Max 3 images per review
+        const blob = await put(`reviews/${Date.now()}-${file.originalname}`, file.buffer, {
+          access: 'public',
+          addRandomSuffix: true,
+        });
+        imageUrls.push(blob.url);
+      }
+    }
+    
     const reviewData = {
       product_id,
       customer_name: name,
       rating,
       comment,
-      is_approved: false
+      images: imageUrls,
+      is_approved: false,
+      likes: 0,
+      dislikes: 0
     };
     
     const review = await Review.create(reviewData);
@@ -96,6 +135,42 @@ export const deleteReview = async (req, res) => {
     await updateProductRating(product_id);
     
     res.json({ message: 'Review deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Like a review
+export const likeReview = async (req, res) => {
+  try {
+    const review = await Review.findOne({ where: { id: req.params.id } });
+    
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+    
+    review.likes = (review.likes || 0) + 1;
+    await review.save();
+    
+    res.json({ likes: review.likes, dislikes: review.dislikes });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Dislike a review
+export const dislikeReview = async (req, res) => {
+  try {
+    const review = await Review.findOne({ where: { id: req.params.id } });
+    
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+    
+    review.dislikes = (review.dislikes || 0) + 1;
+    await review.save();
+    
+    res.json({ likes: review.likes, dislikes: review.dislikes });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

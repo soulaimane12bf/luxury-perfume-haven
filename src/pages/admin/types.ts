@@ -24,10 +24,17 @@ export type Category = {
 export type Review = {
   id: string;
   name: string;
+  customer_name?: string;
   rating: number;
   comment?: string;
   approved?: boolean;
+  is_approved?: boolean;
   product_id?: string;
+  images?: string[];
+  likes?: number;
+  dislikes?: number;
+  created_at?: string;
+  createdAt?: string;
 };
 
 export type OrderItem = {

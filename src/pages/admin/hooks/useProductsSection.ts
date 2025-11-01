@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from 'react';
 import { productsApi } from '@/lib/api';
 import showAdminAlert from '@/lib/swal-admin';
+import { useCart } from '@/contexts/CartContext';
 import type { PaginatedResponse, Product } from '../types';
 
 type ApiErrorHandler = (error: unknown, operation: string) => void;
@@ -79,6 +80,7 @@ const DEFAULT_PRODUCT_FORM: ProductFormState = {
 };
 
 export function useProductsSection({ handleApiError, initialProductPage, initialBestSellersPage }: ProductsSectionParams): ProductsSectionState {
+  const { removeDeletedProduct, updateProductStock } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productDialog, setProductDialog] = useState(false);
@@ -150,7 +152,9 @@ export function useProductsSection({ handleApiError, initialProductPage, initial
   const fetchBestSellers = useCallback(
     async (page = bestSellersPage, limit = bestSellersLimit) => {
       try {
-        const bestData = (await productsApi.getAll({ best_selling: true, page, limit })) as unknown;
+        // For admin, fetch ALL products (not filtered by best_selling)
+        // This allows admin to see and toggle all products
+        const bestData = (await productsApi.getAll({ page, limit })) as unknown;
         if (isPaginatedResponse(bestData)) {
           setBestSellersProducts(bestData.products);
           setBestSellersTotalPages(bestData.totalPages);
@@ -252,6 +256,8 @@ export function useProductsSection({ handleApiError, initialProductPage, initial
     async (productId: string) => {
       try {
         await productsApi.delete(productId);
+        // Remove from customer carts
+        removeDeletedProduct(productId);
         showAdminAlert({ title: '✅ نجح', text: 'تم حذف المنتج', icon: 'success', timer: 3000 });
         await fetchProducts();
         await fetchBestSellerCount();
@@ -260,29 +266,44 @@ export function useProductsSection({ handleApiError, initialProductPage, initial
         throw error;
       }
     },
-    [fetchBestSellerCount, fetchProducts, handleApiError],
+    [fetchBestSellerCount, fetchProducts, handleApiError, removeDeletedProduct],
   );
 
   const handleToggleBestSelling = useCallback(
     async (productId: string) => {
+      // Find the product to get current state
+      const product = bestSellersProducts.find(p => p.id === productId) || products.find(p => p.id === productId);
+      if (!product) return;
+      
+      const newBestSellingState = !product.best_selling;
+      
+      // Optimistically update UI immediately for instant feedback
+      setBestSellersProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, best_selling: newBestSellingState } : p)));
+      setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, best_selling: newBestSellingState } : p)));
+      
       try {
+        // Make API call in background
         const result = (await productsApi.toggleBestSelling(productId)) as { best_selling?: boolean };
         const updatedBestSeller = Boolean(result?.best_selling);
+        
         showAdminAlert({
           title: '✅ نجح',
           text: updatedBestSeller ? 'تمت الإضافة للأكثر مبيعاً' : 'تمت الإزالة من الأكثر مبيعاً',
           icon: 'success',
-          timer: 3000,
+          timer: 2000,
         });
-        setBestSellersProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, best_selling: updatedBestSeller } : p)));
-        setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, best_selling: updatedBestSeller } : p)));
-        await fetchProducts();
-        await fetchBestSellerCount();
+        
+        // Update count in background (don't await)
+        fetchBestSellerCount();
+        
       } catch (error) {
+        // Revert optimistic update on error
+        setBestSellersProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, best_selling: !newBestSellingState } : p)));
+        setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, best_selling: !newBestSellingState } : p)));
         handleApiError(error, 'تحديث حالة الأكثر مبيعاً');
       }
     },
-    [fetchBestSellerCount, fetchProducts, handleApiError],
+    [bestSellersProducts, products, fetchBestSellerCount, handleApiError],
   );
 
   return {

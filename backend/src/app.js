@@ -241,6 +241,51 @@ export async function initializeDatabase() {
 
     await ensureResetTokenColumns();
 
+    // Ensure review columns for images and interactions
+    async function runPostSyncMigrations() {
+      if (USING_IN_MEMORY_FALLBACK) return;
+      try {
+        const qi = sequelize.getQueryInterface();
+        const desc = await qi.describeTable('reviews');
+        
+        if (!desc.images) {
+          console.log('⚙️  Adding missing column `images` to `reviews`');
+          await qi.addColumn('reviews', 'images', { 
+            type: Sequelize.JSON, 
+            allowNull: true, 
+            defaultValue: null 
+          });
+          console.log('✓ Added `images` column');
+        }
+        
+        if (!desc.likes) {
+          console.log('⚙️  Adding missing column `likes` to `reviews`');
+          await qi.addColumn('reviews', 'likes', { 
+            type: Sequelize.INTEGER, 
+            allowNull: false, 
+            defaultValue: 0 
+          });
+          console.log('✓ Added `likes` column');
+        }
+        
+        if (!desc.dislikes) {
+          console.log('⚙️  Adding missing column `dislikes` to `reviews`');
+          await qi.addColumn('reviews', 'dislikes', { 
+            type: Sequelize.INTEGER, 
+            allowNull: false, 
+            defaultValue: 0 
+          });
+          console.log('✓ Added `dislikes` column');
+        }
+        
+        console.log('✓ Review columns migration complete');
+      } catch (e) {
+        console.warn('⚠️  Could not ensure review columns:', e && e.message ? e.message : e);
+      }
+    }
+
+    await ensureResetTokenColumns();
+
     // Allow skipping sync/seed on startup (useful in production serverless).
     // If SKIP_SYNC_ON_STARTUP=true is set in the environment, we will
     // skip `sequelize.sync()` and seeding to avoid long cold-starts and
@@ -252,6 +297,10 @@ export async function initializeDatabase() {
       try {
         await sequelize.authenticate();
         console.log('✓ Connected to the database (authentication successful)');
+        
+        // Run migrations even when sync is skipped
+        await runPostSyncMigrations();
+        
       } catch (authError) {
         console.error('✗ Database authentication failed:', authError.message);
         throw authError;
@@ -265,6 +314,9 @@ export async function initializeDatabase() {
     // Race sync against a 60s timeout for Supabase (increased from 30s)
     await withTimeout(sequelize.sync(), 60000, 'sequelize.sync');
     console.log('✓ Database models synchronized (sync)');
+
+    // Run post-sync migrations for new columns
+    await runPostSyncMigrations();
 
   // Attempt to seed only if SEED env var requests it. For in-memory
   // fallbacks we set SEED=true in the DB config so this will populate demo data.

@@ -22,6 +22,8 @@ interface CartContextType {
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
+  removeDeletedProduct: (productId: string) => void;
+  updateProductStock: (productId: string, newStock: number) => void;
 }
 
 interface ProductInput {
@@ -111,6 +113,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
 
+  // Remove product from cart when deleted by admin
+  const removeDeletedProduct = (productId: string) => {
+    setItems((currentItems) => currentItems.filter((item) => item.id !== productId));
+  };
+
+  // Update product stock in cart items
+  const updateProductStock = (productId: string, newStock: number) => {
+    setItems((currentItems) =>
+      currentItems.map((item) => {
+        if (item.id === productId) {
+          // If stock is 0 or less, remove from cart
+          if (newStock <= 0) {
+            return null;
+          }
+          // If current quantity exceeds new stock, adjust it
+          return {
+            ...item,
+            stock: newStock,
+            quantity: Math.min(item.quantity, newStock)
+          };
+        }
+        return item;
+      }).filter((item): item is CartItem => item !== null)
+    );
+  };
+
   return (
     <CartContext.Provider
       value={{
@@ -124,6 +152,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         isOpen,
         openCart,
         closeCart,
+        removeDeletedProduct,
+        updateProductStock,
       }}
     >
       {children}

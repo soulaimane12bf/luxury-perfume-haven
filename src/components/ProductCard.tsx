@@ -28,6 +28,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
     ? Math.round(((product.old_price - product.price) / product.old_price) * 100)
     : null;
 
+  const isOutOfStock = typeof product.stock === 'number' && product.stock <= 0;
+
   return (
     <Card 
       className="relative overflow-hidden cursor-pointer bg-white group h-full flex flex-col border border-gray-100 transition-all duration-500 hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:-translate-y-1"
@@ -45,10 +47,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
             className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
           />
           
+          {/* Out of stock overlay */}
+          {isOutOfStock && (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+              <Badge className="bg-red-600 text-white font-bold text-sm px-4 py-2 shadow-lg">
+                نفذ من المخزون
+              </Badge>
+            </div>
+          )}
+          
           {/* Overlay gradient on hover */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           
-          {discountPercentage && (
+          {discountPercentage && !isOutOfStock && (
             <Badge className="absolute top-3 left-3 bg-black text-yellow-500 font-bold text-xs px-3 py-1 shadow-lg">
               {discountPercentage}%-
             </Badge>
@@ -85,21 +96,34 @@ const ProductCard = ({ product }: ProductCardProps) => {
             )}
           </div>
           
-          {product.stock < 10 && product.stock > 0 && (
+          {isOutOfStock ? (
+            <p className="text-sm text-red-600 font-bold">نفذ من المخزون</p>
+          ) : product.stock && product.stock < 10 && product.stock > 0 && (
             <p className="text-xs text-red-600 font-medium">بقي {product.stock} فقط</p>
           )}
         </div>
         
         <Button
-          className="w-full bg-black hover:bg-gray-900 text-yellow-500 font-bold py-5 transition-all duration-300 transform group-hover:shadow-[0_10px_30px_rgba(0,0,0,0.3)] relative overflow-hidden"
+          className={`w-full font-bold py-5 transition-all duration-300 transform relative overflow-hidden ${
+            isOutOfStock 
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+              : 'bg-black hover:bg-gray-900 text-yellow-500 group-hover:shadow-[0_10px_30px_rgba(0,0,0,0.3)]'
+          }`}
           onClick={(e) => {
             e.stopPropagation();
-            addToCart(product, 1);
+            if (!isOutOfStock) {
+              addToCart(product, 1);
+            }
           }}
+          disabled={isOutOfStock}
         >
-          <span className="relative z-10">اضغط هنا للطلب</span>
+          <span className="relative z-10">
+            {isOutOfStock ? 'غير متوفر' : 'اضغط هنا للطلب'}
+          </span>
           {/* Golden shine effect */}
-          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+          {!isOutOfStock && (
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+          )}
         </Button>
       </CardFooter>
     </Card>
