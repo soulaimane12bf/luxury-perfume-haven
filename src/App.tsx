@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,26 +8,27 @@ import { CartProvider } from "@/contexts/CartContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import CartDrawer from "@/components/CartDrawer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
-// Lazy load heavy pages
-const ProductSingle = lazy(() => import("./pages/ProductSingle"));
-const Collection = lazy(() => import("./pages/Collection"));
-const BestSellers = lazy(() => import("./pages/BestSellers"));
-const Admin = lazy(() => import("./pages/AdminNew"));
-const Login = lazy(() => import("./pages/Login"));
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const About = lazy(() => import("./pages/About"));
-const Payment = lazy(() => import("./pages/Payment"));
-const Shipping = lazy(() => import("./pages/Shipping"));
-const Terms = lazy(() => import("./pages/Terms"));
-const Refunds = lazy(() => import("./pages/Refunds"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const Contact = lazy(() => import("./pages/Contact"));
-const Faq = lazy(() => import("./pages/Faq"));
-const ProtectedRoute = lazy(() => import("@/components/ProtectedRoute"));
+// Lazy load heavy pages with chunk-retry support
+const ProductSingle = lazyWithRetry(() => import("./pages/ProductSingle"), 'ProductSingle');
+const Collection = lazyWithRetry(() => import("./pages/Collection"), 'Collection');
+const BestSellers = lazyWithRetry(() => import("./pages/BestSellers"), 'BestSellers');
+const Admin = lazyWithRetry(() => import("./pages/AdminNew"), 'AdminNew');
+const Login = lazyWithRetry(() => import("./pages/Login"), 'Login');
+const ForgotPassword = lazyWithRetry(() => import("./pages/ForgotPassword"), 'ForgotPassword');
+const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"), 'ResetPassword');
+const About = lazyWithRetry(() => import("./pages/About"), 'About');
+const Payment = lazyWithRetry(() => import("./pages/Payment"), 'Payment');
+const Shipping = lazyWithRetry(() => import("./pages/Shipping"), 'Shipping');
+const Terms = lazyWithRetry(() => import("./pages/Terms"), 'Terms');
+const Refunds = lazyWithRetry(() => import("./pages/Refunds"), 'Refunds');
+const Privacy = lazyWithRetry(() => import("./pages/Privacy"), 'Privacy');
+const Contact = lazyWithRetry(() => import("./pages/Contact"), 'Contact');
+const Faq = lazyWithRetry(() => import("./pages/Faq"), 'Faq');
+const ProtectedRoute = lazyWithRetry(() => import("@/components/ProtectedRoute"), 'ProtectedRoute');
 
 const queryClient = new QueryClient();
 
