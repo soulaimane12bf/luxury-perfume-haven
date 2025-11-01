@@ -1,7 +1,7 @@
 {
   "name": "cosmed-stores",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "start": "bash start-banner.sh && bash setup.sh && npm run dev",
