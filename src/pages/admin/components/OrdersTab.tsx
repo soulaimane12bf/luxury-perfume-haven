@@ -351,83 +351,123 @@ export function OrdersTab({
           {orders.map((order) => {
             const expanded = expandedOrders.has(order.id);
             return (
-              <Card key={order.id} className="p-4 space-y-3">
+              <Card key={order.id} className="p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xs text-muted-foreground">رقم الطلب</div>
-                    <div className="font-semibold">{order.id}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <div className="font-semibold text-sm truncate">{order.customer_name}</div>
+                      <Badge variant="secondary" className="text-xs shrink-0">{getStatusLabel(order.status)}</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {order.total_amount} د.م • {formatOrderDate(order)}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{getStatusLabel(order.status)}</Badge>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => onToggleOrderDetails(order.id)}
-                      aria-label={expanded ? 'إخفاء تفاصيل الطلب' : 'عرض تفاصيل الطلب'}
-                    >
-                      {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
-              <div>
-                <div className="text-xs text-muted-foreground">العميل</div>
-                <div className="font-medium">{order.customer_name}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">المبلغ</div>
-                <div className="font-semibold">{order.total_amount} درهم</div>
-              </div>
-              <div className="space-y-2 border-t pt-2 text-xs">
-                {order.customer_phone && <div>الهاتف: {order.customer_phone}</div>}
-                {order.customer_email && <div>البريد: {order.customer_email}</div>}
-                {order.city && <div>المدينة: {order.city}</div>}
-              </div>
-              <div className="space-y-2">
-                <Select value={order.status} onValueChange={(value) => onUpdateOrderStatus(order.id, value)}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ORDER_STATUS_OPTIONS.map((status) => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="text-xs text-muted-foreground">التاريخ: {formatOrderDate(order)}</div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="icon" onClick={() => onContactCustomer(order)}>
-                    <MessageCircle className="h-4 w-4 text-green-600" />
-                  </Button>
                   <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() =>
-                      openDeleteDialog({
-                        type: 'order',
-                        id: order.id,
-                        name: order.customer_name,
-                        meta: order.customer_phone,
-                      })
-                    }
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onToggleOrderDetails(order.id)}
+                    className="shrink-0 h-8 w-8 p-0"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
                 </div>
-              </div>
-              {expanded && (
-                <div className="border-t pt-3">
-                  <OrderDetailsSection
-                    order={order}
-                    onUpdateOrderStatus={onUpdateOrderStatus}
-                    onContactCustomer={onContactCustomer}
-                    openDeleteDialog={openDeleteDialog}
-                    showManagementControls={false}
-                    layout="mobile"
-                  />
-                </div>
-              )}
+                
+                {/* Product Preview - Only show when collapsed */}
+                {!expanded && Array.isArray(order.items) && order.items.length > 0 && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex -space-x-1">
+                      {order.items.slice(0, 3).map((item: OrderItem, index: number) => {
+                        const src = item.image_url || item.image || item.image_urls?.[0] || '';
+                        return (
+                          <img
+                            key={index}
+                            src={src}
+                            alt={item.name || 'product'}
+                            className="h-6 w-6 rounded object-cover border bg-white"
+                          />
+                        );
+                      })}
+                    </div>
+                    <span className="truncate">{order.items.length} منتج</span>
+                  </div>
+                )}
+
+                {expanded && (
+                  <div className="space-y-3 pt-2 border-t">
+                    {/* Contact Info */}
+                    <div className="space-y-1 text-xs">
+                      {order.customer_phone && <div>📱 {order.customer_phone}</div>}
+                      {order.customer_email && <div>✉️ {order.customer_email}</div>}
+                      {order.city && <div>📍 {order.city}</div>}
+                      {order.customer_address && <div className="text-muted-foreground">العنوان: {order.customer_address}</div>}
+                    </div>
+                    
+                    {/* Products */}
+                    <div>
+                      <div className="text-xs font-semibold mb-2">المنتجات:</div>
+                      <div className="space-y-2">
+                        {order.items?.map((item: OrderItem, idx: number) => {
+                          const img = item.image_url || item.image || item.image_urls?.[0] || '';
+                          return (
+                            <div key={idx} className="flex items-center gap-2">
+                              <img
+                                src={img}
+                                alt={item.name}
+                                className="h-10 w-10 rounded object-cover bg-white border shrink-0"
+                              />
+                              <div className="flex-1 min-w-0 text-xs">
+                                <div className="font-medium truncate">{item.name}</div>
+                                <div className="text-muted-foreground">x{item.quantity} • {item.price * item.quantity} د.م</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    
+                    {/* Actions */}
+                    <div className="space-y-2 pt-2 border-t">
+                      <Select value={order.status} onValueChange={(value) => onUpdateOrderStatus(order.id, value)}>
+                        <SelectTrigger className="h-9 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ORDER_STATUS_OPTIONS.map((status) => (
+                            <SelectItem key={status.value} value={status.value}>
+                              {status.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => onContactCustomer(order)}
+                          className="flex-1 h-9"
+                        >
+                          <MessageCircle className="h-4 w-4 text-green-600 mr-2" />
+                          واتساب
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() =>
+                            openDeleteDialog({
+                              type: 'order',
+                              id: order.id,
+                              name: order.customer_name,
+                              meta: order.customer_phone,
+                            })
+                          }
+                          className="h-9 px-3"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </Card>
             );
           })}
