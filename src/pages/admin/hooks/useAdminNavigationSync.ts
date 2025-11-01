@@ -41,31 +41,37 @@ export const useAdminNavigationSync = ({
     [setActiveTab],
   );
 
+  // Sync URL params to state (only when URL changes externally)
   useEffect(() => {
     const p = parseInt(searchParams.get('productsPage') || '1', 10) || 1;
     if (p !== productPage) setProductPage(p);
-  }, [productPage, searchParams, setProductPage]);
+  }, [searchParams]); // Remove productPage and setProductPage from deps to prevent loop
 
+  // Sync state to URL params
   useEffect(() => {
-    const np = new URLSearchParams(searchParams);
-    if (Number(np.get('productsPage') || '1') !== productPage) {
+    const currentPage = parseInt(searchParams.get('productsPage') || '1', 10) || 1;
+    if (currentPage !== productPage) {
+      const np = new URLSearchParams(searchParams);
       np.set('productsPage', String(productPage));
       setSearchParams(np, { replace: true });
     }
-  }, [productPage, searchParams, setSearchParams]);
+  }, [productPage]); // Only trigger when productPage changes
 
+  // Sync URL params to state (only when URL changes externally)
   useEffect(() => {
     const bp = parseInt(searchParams.get('bestsellersPage') || '1', 10) || 1;
     if (bp !== bestSellersPage) setBestSellersPage(bp);
-  }, [bestSellersPage, searchParams, setBestSellersPage]);
+  }, [searchParams]); // Remove bestSellersPage and setBestSellersPage from deps to prevent loop
 
+  // Sync state to URL params
   useEffect(() => {
-    const np = new URLSearchParams(searchParams);
-    if (Number(np.get('bestsellersPage') || '1') !== bestSellersPage) {
+    const currentPage = parseInt(searchParams.get('bestsellersPage') || '1', 10) || 1;
+    if (currentPage !== bestSellersPage) {
+      const np = new URLSearchParams(searchParams);
       np.set('bestsellersPage', String(bestSellersPage));
       setSearchParams(np, { replace: true });
     }
-  }, [bestSellersPage, searchParams, setSearchParams]);
+  }, [bestSellersPage]); // Only trigger when bestSellersPage changes
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);

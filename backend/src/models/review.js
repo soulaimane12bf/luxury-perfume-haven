@@ -3,15 +3,16 @@ import sequelize from '../config/database.js';
 
 const Review = sequelize.define('Review', {
   id: {
-    type: DataTypes.STRING,
+    type: DataTypes.INTEGER,
     primaryKey: true,
+    autoIncrement: true,
     allowNull: false
   },
   product_id: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  name: {
+  customer_name: {
     type: DataTypes.STRING,
     allowNull: false
   },
@@ -27,7 +28,7 @@ const Review = sequelize.define('Review', {
     type: DataTypes.TEXT,
     allowNull: false
   },
-  approved: {
+  is_approved: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false
@@ -39,7 +40,7 @@ const Review = sequelize.define('Review', {
   tableName: 'reviews',
   indexes: [
     {
-      fields: ['product_id', 'approved']
+      fields: ['product_id', 'is_approved']
     }
   ]
 });

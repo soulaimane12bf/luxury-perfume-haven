@@ -18,10 +18,13 @@ export default async function handler(req, res) {
         return false;
       });
     }
-    // Start initialization on the first request but don't await it here.
-    // Awaiting causes the serverless function to block on DB setup and
-    // increases cold start latency (and can hit function timeouts).
-    // Individual routes should handle DB readiness when needed.
+    
+    // For modifying requests (POST/PUT/PATCH/DELETE), wait for DB to be ready
+    // This prevents 503 errors on write operations during cold start
+    const isModifyingRequest = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method);
+    if (isModifyingRequest && initPromise) {
+      await initPromise;
+    }
     
     // Log incoming request for debugging
     console.log('[API Handler] Method:', req.method, 'URL:', req.url, 'Query:', JSON.stringify(req.query));

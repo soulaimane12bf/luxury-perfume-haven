@@ -7,7 +7,7 @@ export const getReviewsByProduct = async (req, res) => {
     const reviews = await Review.findAll({ 
       where: { 
         product_id: req.params.productId, 
-        approved: true 
+        is_approved: true 
       },
       order: [['created_at', 'DESC']]
     });
@@ -39,12 +39,11 @@ export const createReview = async (req, res) => {
     }
     
     const reviewData = {
-      id: `review-${Date.now()}`,
       product_id,
-      name,
+      customer_name: name,
       rating,
       comment,
-      approved: false
+      is_approved: false
     };
     
     const review = await Review.create(reviewData);
@@ -62,7 +61,7 @@ export const createReview = async (req, res) => {
 export const approveReview = async (req, res) => {
   try {
     const [updated] = await Review.update(
-      { approved: true },
+      { is_approved: true },
       { where: { id: req.params.id } }
     );
     
@@ -105,7 +104,7 @@ export const deleteReview = async (req, res) => {
 // Helper function to update product rating
 async function updateProductRating(productId) {
   const reviews = await Review.findAll({ 
-    where: { product_id: productId, approved: true } 
+    where: { product_id: productId, is_approved: true } 
   });
   const product = await Product.findOne({ where: { id: productId } });
   

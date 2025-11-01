@@ -113,14 +113,8 @@ app.use((req, res, next) => {
 // successfully and false otherwise. The value is exported so other modules can
 // check it and handle requests appropriately.
 export let databaseReady = false;
-// If SKIP_SYNC_ON_STARTUP is set in the environment, mark databaseReady
-// immediately so serverless function instances won't block modifying
-// requests while migrations are run separately. This avoids falling back to
-// the in-memory sqlite path for request-time behavior in production.
-if (process.env.SKIP_SYNC_ON_STARTUP === 'true') {
-  databaseReady = true;
-  console.log('⚠️  SKIP_SYNC_ON_STARTUP=true — marking databaseReady=true to allow modifying requests. Run migrations separately.');
-}
+// Don't mark databaseReady here - let the initialization function handle it
+// after establishing connection
 let _initializing = false;
 let _initAttempts = 0;
 const _MAX_INIT_ATTEMPTS = 10;
@@ -254,6 +248,14 @@ export async function initializeDatabase() {
     // be run separately as part of your deploy pipeline.
     if (process.env.SKIP_SYNC_ON_STARTUP === 'true') {
       console.log('⚠️  SKIP_SYNC_ON_STARTUP=true — skipping sequelize.sync() and seeding on startup');
+      // Still test the connection to ensure database is reachable
+      try {
+        await sequelize.authenticate();
+        console.log('✓ Connected to the database (authentication successful)');
+      } catch (authError) {
+        console.error('✗ Database authentication failed:', authError.message);
+        throw authError;
+      }
       databaseReady = true;
       return true;
     }

@@ -155,13 +155,14 @@ export const useAdminDataManager = ({
     ],
   );
 
+  // Initial data load only - don't refetch everything on page changes
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
     (async () => {
       setLoading(true);
       try {
         await Promise.all([
-          fetchProducts(productPage, productLimit),
+          fetchProducts(1, productLimit), // Always fetch page 1 initially
           fetchBestSellerCount(),
           fetchCategories(),
           fetchReviews(),
@@ -174,17 +175,23 @@ export const useAdminDataManager = ({
     })();
   }, [
     authLoading,
-    fetchBestSellerCount,
-    fetchCategories,
-    fetchProducts,
-    fetchReviews,
-    fetchSliders,
     isAuthenticated,
-    productLimit,
-    productPage,
-    refreshOrders,
-    setLoading,
+    // Removed productPage from deps to prevent refetching everything on page change
   ]);
+
+  // Fetch products when productPage changes (but don't refetch other data)
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+    if (productPage === 1) return; // Skip if page 1 (already loaded in initial effect)
+    fetchProducts(productPage, productLimit);
+  }, [productPage, authLoading, isAuthenticated]);
+
+  // Fetch bestsellers when bestSellersPage changes
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+    if (activeTab !== 'bestsellers') return; // Only fetch if on bestsellers tab
+    fetchBestSellers(bestSellersPage, bestSellersLimit);
+  }, [bestSellersPage, authLoading, isAuthenticated, activeTab]);
 
   useEffect(() => {
     loadTabData(activeTab);
