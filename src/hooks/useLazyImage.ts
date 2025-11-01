@@ -6,31 +6,29 @@ export const useLazyImage = (src: string, placeholder = '') => {
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    let observer: IntersectionObserver;
-    
-    if (imgRef.current) {
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              setImageSrc(src);
-              setIsLoaded(true);
-              observer.unobserve(entry.target);
-            }
-          });
-        },
-        {
-          rootMargin: '50px', // Start loading 50px before the image is visible
-        }
-      );
+    const element = imgRef.current;
+    if (!element) return undefined;
 
-      observer.observe(imgRef.current);
-    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setImageSrc(src);
+            setIsLoaded(true);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        rootMargin: '50px',
+      },
+    );
+
+    observer.observe(element);
 
     return () => {
-      if (observer && imgRef.current) {
-        observer.unobserve(imgRef.current);
-      }
+      observer.unobserve(element);
+      observer.disconnect();
     };
   }, [src]);
 

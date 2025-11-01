@@ -27,11 +27,52 @@ interface ProductPreview {
   category?: string | number;
 }
 
+interface ProductLike {
+  id?: string | number;
+  name?: string;
+  brand?: string;
+  price?: number | string;
+  image_urls?: unknown;
+  category?: string | number;
+}
+
 interface Category {
   id: string | number;
   slug: string;
   name: string;
 }
+
+const isCategoryArray = (value: unknown): value is Category[] =>
+  Array.isArray(value) &&
+  value.every(
+    (item) =>
+      item &&
+      typeof item === 'object' &&
+      'id' in item &&
+      ('slug' in item || 'name' in item),
+  );
+
+const isProductLike = (value: unknown): value is ProductLike =>
+  typeof value === 'object' && value !== null && 'id' in value && 'name' in value;
+
+const toProductPreview = (product: ProductLike): ProductPreview => ({
+  id: String(product.id ?? ''),
+  name: String(product.name ?? ''),
+  brand: typeof product.brand === 'string' ? product.brand : undefined,
+  price: product.price,
+  image_urls: Array.isArray(product.image_urls) ? (product.image_urls as string[]) : [],
+  category: product.category,
+});
+
+const extractProducts = (value: unknown): ProductPreview[] => {
+  if (Array.isArray(value)) {
+    return value.filter(isProductLike).map(toProductPreview);
+  }
+  if (value && typeof value === 'object' && Array.isArray((value as { products?: unknown }).products)) {
+    return ((value as { products: unknown[] }).products).filter(isProductLike).map(toProductPreview);
+  }
+  return [];
+};
 
 export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,7 +87,7 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
     const fetchCategories = async () => {
       try {
         const data = await categoriesApi.getAll();
-        setCategories(Array.isArray(data) ? data : []);
+        setCategories(isCategoryArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to fetch categories:', error);
       }
@@ -58,15 +99,15 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
   const performSearch = useCallback(async (query: string, categorySlug?: string) => {
     setIsSearching(true);
     try {
-      let products: unknown;
+      let products: ProductPreview[] = [];
 
       if (query.trim().length >= 2) {
         // If we have a search query, use search API and then apply client-side smart filtering
         const raw = await productsApi.search(query, 50);
-        const arr = Array.isArray(raw) ? raw : [];
+        const arr = extractProducts(raw);
 
         // Apply fuzzy/case-insensitive matching and optionally category filter
-        let filteredProducts = (arr as any[]).filter((p) => productMatchesQuery(p, query));
+        let filteredProducts = arr.filter((product) => productMatchesQuery(product, query));
         if (categorySlug && categorySlug !== 'all') {
           filteredProducts = filteredProducts.filter(product => String(product.category) === String(categorySlug));
         }
@@ -74,7 +115,8 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
         products = filteredProducts;
       } else if (categorySlug && categorySlug !== 'all') {
         // If only category is selected, get all products from that category (backend expects slug)
-        products = await productsApi.getAll({ category: categorySlug, limit: 50 });
+        const fetched = await productsApi.getAll({ category: categorySlug, limit: 50 });
+        products = extractProducts(fetched);
       } else {
         // No query and no category selected
         setSearchResults([]);
@@ -83,17 +125,8 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
       }
 
       // Limit to 10 results and coerce to ProductPreview[] for the UI
-      const resultArr = Array.isArray(products) ? (products as any[]).slice(0, 10) : [];
-      setSearchResults(
-        resultArr.map((p) => ({
-          id: String(p.id),
-          name: p.name,
-          brand: p.brand,
-          price: p.price,
-          image_urls: Array.isArray(p.image_urls) ? p.image_urls : [],
-          category: p.category,
-        })) as ProductPreview[],
-      );
+      const resultArr = Array.isArray(products) ? products.slice(0, 10) : [];
+      setSearchResults(resultArr);
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);

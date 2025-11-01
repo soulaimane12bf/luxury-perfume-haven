@@ -32,11 +32,11 @@ const commonOptions = {
   dialect,
   logging: false,
   pool: {
-    max: 2, // Reduce max connections for serverless (was 10)
+    max: 3, // Increase for Supabase
     min: 0,
-    acquire: 10000, // Reduce timeout (was 30000)
-    idle: 5000, // Reduce idle time (was 10000)
-    evict: 5000, // Add eviction timeout
+    acquire: 60000, // Increase timeout for Supabase (60 seconds)
+    idle: 10000, // Increase idle time
+    evict: 10000, // Increase eviction timeout
   },
   dialectOptions: {},
 };

@@ -3,7 +3,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from '@/components/SEO';
 import ScrollToTopButton from '@/components/ScrollToTopButton';
-import { toast } from "sonner";
 import { HeroSlider } from "@/components/HeroSlider";
 import { BestSellers } from "@/components/BestSellers";
 import { CategorySection } from "@/components/CategorySection";
@@ -21,7 +20,25 @@ type Product = {
   name: string;
   category: string;
   best_selling?: boolean;
-  [key: string]: any;
+  brand?: string;
+  price?: number | string;
+  image_urls?: string[];
+};
+
+type ProductsResponse = { products?: unknown };
+
+const isCategoryArray = (value: unknown): value is Category[] =>
+  Array.isArray(value) && value.every((item) => item && typeof item === 'object' && 'id' in item && 'slug' in item && 'name' in item);
+
+const isProductArray = (value: unknown): value is Product[] =>
+  Array.isArray(value) && value.every((item) => item && typeof item === 'object' && 'id' in item && 'name' in item && 'category' in item);
+
+const extractProducts = (value: unknown): Product[] => {
+  if (isProductArray(value)) return value;
+  if (value && typeof value === 'object' && isProductArray((value as ProductsResponse).products)) {
+    return (value as ProductsResponse).products as Product[];
+  }
+  return [];
 };
 
 const Index = () => {
@@ -35,7 +52,7 @@ const Index = () => {
     const fetchCategories = async () => {
       try {
         const categoriesData = await categoriesApi.getAll();
-        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        setCategories(isCategoryArray(categoriesData) ? categoriesData : []);
       } catch (error) {
         console.error('Failed to fetch categories:', error);
       }
@@ -54,9 +71,7 @@ const Index = () => {
         await Promise.all(categories.map(async (cat) => {
           try {
             const data = await productsApi.getAll({ category: cat.slug, limit: 4 });
-            // productsApi returns an array for public requests
-            const prods = Array.isArray(data) ? data : ((data as any).products || []);
-            results[cat.slug] = prods;
+            results[cat.slug] = extractProducts(data);
           } catch (err) {
             console.error(`Failed to fetch products for category ${cat.slug}:`, err);
             results[cat.slug] = [];

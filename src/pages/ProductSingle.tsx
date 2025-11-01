@@ -16,6 +16,27 @@ import { useProduct, useProductReviews } from '@/lib/hooks/useApi';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@/lib/hooks/useApi';
 
+type ProductDetail = {
+  id: string | number;
+  name: string;
+  description?: string;
+  price?: string | number;
+  old_price?: string | number;
+  stock?: number;
+  image_urls: string[];
+  rating?: number;
+  type?: string;
+  brand?: string;
+  sku?: string;
+  category?: string;
+};
+
+const isProductDetail = (value: unknown): value is ProductDetail => {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<ProductDetail>;
+  return typeof candidate.id !== 'undefined' && typeof candidate.name === 'string' && Array.isArray(candidate.image_urls);
+};
+
 export default function ProductSingle() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -26,7 +47,7 @@ export default function ProductSingle() {
   const { data: productData, isLoading: productLoading } = useProduct(id!);
   const { data: reviewsData, isLoading: reviewsLoading } = useProductReviews(id!);
   
-  const product = productData as any;
+  const product = isProductDetail(productData) ? productData : null;
   const reviews = Array.isArray(reviewsData) ? reviewsData : [];
   
   const [selectedImage, setSelectedImage] = useState(0);
@@ -36,8 +57,9 @@ export default function ProductSingle() {
   const loading = productLoading || reviewsLoading;
 
   // Calculate discount percentage if old_price exists
-  const currentPrice = parseFloat(product?.price) || 0;
-  const oldPrice = product?.old_price ? parseFloat(product.old_price) : null;
+  const currentPrice = product ? Number(product.price ?? 0) : 0;
+  const oldPriceValue = product?.old_price;
+  const oldPrice = oldPriceValue !== undefined && oldPriceValue !== null ? Number(oldPriceValue) : null;
   const discountPercentage = oldPrice && oldPrice > currentPrice
     ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100)
     : null;
@@ -70,6 +92,8 @@ export default function ProductSingle() {
   const canonicalUrl = `${window.location.origin}/product/${product.id}`;
   const pageTitle = `${product.name} — ${product.brand} | متجر العطور`;
   const pageDescription = product.description || 'متجر العطور الأصلية الفاخرة - توصيل لجميع المدن';
+
+  const rating = typeof product.rating === 'number' ? product.rating : 0;
 
   const productJsonLd = {
     '@context': 'https://schema.org',
@@ -154,13 +178,13 @@ export default function ProductSingle() {
                   <Star
                     key={i}
                     className={`h-5 w-5 ${
-                      i < Math.round(product.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                      i < Math.round(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
                     }`}
                   />
                 ))}
               </div>
               <span className="text-sm text-muted-foreground">
-                ({product.rating}) · {reviews.length} تقييم
+                ({rating}) · {reviews.length} تقييم
               </span>
             </div>
 

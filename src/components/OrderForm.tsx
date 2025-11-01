@@ -106,11 +106,12 @@ export default function OrderForm({ open, onOpenChange, items, totalAmount, onSu
 
       onOpenChange(false);
       if (onSuccess) onSuccess();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating order:', error);
+      const message = error instanceof Error ? error.message : 'حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى';
       toast({
         title: 'فشل إرسال الطلب',
-        description: error.message || 'حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى',
+        description: message,
         variant: 'destructive',
       });
     } finally {

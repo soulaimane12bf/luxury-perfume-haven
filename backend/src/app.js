@@ -260,8 +260,8 @@ export async function initializeDatabase() {
 
     // Use a standard sync in serverless to keep startup fast. Avoid alter
     // operations on cold starts as they can be slow; use migrations in prod.
-    // Race sync against a 30s timeout so we fail fast and avoid long cold-starts
-    await withTimeout(sequelize.sync(), 30000, 'sequelize.sync');
+    // Race sync against a 60s timeout for Supabase (increased from 30s)
+    await withTimeout(sequelize.sync(), 60000, 'sequelize.sync');
     console.log('✓ Database models synchronized (sync)');
 
   // Attempt to seed only if SEED env var requests it. For in-memory

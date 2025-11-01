@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { slidersApi } from '@/lib/api';
 import { Button } from './ui/button';
@@ -55,6 +55,14 @@ export function HeroSlider() {
   }, []);
 
   // Auto-play functionality
+  const goToNext = useCallback(() => {
+    if (isTransitioning || sliders.length === 0) return;
+    setDirection('next');
+    setIsTransitioning(true);
+    setCurrentIndex((prev) => (prev + 1) % sliders.length);
+    setTimeout(() => setIsTransitioning(false), 250);
+  }, [isTransitioning, sliders.length]);
+
   useEffect(() => {
     if (sliders.length <= 1) return;
 
@@ -63,32 +71,24 @@ export function HeroSlider() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [sliders.length, currentIndex]);
+  }, [sliders.length, goToNext]);
 
   // Navigation functions
-  const goToNext = () => {
-    if (isTransitioning || sliders.length === 0) return;
-    setDirection('next');
-    setIsTransitioning(true);
-    setCurrentIndex((prev) => (prev + 1) % sliders.length);
-  setTimeout(() => setIsTransitioning(false), 250);
-  };
-
-  const goToPrev = () => {
+  const goToPrev = useCallback(() => {
     if (isTransitioning || sliders.length === 0) return;
     setDirection('prev');
     setIsTransitioning(true);
     setCurrentIndex((prev) => (prev - 1 + sliders.length) % sliders.length);
-  setTimeout(() => setIsTransitioning(false), 250);
-  };
+    setTimeout(() => setIsTransitioning(false), 250);
+  }, [isTransitioning, sliders.length]);
 
-  const goToSlide = (index: number) => {
+  const goToSlide = useCallback((index: number) => {
     if (isTransitioning || index === currentIndex) return;
     setDirection(index > currentIndex ? 'next' : 'prev');
     setIsTransitioning(true);
     setCurrentIndex(index);
-  setTimeout(() => setIsTransitioning(false), 250);
-  };
+    setTimeout(() => setIsTransitioning(false), 250);
+  }, [currentIndex, isTransitioning]);
 
   // Handle button click
   const handleButtonClick = (link?: string) => {

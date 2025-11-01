@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -7,8 +7,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -31,13 +31,14 @@ const ResetPassword = () => {
           setTimeout(() => navigate('/forgot-password', { replace: true }), 1800);
         }
       } catch (err) {
+        console.error('Failed to validate reset token', err);
         setError('فشل التحقق من الرمز. حاول مرة أخرى.');
         setTimeout(() => navigate('/forgot-password', { replace: true }), 1800);
       }
     })();
   }, [token, navigate]);
 
-  const onSubmit = async (e) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
@@ -50,14 +51,16 @@ const ResetPassword = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'حدث خطأ ما');
-  setSuccess('تم تعيين كلمة مرور جديدة بنجاح. سيتم تحويلك إلى صفحة تسجيل الدخول.');
-  // Mark the token as used in session storage so revisiting the same URL
-  // client-side will redirect immediately. The backend also clears the
-  // token server-side, so this is a UX improvement.
-  try { sessionStorage.setItem(`reset_used:${token}`, '1'); } catch (e) {}
-  setTimeout(() => navigate('/login', { replace: true }), 1600);
+      setSuccess('تم تعيين كلمة مرور جديدة بنجاح. سيتم تحويلك إلى صفحة تسجيل الدخول.');
+      try {
+        sessionStorage.setItem(`reset_used:${token}`, '1');
+      } catch (storageError) {
+        console.error('Failed to persist reset token usage', storageError);
+      }
+      setTimeout(() => navigate('/login', { replace: true }), 1600);
     } catch (err) {
-      setError(err.message);
+      const message = err instanceof Error ? err.message : 'حدث خطأ ما';
+      setError(message);
     } finally {
       setLoading(false);
     }

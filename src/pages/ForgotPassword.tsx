@@ -7,8 +7,8 @@ import { useNavigate } from 'react-router-dom';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [maskedAdminEmail, setMaskedAdminEmail] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -21,14 +21,14 @@ const ForgotPassword = () => {
         if (!res.ok) return;
         const data = await res.json();
         setMaskedAdminEmail(data.masked || null);
-      } catch (e) {
-        // ignore
+      } catch (fetchError) {
+        console.error('Failed to fetch masked admin email', fetchError);
       }
     };
     fetchMasked();
   }, []);
 
-  const onSubmit = async (e) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
@@ -48,8 +48,9 @@ const ForgotPassword = () => {
         throw new Error(data.message || 'حدث خطأ ما');
       }
       setSuccess('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. تحقق من صندوق الوارد.');
-    } catch (err: any) {
-      setError(err.message || 'حدث خطأ ما');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'حدث خطأ ما';
+      setError(message);
     } finally {
       setLoading(false);
     }

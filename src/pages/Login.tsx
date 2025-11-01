@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,6 +8,14 @@ import { Loader2, AlertCircle, Lock, User, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import SEO from '@/components/SEO';
 
+type FocusedField = 'username' | 'password' | null;
+
+type LocationState = {
+	from?: {
+		pathname?: string;
+	};
+};
+
 const Login = () => {
 
 	const canonical = (typeof window !== 'undefined') ? window.location.href : 'https://www.cosmedstores.com/login';
@@ -15,16 +23,16 @@ const Login = () => {
 	const description = 'تسجيل الدخول إلى حسابك في Cosmed Stores للوصول إلى الطلبات والخصومات.';
 	const [username, setUsername] = useState('')
 	const [password, setPassword] = useState('')
-	const [error, setError] = useState(null)
+	const [error, setError] = useState<string | null>(null)
 	const [loading, setLoading] = useState(false)
-	const [focusedField, setFocusedField] = useState(null)
+	const [focusedField, setFocusedField] = useState<FocusedField>(null)
 
 	const navigate = useNavigate()
-	const location = useLocation() as { state?: { from?: { pathname?: string } } }
+	const location = useLocation()
 
 	const { login, isAuthenticated, loading: authLoading } = useAuth()
 
-	const from = location.state?.from?.pathname || '/admin'
+	const from = ((location.state as LocationState | undefined)?.from?.pathname) || '/admin'
 
 	useEffect(() => {
 		// if the auth hook finished and user is authenticated, redirect away from login
@@ -42,9 +50,9 @@ const Login = () => {
 		if (error) {
 			setError(null)
 		}
-	}, [username, password])
+	}, [username, password, error])
 
-	const onSubmit = async (e) => {
+	const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		setError(null)
 		setLoading(true)
@@ -54,9 +62,8 @@ const Login = () => {
 		} catch (err) {
 			let message = 'اسم المستخدم أو كلمة المرور غير صحيحة'
 			if (err instanceof Error) {
-				// Prefer a friendly message for 401 responses
-				// @ts-ignore
-				if ((err as any).status === 401) {
+				const apiError = err as Error & { status?: number }
+				if (apiError.status === 401) {
 					message = 'اسم المستخدم أو كلمة المرور غير صحيحة'
 				} else {
 					message = err.message || message

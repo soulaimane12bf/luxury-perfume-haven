@@ -192,7 +192,7 @@ export const productsApi = {
     
     const data: unknown = await apiCall(`${API_BASE_URL}/products?${params}`, {
       headers: isAdmin ? withAuth({ 'Cache-Control': 'no-cache' }) : {},
-    }, 'جلب المنتجات') as any;
+    }, 'جلب المنتجات');
     // `data` shape varies by endpoint and request params; treat as unknown and
     // narrow below where needed to avoid `any` usage.
 
@@ -502,6 +502,8 @@ export const profileApi = {
     username?: string;
     email?: string;
     phone?: string;
+    smtp_email?: string;
+    smtp_password?: string;
     instagram?: string | null;
     facebook?: string | null;
   }) => {

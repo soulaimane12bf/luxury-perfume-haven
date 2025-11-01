@@ -9,6 +9,54 @@ import { useToast } from '@/hooks/use-toast';
 import showAdminAlert from '@/lib/swal-admin';
 import { Loader2, User, Mail, Phone, Lock, Save, Instagram, Facebook } from 'lucide-react';
 
+type AdminProfileResponse = {
+  username?: string;
+  email?: string;
+  phone?: string;
+  smtp_email?: string;
+  instagram?: string | null;
+  facebook?: string | null;
+};
+
+type AdminProfileState = {
+  username: string;
+  email: string;
+  phone: string;
+  smtp_email: string;
+  smtp_password: string;
+  instagram: string;
+  facebook: string;
+};
+
+type AdminPasswordFormState = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
+
+const emptyProfile: AdminProfileState = {
+  username: '',
+  email: '',
+  phone: '',
+  smtp_email: '',
+  smtp_password: '',
+  instagram: '',
+  facebook: '',
+};
+
+const emptyPasswordForm: AdminPasswordFormState = {
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+};
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
+    return (error as { message: string }).message;
+  }
+  return fallback;
+};
+
 export default function AdminProfile() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -16,22 +64,10 @@ export default function AdminProfile() {
   const [changingPassword, setChangingPassword] = useState(false);
 
   // Profile form state
-  const [profile, setProfile] = useState({
-    username: '',
-    email: '',
-    phone: '',
-    smtp_email: '',
-    smtp_password: '',
-    instagram: '',
-    facebook: '',
-  });
+  const [profile, setProfile] = useState<AdminProfileState>(emptyProfile);
 
   // Password form state
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
+  const [passwordForm, setPasswordForm] = useState<AdminPasswordFormState>(emptyPasswordForm);
 
   // Fetch admin profile
   useEffect(() => {
@@ -41,7 +77,7 @@ export default function AdminProfile() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const data: any = await profileApi.getProfile();
+      const data = (await profileApi.getProfile()) as AdminProfileResponse;
       setProfile({
         username: data.username || '',
         email: data.email || '',
@@ -51,10 +87,10 @@ export default function AdminProfile() {
         instagram: data.instagram || '',
         facebook: data.facebook || '',
       });
-    } catch (error: any) {
+    } catch (error) {
       showAdminAlert({
         title: 'خطأ',
-        text: error.message || 'فشل في جلب البيانات',
+        text: getErrorMessage(error, 'فشل في جلب البيانات'),
         icon: 'error',
         timer: 5000,
       });
@@ -75,7 +111,15 @@ export default function AdminProfile() {
       setUpdating(true);
       
       // Only send SMTP password if it was actually changed (not empty)
-      const updateData = {
+      const updateData: {
+        username: string;
+        email: string;
+        phone: string;
+        smtp_email: string;
+        smtp_password?: string;
+        instagram: string;
+        facebook: string;
+      } = {
         username: profile.username,
         email: profile.email,
         phone: profile.phone,
@@ -90,8 +134,8 @@ export default function AdminProfile() {
       await profileApi.updateProfile(updateData);
       showAdminAlert({ title: 'تم التحديث', text: 'تم تحديث الملف الشخصي بنجاح', icon: 'success', timer: 3000 });
       fetchProfile(); // Refresh profile
-    } catch (error: any) {
-      showAdminAlert({ title: 'خطأ', text: error.message || 'فشل في تحديث الملف الشخصي', icon: 'error', timer: 5000 });
+    } catch (error) {
+      showAdminAlert({ title: 'خطأ', text: getErrorMessage(error, 'فشل في تحديث الملف الشخصي'), icon: 'error', timer: 5000 });
     } finally {
       setUpdating(false);
     }
@@ -120,13 +164,9 @@ export default function AdminProfile() {
       await profileApi.updatePassword(passwordForm.currentPassword, passwordForm.newPassword);
       showAdminAlert({ title: 'تم التغيير', text: 'تم تغيير كلمة المرور بنجاح', icon: 'success', timer: 3000 });
       // Clear password form
-      setPasswordForm({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-    } catch (error: any) {
-      showAdminAlert({ title: 'خطأ', text: error.message || 'فشل في تغيير كلمة المرور', icon: 'error', timer: 5000 });
+      setPasswordForm(emptyPasswordForm);
+    } catch (error) {
+      showAdminAlert({ title: 'خطأ', text: getErrorMessage(error, 'فشل في تغيير كلمة المرور'), icon: 'error', timer: 5000 });
     } finally {
       setChangingPassword(false);
     }
