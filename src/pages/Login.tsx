@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, AlertCircle, Lock, User, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import showAdminAlert from '@/lib/swal-admin';
 import SEO from '@/components/SEO';
 
 type FocusedField = 'username' | 'password' | null;
@@ -41,17 +42,6 @@ const Login = () => {
 		}
 	}, [authLoading, isAuthenticated, navigate, from])
 
-	useEffect(() => {
-		// Clear inline error only when the user edits the username or password.
-		// Previously this effect also depended on `error` which immediately
-		// cleared the error after it was set, preventing the alert from
-		// remaining visible. Keep the dependency list to username/password
-		// so the alert stays until the user changes the inputs.
-		if (error) {
-			setError(null)
-		}
-	}, [username, password, error])
-
 	const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		setError(null)
@@ -72,6 +62,7 @@ const Login = () => {
 				message = err
 			}
 			// Set the error and move focus to the alert for accessibility
+			showAdminAlert({ title: 'خطأ', text: message, icon: 'error', timer: 3500 })
 			setError(message)
 			setTimeout(() => {
 				const el = document.getElementById('login-error-alert')
@@ -155,7 +146,10 @@ const Login = () => {
 											id="username"
 											type="text"
 											value={username}
-											onChange={(e) => setUsername(e.target.value)}
+											onChange={(e) => {
+												if (error) setError(null);
+												setUsername(e.target.value);
+											}}
 											onFocus={() => setFocusedField('username')}
 											onBlur={() => setFocusedField(null)}
 											placeholder="أدخل اسم المستخدم أو البريد الإلكتروني"
@@ -184,7 +178,10 @@ const Login = () => {
 															id="password"
 															type="password"
 															value={password}
-															onChange={(e) => setPassword(e.target.value)}
+															onChange={(e) => {
+																if (error) setError(null);
+																setPassword(e.target.value);
+															}}
 															onFocus={() => setFocusedField('password')}
 															onBlur={() => setFocusedField(null)}
 															placeholder="أدخل كلمة المرور"
