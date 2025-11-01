@@ -120,7 +120,7 @@ export default function ReturnPolicy() {
                 <ul className="space-y-3 text-gray-700">
                   <li className="flex items-start gap-2">
                     <span className="text-amber-600 mt-1">•</span>
-                    <span>تواصل معنا فوراً عبر الواتساب: <strong>+212 625 073 838</strong></span>
+                    <span>تواصل معنا فوراً عبر الواتساب: <strong dir="ltr">+212 625 073 838</strong></span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-amber-600 mt-1">•</span>
@@ -198,7 +198,7 @@ export default function ReturnPolicy() {
                 
                 <div className="mt-6 bg-white rounded-lg p-4 border border-amber-300">
                   <p className="text-amber-800 font-semibold text-center">
-                    للاستفسارات: واتساب +212 625 073 838
+                    للاستفسارات: واتساب <span dir="ltr">+212 625 073 838</span>
                   </p>
                 </div>
               </div>

@@ -192,7 +192,7 @@ export default function ShippingPolicy() {
                 </p>
                 <div className="bg-white rounded-lg p-4 border border-amber-300 text-center">
                   <p className="text-amber-800 font-bold text-lg">
-                    📱 واتساب: +212 625 073 838
+                    📱 واتساب: <span dir="ltr">+212 625 073 838</span>
                   </p>
                   <p className="text-sm text-gray-600 mt-2">
                     متاحون 24 ساعة، 7 أيام في الأسبوع

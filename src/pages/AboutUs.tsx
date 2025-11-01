@@ -112,7 +112,7 @@ export default function AboutUs() {
                   📍 <strong>العنوان:</strong> سوكوما 2، مراكش، المغرب
                 </p>
                 <p className="text-gray-700 leading-relaxed mb-2">
-                  📱 <strong>الهاتف/واتساب:</strong> +212 625 073 838
+                  📱 <strong>الهاتف/واتساب:</strong> <span dir="ltr">+212 625 073 838</span>
                 </p>
                 <p className="text-gray-700 leading-relaxed">
                   🕒 <strong>ساعات العمل:</strong> متاحون على الواتساب 24/7

@@ -57,7 +57,7 @@ const Contact = () => {
                         <Send className="h-5 w-5" />
                         أرسل رسالة الآن
                       </a>
-                      <p className="text-sm text-green-700 mt-3 font-mono">
+                      <p className="text-sm text-green-700 mt-3 font-mono" dir="ltr">
                         +212 625 073 838
                       </p>
                     </div>
@@ -76,6 +76,7 @@ const Contact = () => {
                       <a 
                         href={`tel:${whatsappNumber}`}
                         className="text-amber-700 font-mono text-lg hover:text-amber-900"
+                        dir="ltr"
                       >
                         +212 625 073 838
                       </a>

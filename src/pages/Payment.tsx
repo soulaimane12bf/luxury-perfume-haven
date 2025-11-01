@@ -132,7 +132,7 @@ const Payment = () => {
               </p>
               <div className="bg-white rounded-lg p-4 border border-amber-300 inline-block">
                 <p className="text-amber-800 font-bold text-lg">
-                  📱 واتساب: +212 625 073 838
+                  📱 واتساب: <span dir="ltr">+212 625 073 838</span>
                 </p>
               </div>
             </div>

@@ -152,7 +152,7 @@ export default function TermsOfService() {
                   استمرارك في استخدام الموقع بعد التعديلات يعني موافقتك على الشروط الجديدة.
                 </p>
                 <p className="text-gray-700 leading-relaxed mt-4">
-                  للاستفسارات، تواصل معنا عبر الواتساب: <strong className="text-amber-700">+212 625 073 838</strong>
+                  للاستفسارات، تواصل معنا عبر الواتساب: <strong className="text-amber-700" dir="ltr">+212 625 073 838</strong>
                 </p>
               </div>
             </div>

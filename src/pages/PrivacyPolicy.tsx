@@ -151,7 +151,7 @@ export default function PrivacyPolicy() {
                   </li>
                 </ul>
                 <p className="text-gray-700 leading-relaxed mt-4">
-                  للاستفسارات حول خصوصيتك، تواصل معنا عبر الواتساب: <strong className="text-amber-700">+212 625 073 838</strong>
+                  للاستفسارات حول خصوصيتك، تواصل معنا عبر الواتساب: <strong className="text-amber-700" dir="ltr">+212 625 073 838</strong>
                 </p>
               </div>
             </div>

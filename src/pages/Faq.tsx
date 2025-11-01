@@ -185,7 +185,13 @@ const Faq = () => {
                         {isOpen && (
                           <div className="px-4 pb-4 bg-amber-50 border-t border-amber-100">
                             <p className="text-gray-700 leading-relaxed pt-4">
-                              {faq.a}
+                              {faq.a.split(/([\+\d\s]+\d{3}\s\d{3}\s\d{3})/).map((part, i) => 
+                                /[\+\d\s]+\d{3}\s\d{3}\s\d{3}/.test(part) ? (
+                                  <span key={i} dir="ltr">{part}</span>
+                                ) : (
+                                  part
+                                )
+                              )}
                             </p>
                           </div>
                         )}
@@ -207,7 +213,7 @@ const Faq = () => {
             </p>
             <div className="bg-white rounded-lg p-4 border border-amber-300 inline-block">
               <p className="text-amber-800 font-bold text-lg">
-                📱 واتساب: +212 625 073 838
+                📱 واتساب: <span dir="ltr">+212 625 073 838</span>
               </p>
             </div>
           </div>
