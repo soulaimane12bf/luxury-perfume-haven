@@ -34,7 +34,7 @@ export default function AdminNavbar({ showMenuButton = false, onToggleSidebar }:
           <ShoppingBag className="h-5 w-5 md:h-6 md:w-6 flex-shrink-0" />
           <div>
             <h1 className="text-base md:text-xl font-bold">لوحة التحكم</h1>
-            <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">Luxury Perfume Haven</p>
+            <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">Cosmed Stores</p>
           </div>
         </div>
         

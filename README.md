@@ -1,14 +1,14 @@
-# 🌟 Luxury Perfume Haven - Premium E-commerce Platform
+# 🌟 Cosmed Stores - متجر كوسمد للعطور الأصلية
 
 <div align="center">
 
-![Perfume Haven](https://img.shields.io/badge/Status-Production%20Ready-success?style=for-the-badge)
-![Version](https://img.shields.io/badge/Version-2.0-blue?style=for-the-badge)
+![Cosmed Stores](https://img.shields.io/badge/Status-Production%20Ready-success?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-1.0-blue?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
-**A full-stack luxury perfume e-commerce platform with advanced features, admin panel, and performance optimizations**
+**Cosmed Stores - Full-stack luxury perfume e-commerce platform with advanced features, admin panel, and performance optimizations**
 
-[Live Demo](https://luxury-perfume-haven.vercel.app) • [Report Bug](https://github.com/soulaimane12bf/luxury-perfume-haven/issues) • [Request Feature](https://github.com/soulaimane12bf/luxury-perfume-haven/issues)
+[Live Site](https://www.cosmedstores.com) • [Report Bug](https://github.com/soulaimane12bf/luxury-perfume-haven/issues) • [Request Feature](https://github.com/soulaimane12bf/luxury-perfume-haven/issues)
 
 </div>
 
