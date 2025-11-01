@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -22,7 +22,7 @@ type ProductDetail = {
   description?: string;
   price?: string | number;
   old_price?: string | number;
-  stock?: number;
+  stock?: string | number;
   image_urls: string[];
   rating?: number;
   type?: string;
@@ -73,26 +73,49 @@ export default function ProductSingle() {
   const canonicalUrl = `${window.location.origin}/product/${product.id}`;
   const pageTitle = `${product.name} — ${product.brand} | متجر العطور`;
   const pageDescription = product.description || 'متجر العطور الأصلية الفاخرة - توصيل لجميع المدن';
-  const numericPrice = typeof product.price === 'number' ? product.price : Number(product.price ?? 0);
-  const numericStock = typeof product.stock === 'number' ? product.stock : undefined;
-  const isOutOfStock = numericStock !== undefined && numericStock <= 0;
-  const oldPriceValue = product.old_price;
-  const oldPrice = oldPriceValue !== undefined && oldPriceValue !== null ? Number(oldPriceValue) : null;
+
+  const parseNumeric = (value: unknown): number | null => {
+    if (value === null || value === undefined) return null;
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : null;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const numericPrice = parseNumeric(product.price) ?? 0;
+  const numericStock = parseNumeric(product.stock);
+  const isOutOfStock = numericStock !== null && numericStock <= 0;
+  const oldPrice = parseNumeric(product.old_price);
   const currentPrice = numericPrice;
   const discountPercentage = oldPrice && oldPrice > currentPrice
     ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100)
     : null;
 
-  console.log('Product data:', {
-    name: product.name,
-    price: product.price,
-    old_price: product.old_price,
-    currentPrice,
-    oldPrice,
-    discountPercentage
-  });
+  const reviewRatings = reviews
+    .map((review) => parseNumeric((review as { rating?: unknown })?.rating))
+    .filter((rating): rating is number => rating !== null && rating >= 0);
 
-  const rating = typeof product.rating === 'number' ? product.rating : 0;
+  const averageRatingSource = reviewRatings.length > 0
+    ? reviewRatings.reduce((sum, rating) => sum + rating, 0) / reviewRatings.length
+    : parseNumeric(product.rating);
+
+  const averageRating = averageRatingSource ? Number(averageRatingSource.toFixed(1)) : 0;
+  const ratingCount = reviewRatings.length > 0 ? reviewRatings.length : reviews.length;
+  const productForCart = {
+    ...product,
+    id: String(product.id),
+    price: numericPrice,
+    stock: numericStock ?? undefined,
+  };
+
+  useEffect(() => {
+    if (numericStock === null) return;
+    setQuantity((prev) => {
+      if (numericStock <= 0) return 1;
+      return Math.min(prev, numericStock);
+    });
+  }, [numericStock]);
 
   const productJsonLd = {
     '@context': 'https://schema.org',
@@ -177,13 +200,13 @@ export default function ProductSingle() {
                   <Star
                     key={i}
                     className={`h-5 w-5 ${
-                      i < Math.round(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                      i < Math.round(averageRating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
                     }`}
                   />
                 ))}
               </div>
               <span className="text-sm text-muted-foreground">
-                ({rating}) · {reviews.length} تقييم
+                ({averageRating}) · {ratingCount} تقييم
               </span>
             </div>
 
@@ -228,7 +251,7 @@ export default function ProductSingle() {
                 <Badge variant="destructive" className="mt-2 text-sm">
                   نفذ من المخزون
                 </Badge>
-              ) : numericStock !== undefined && numericStock < 10 && (
+              ) : numericStock !== null && numericStock < 10 && (
                 <p className="text-sm text-red-500 mt-1">بقي {numericStock} فقط في المخزون!</p>
               )}
             </div>
@@ -252,7 +275,7 @@ export default function ProductSingle() {
                   size="icon"
                   onClick={() =>
                     setQuantity((prev) => {
-                      if (numericStock === undefined) return prev + 1;
+                      if (numericStock === null) return prev + 1;
                       return Math.min(numericStock, prev + 1);
                     })
                   }
@@ -269,7 +292,10 @@ export default function ProductSingle() {
                 size="lg" 
                 className="w-full text-lg bg-primary hover:bg-primary/90" 
                 disabled={isOutOfStock}
-                onClick={() => setOrderFormOpen(true)}
+                onClick={() => {
+                  if (isOutOfStock) return;
+                  setOrderFormOpen(true);
+                }}
               >
                 <ShoppingBag className="mr-2 h-5 w-5" />
                 اشتري الآن
@@ -281,11 +307,13 @@ export default function ProductSingle() {
                 variant="outline"
                 className="w-full text-lg" 
                 disabled={isOutOfStock}
-                onClick={() => addToCart({ 
-                  ...product, 
-                  id: String(product.id),
-                  price: numericPrice
-                }, quantity)}
+                onClick={() => {
+                  if (isOutOfStock) return;
+                  addToCart(
+                    productForCart,
+                    Math.max(1, Math.min(quantity, numericStock ?? quantity))
+                  );
+                }}
               >
                 <ShoppingCart className="mr-2 h-5 w-5" />
                 أضف إلى السلة
@@ -308,7 +336,7 @@ export default function ProductSingle() {
 
         {/* Reviews Section */}
         <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-6">آراء العملاء ({reviews.length})</h2>
+          <h2 className="text-2xl font-bold mb-6">آراء العملاء ({ratingCount})</h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
