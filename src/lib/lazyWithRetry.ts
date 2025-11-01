@@ -1,6 +1,6 @@
-import { lazy } from 'react';
+import { lazy, type ComponentType } from 'react';
 
-type LazyFactory<T extends React.ComponentType<any>> = () => Promise<{ default: T }>;
+type LazyFactory<T extends ComponentType<unknown>> = () => Promise<{ default: T }>;
 
 const isChunkLoadError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error ?? '');
@@ -16,7 +16,7 @@ const isChunkLoadError = (error: unknown) => {
  * deployment invalidated the hash), the page refreshes once to fetch the
  * latest bundle. Prevents users from being stuck on a blank screen.
  */
-export function lazyWithRetry<T extends React.ComponentType<any>>(
+export function lazyWithRetry<T extends ComponentType<unknown>>(
   factory: LazyFactory<T>,
   storageKey?: string,
 ) {

@@ -16,6 +16,15 @@ import { useProduct, useProductReviews } from '@/lib/hooks/useApi';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@/lib/hooks/useApi';
 
+const parseNumeric = (value: unknown): number | null => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 type ProductDetail = {
   id: string | number;
   name: string;
@@ -49,7 +58,10 @@ export default function ProductSingle() {
   const { data: reviewsData, isLoading: reviewsLoading } = useProductReviews(id!);
   
   const product = isProductDetail(productData) ? productData : null;
-  const reviews = Array.isArray(reviewsData) ? reviewsData : [];
+  const reviews = useMemo(
+    () => (Array.isArray(reviewsData) ? reviewsData : []),
+    [reviewsData],
+  );
   
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -62,54 +74,100 @@ export default function ProductSingle() {
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.reviews.byProduct(id!) });
   };
 
+  const computed = useMemo(() => {
+    if (!product) {
+      return {
+        numericPrice: 0,
+        numericStock: null as number | null,
+        isOutOfStock: false,
+        oldPrice: null as number | null,
+        discountPercentage: null as number | null,
+        averageRating: 0,
+        ratingCount: reviews.length,
+        productForCart: null as {
+          id: string;
+          price: number;
+          stock?: number;
+        } | null,
+      };
+    }
+
+    const numericPrice = parseNumeric(product.price) ?? 0;
+    const numericStock = parseNumeric(product.stock);
+    const isOutOfStock = numericStock !== null && numericStock <= 0;
+    const oldPrice = parseNumeric(product.old_price);
+    const discountPercentage = oldPrice && oldPrice > numericPrice
+      ? Math.round(((oldPrice - numericPrice) / oldPrice) * 100)
+      : null;
+
+    const reviewRatings = reviews
+      .map((review) => parseNumeric((review as { rating?: unknown })?.rating))
+      .filter((rating): rating is number => rating !== null && rating >= 0);
+
+    const averageRatingSource = reviewRatings.length > 0
+      ? reviewRatings.reduce((sum, rating) => sum + rating, 0) / reviewRatings.length
+      : parseNumeric(product.rating);
+
+    const averageRating = averageRatingSource ? Number(averageRatingSource.toFixed(1)) : 0;
+    const ratingCount = reviewRatings.length > 0 ? reviewRatings.length : reviews.length;
+
+    const productForCart = {
+      ...product,
+      id: String(product.id),
+      price: numericPrice,
+      stock: numericStock ?? undefined,
+    };
+
+    return {
+      numericPrice,
+      numericStock,
+      isOutOfStock,
+      oldPrice,
+      discountPercentage,
+      averageRating,
+      ratingCount,
+      productForCart,
+    };
+  }, [product, reviews]);
+
+  const derivedStock = computed.numericStock;
+
+  useEffect(() => {
+    if (derivedStock === null) return;
+    setQuantity((prev) => {
+      if (derivedStock <= 0) return 1;
+      return Math.min(prev, derivedStock);
+    });
+  }, [derivedStock]);
+
   if (loading) {
     return <div className="container py-20 text-center">Loading...</div>;
   }
 
-  if (!product) {
+  if (!product || !computed) {
+    return <div className="container py-20 text-center">Product not found</div>;
+  }
+
+  const {
+    numericPrice,
+    numericStock: computedNumericStock,
+    isOutOfStock,
+    oldPrice,
+    discountPercentage,
+    averageRating,
+    ratingCount,
+    productForCart,
+  } = computed;
+  const currentPrice = numericPrice;
+  const numericStock = computedNumericStock ?? null;
+
+  if (!productForCart) {
     return <div className="container py-20 text-center">Product not found</div>;
   }
 
   const canonicalUrl = `${window.location.origin}/product/${product.id}`;
   const pageTitle = `${product.name} — ${product.brand} | متجر العطور`;
   const pageDescription = product.description || 'متجر العطور الأصلية الفاخرة - توصيل لجميع المدن';
-
-  const parseNumeric = (value: unknown): number | null => {
-    if (value === null || value === undefined) return null;
-    if (typeof value === 'number') {
-      return Number.isFinite(value) ? value : null;
-    }
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  };
-
-  const numericPrice = parseNumeric(product.price) ?? 0;
-  const numericStock = parseNumeric(product.stock);
-  const isOutOfStock = numericStock !== null && numericStock <= 0;
-  const oldPrice = parseNumeric(product.old_price);
-  const currentPrice = numericPrice;
-  const discountPercentage = oldPrice && oldPrice > currentPrice
-    ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100)
-    : null;
-
-  const reviewRatings = reviews
-    .map((review) => parseNumeric((review as { rating?: unknown })?.rating))
-    .filter((rating): rating is number => rating !== null && rating >= 0);
-
-  const averageRatingSource = reviewRatings.length > 0
-    ? reviewRatings.reduce((sum, rating) => sum + rating, 0) / reviewRatings.length
-    : parseNumeric(product.rating);
-
-  const averageRating = averageRatingSource ? Number(averageRatingSource.toFixed(1)) : 0;
-  const ratingCount = reviewRatings.length > 0 ? reviewRatings.length : reviews.length;
-
-  useEffect(() => {
-    if (numericStock === null) return;
-    setQuantity((prev) => {
-      if (numericStock <= 0) return 1;
-      return Math.min(prev, numericStock);
-    });
-  }, [numericStock]);
 
   const productJsonLd = {
     '@context': 'https://schema.org',

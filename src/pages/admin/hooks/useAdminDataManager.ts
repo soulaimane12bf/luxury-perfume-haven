@@ -176,7 +176,14 @@ export const useAdminDataManager = ({
   }, [
     authLoading,
     isAuthenticated,
-    // Removed productPage from deps to prevent refetching everything on page change
+    fetchProducts,
+    productLimit,
+    fetchBestSellerCount,
+    fetchCategories,
+    fetchReviews,
+    refreshOrders,
+    fetchSliders,
+    setLoading,
   ]);
 
   // Fetch products when productPage changes (but don't refetch other data)
@@ -184,14 +191,14 @@ export const useAdminDataManager = ({
     if (authLoading || !isAuthenticated) return;
     if (productPage === 1) return; // Skip if page 1 (already loaded in initial effect)
     fetchProducts(productPage, productLimit);
-  }, [productPage, authLoading, isAuthenticated]);
+  }, [productPage, productLimit, authLoading, isAuthenticated, fetchProducts]);
 
   // Fetch bestsellers when bestSellersPage changes
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
     if (activeTab !== 'bestsellers') return; // Only fetch if on bestsellers tab
     fetchBestSellers(bestSellersPage, bestSellersLimit);
-  }, [bestSellersPage, authLoading, isAuthenticated, activeTab]);
+  }, [bestSellersPage, bestSellersLimit, authLoading, isAuthenticated, activeTab, fetchBestSellers]);
 
   useEffect(() => {
     loadTabData(activeTab);

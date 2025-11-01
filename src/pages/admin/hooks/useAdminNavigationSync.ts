@@ -45,7 +45,7 @@ export const useAdminNavigationSync = ({
   useEffect(() => {
     const p = parseInt(searchParams.get('productsPage') || '1', 10) || 1;
     if (p !== productPage) setProductPage(p);
-  }, [searchParams]); // Remove productPage and setProductPage from deps to prevent loop
+  }, [searchParams, productPage, setProductPage]);
 
   // Sync state to URL params
   useEffect(() => {
@@ -55,13 +55,13 @@ export const useAdminNavigationSync = ({
       np.set('productsPage', String(productPage));
       setSearchParams(np, { replace: true });
     }
-  }, [productPage]); // Only trigger when productPage changes
+  }, [productPage, searchParams, setSearchParams]);
 
   // Sync URL params to state (only when URL changes externally)
   useEffect(() => {
     const bp = parseInt(searchParams.get('bestsellersPage') || '1', 10) || 1;
     if (bp !== bestSellersPage) setBestSellersPage(bp);
-  }, [searchParams]); // Remove bestSellersPage and setBestSellersPage from deps to prevent loop
+  }, [searchParams, bestSellersPage, setBestSellersPage]);
 
   // Sync state to URL params
   useEffect(() => {
@@ -71,7 +71,7 @@ export const useAdminNavigationSync = ({
       np.set('bestsellersPage', String(bestSellersPage));
       setSearchParams(np, { replace: true });
     }
-  }, [bestSellersPage]); // Only trigger when bestSellersPage changes
+  }, [bestSellersPage, searchParams, setSearchParams]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
