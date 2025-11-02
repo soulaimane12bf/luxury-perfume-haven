@@ -76,42 +76,42 @@ const OrderDetailsSection = ({
     <div className={isMobile ? "space-y-3" : "space-y-4"}>
       <div className={gridClasses}>
         <div>
-          <h4 className={`font-semibold mb-2 ${isMobile ? 'text-xs text-amber-400' : 'text-sm'}`}>تفاصيل العميل</h4>
-          <div className={`space-y-1 ${isMobile ? 'text-[11px] text-zinc-300' : 'text-xs'}`}>
+          <h4 className={`font-semibold mb-2 ${isMobile ? 'text-xs text-amber-700' : 'text-sm'}`}>تفاصيل العميل</h4>
+          <div className={`space-y-1 ${isMobile ? 'text-[11px] text-gray-700' : 'text-xs'}`}>
             {order.customer_name && (
               <div>
-                <span className={isMobile ? "text-amber-500/70" : "font-medium"}>الاسم:</span> {order.customer_name}
+                <span className={isMobile ? "text-amber-600" : "font-medium"}>الاسم:</span> {order.customer_name}
               </div>
             )}
             {order.customer_phone && (
               <div>
-                <span className={isMobile ? "text-amber-500/70" : "font-medium"}>الهاتف:</span> {order.customer_phone}
+                <span className={isMobile ? "text-amber-600" : "font-medium"}>الهاتف:</span> {order.customer_phone}
               </div>
             )}
             {order.customer_email && (
               <div>
-                <span className={isMobile ? "text-amber-500/70" : "font-medium"}>البريد:</span> {order.customer_email}
+                <span className={isMobile ? "text-amber-600" : "font-medium"}>البريد:</span> {order.customer_email}
               </div>
             )}
             {order.customer_address && (
               <div>
-                <span className={isMobile ? "text-amber-500/70" : "font-medium"}>العنوان:</span> {order.customer_address}
+                <span className={isMobile ? "text-amber-600" : "font-medium"}>العنوان:</span> {order.customer_address}
               </div>
             )}
             {order.shipping_address && (
               <div>
-                <span className={isMobile ? "text-amber-500/70" : "font-medium"}>عنوان الشحن:</span> {order.shipping_address}
+                <span className={isMobile ? "text-amber-600" : "font-medium"}>عنوان الشحن:</span> {order.shipping_address}
               </div>
             )}
             {order.city && (
               <div>
-                <span className={isMobile ? "text-amber-500/70" : "font-medium"}>المدينة:</span> {order.city}
+                <span className={isMobile ? "text-amber-600" : "font-medium"}>المدينة:</span> {order.city}
               </div>
             )}
           </div>
         </div>
         <div>
-          <h4 className={`font-semibold mb-2 ${isMobile ? 'text-xs text-amber-400' : 'text-sm'}`}>المنتجات</h4>
+          <h4 className={`font-semibold mb-2 ${isMobile ? 'text-xs text-amber-700' : 'text-sm'}`}>المنتجات</h4>
           <div className="space-y-2">
             {Array.isArray(order.items) &&
               order.items.map((item: OrderItem, idx: number) => {
@@ -122,18 +122,18 @@ const OrderDetailsSection = ({
                       <img
                         src={img}
                         alt={item.name}
-                        className={`rounded object-cover flex-shrink-0 border ${isMobile ? 'h-10 w-10 border-amber-900/30' : 'h-12 w-12 bg-white border'}`}
+                        className={`rounded object-cover flex-shrink-0 border ${isMobile ? 'h-10 w-10 border-amber-200' : 'h-12 w-12 bg-white border'}`}
                       />
                       <div className="min-w-0">
-                        <div className={`font-medium truncate ${isMobile ? 'text-[11px] text-amber-50' : ''}`}>{item.name}</div>
+                        <div className={`font-medium truncate ${isMobile ? 'text-[11px] text-gray-900' : ''}`}>{item.name}</div>
                         {item.variant && (
-                          <div className={`text-xs truncate ${isMobile ? 'text-[10px] text-zinc-400' : 'text-muted-foreground'}`}>{item.variant}</div>
+                          <div className={`text-xs truncate ${isMobile ? 'text-[10px] text-gray-600' : 'text-muted-foreground'}`}>{item.variant}</div>
                         )}
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <div className={`${isMobile ? 'text-[10px] text-zinc-400' : 'text-sm'}`}>x{item.quantity}</div>
-                      <div className={`font-medium ${isMobile ? 'text-xs text-amber-400' : ''}`}>{item.price * item.quantity} <span className="text-[10px]">درهم</span></div>
+                      <div className={`${isMobile ? 'text-[10px] text-gray-600' : 'text-sm'}`}>x{item.quantity}</div>
+                      <div className={`font-medium ${isMobile ? 'text-xs text-amber-600' : ''}`}>{item.price * item.quantity} <span className="text-[10px]">درهم</span></div>
                     </div>
                   </div>
                 );
@@ -353,20 +353,20 @@ export function OrdersTab({
           {orders.map((order) => {
             const expanded = expandedOrders.has(order.id);
             return (
-              <Card key={order.id} className="overflow-hidden border-amber-900/20 bg-gradient-to-br from-zinc-900 to-zinc-950">
+              <Card key={order.id} className="overflow-hidden border-amber-200 bg-white shadow-sm">
                 {/* Header Section - Compact */}
-                <div className="bg-gradient-to-r from-amber-900/20 to-amber-800/10 p-3 border-b border-amber-900/30">
+                <div className="bg-gradient-to-r from-amber-50 to-amber-100/50 p-3 border-b border-amber-200">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="text-[10px] font-mono text-amber-500/70">#{order.id.slice(0, 8)}</div>
-                      <Badge className="bg-amber-900/30 text-amber-400 border-amber-700/40 text-[10px] px-1.5 py-0">
+                      <div className="text-[10px] font-mono text-amber-700">#{order.id.slice(0, 8)}</div>
+                      <Badge className="bg-amber-100 text-amber-700 border-amber-300 text-[10px] px-1.5 py-0">
                         {getStatusLabel(order.status)}
                       </Badge>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 w-7 p-0 text-amber-500 hover:text-amber-400 hover:bg-amber-900/20"
+                      className="h-7 w-7 p-0 text-amber-600 hover:text-amber-700 hover:bg-amber-100"
                       onClick={() => onToggleOrderDetails(order.id)}
                       aria-label={expanded ? 'إخفاء تفاصيل الطلب' : 'عرض تفاصيل الطلب'}
                     >
@@ -379,28 +379,28 @@ export function OrdersTab({
                 <div className="p-3 space-y-2">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="text-[10px] text-amber-500/60 mb-0.5">العميل</div>
-                      <div className="font-medium text-sm text-amber-50">{order.customer_name}</div>
+                      <div className="text-[10px] text-amber-600 mb-0.5">العميل</div>
+                      <div className="font-medium text-sm text-gray-900">{order.customer_name}</div>
                       {order.customer_phone && (
-                        <div className="text-[10px] text-zinc-400 mt-0.5">{order.customer_phone}</div>
+                        <div className="text-[10px] text-gray-600 mt-0.5">{order.customer_phone}</div>
                       )}
                     </div>
                     <div className="text-left">
-                      <div className="text-[10px] text-amber-500/60 mb-0.5">المبلغ</div>
-                      <div className="font-bold text-lg text-amber-400">{order.total_amount} <span className="text-xs">درهم</span></div>
-                      <div className="text-[10px] text-zinc-400 mt-0.5">{formatOrderDate(order)}</div>
+                      <div className="text-[10px] text-amber-600 mb-0.5">المبلغ</div>
+                      <div className="font-bold text-lg text-amber-600">{order.total_amount} <span className="text-xs">درهم</span></div>
+                      <div className="text-[10px] text-gray-600 mt-0.5">{formatOrderDate(order)}</div>
                     </div>
                   </div>
 
                   {/* Quick Actions - Horizontal */}
                   <div className="flex gap-2 pt-2">
                     <Select value={order.status} onValueChange={(value) => onUpdateOrderStatus(order.id, value)}>
-                      <SelectTrigger className="flex-1 h-8 text-xs bg-zinc-900/50 border-amber-900/30 text-amber-100 hover:bg-zinc-900">
+                      <SelectTrigger className="flex-1 h-8 text-xs bg-white border-amber-200 text-gray-900 hover:bg-amber-50">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-zinc-900 border-amber-900/30">
+                      <SelectContent className="bg-white border-amber-200">
                         {ORDER_STATUS_OPTIONS.map((status) => (
-                          <SelectItem key={status.value} value={status.value} className="text-amber-100 focus:bg-amber-900/20 focus:text-amber-400">
+                          <SelectItem key={status.value} value={status.value} className="text-gray-900 focus:bg-amber-50 focus:text-amber-700">
                             {status.label}
                           </SelectItem>
                         ))}
@@ -409,7 +409,7 @@ export function OrdersTab({
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="h-8 px-3 bg-green-900/20 border-green-700/40 text-green-400 hover:bg-green-900/30 hover:text-green-300"
+                      className="h-8 px-3 bg-green-50 border-green-300 text-green-700 hover:bg-green-100 hover:text-green-800"
                       onClick={() => onContactCustomer(order)}
                     >
                       <MessageCircle className="h-3.5 w-3.5" />
@@ -417,7 +417,7 @@ export function OrdersTab({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-8 px-3 bg-red-900/20 border-red-700/40 text-red-400 hover:bg-red-900/30 hover:text-red-300"
+                      className="h-8 px-3 bg-red-50 border-red-300 text-red-700 hover:bg-red-100 hover:text-red-800"
                       onClick={() =>
                         openDeleteDialog({
                           type: 'order',
@@ -434,7 +434,7 @@ export function OrdersTab({
 
                 {/* Expanded Details */}
                 {expanded && (
-                  <div className="border-t border-amber-900/20 bg-zinc-950/50 p-3">
+                  <div className="border-t border-amber-200 bg-amber-50/30 p-3">
                     <OrderDetailsSection
                       order={order}
                       onUpdateOrderStatus={onUpdateOrderStatus}
