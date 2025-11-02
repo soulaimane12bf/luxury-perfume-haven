@@ -90,7 +90,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="relative flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
+      <div className="relative flex h-screen overflow-hidden bg-white">
         <div className="hidden md:flex">
           <AdminSidebar activeTab={activeTab} onTabChange={handleTabChange} onLogout={handleLogout} className="md:translate-x-0" />
         </div>
@@ -128,7 +128,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="relative flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
+    <div className="relative flex h-screen overflow-hidden bg-white">
       <div className="hidden md:flex">
         <AdminSidebar activeTab={activeTab} onTabChange={handleTabChange} onLogout={handleLogout} />
       </div>
@@ -154,11 +154,11 @@ export default function AdminDashboard() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <AdminNavbar showMenuButton onToggleSidebar={toggleSidebar} />
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-black">
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-amber-50/30 via-white to-amber-50/20">
           <div className="container py-4 md:py-8 px-4 space-y-6">
             <div className="md:hidden">
               <Select value={activeTab} onValueChange={handleTabChange}>
-                <SelectTrigger className="justify-between bg-white/80 dark:bg-gray-900/60">
+                <SelectTrigger className="justify-between bg-white border-amber-200">
                   <SelectValue placeholder="اختر القسم" />
                 </SelectTrigger>
                 <SelectContent>

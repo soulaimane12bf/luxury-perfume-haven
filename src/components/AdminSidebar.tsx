@@ -25,23 +25,23 @@ export default function AdminSidebar({ activeTab, onTabChange, onLogout, onClose
   return (
     <div
       className={cn(
-        'relative flex h-full w-64 flex-col bg-gradient-to-b from-gray-950 via-gray-900 to-black border-r border-amber-500/30 shadow-[0_0_30px_rgba(212,175,55,0.25)] transition-transform duration-300 ease-out overflow-hidden',
+        'relative flex h-full w-64 flex-col bg-gradient-to-b from-white via-amber-50/30 to-white border-r border-amber-200 shadow-lg transition-transform duration-300 ease-out overflow-hidden',
         isMobile ? 'h-full rounded-l-3xl rounded-r-none' : 'h-screen',
         className
       )}
     >
-      <div className="absolute inset-0 opacity-60 pointer-events-none bg-[radial-gradient(circle_at_top,#facc15_0%,rgba(0,0,0,0)_55%)] blur-3xl" />
+      <div className="absolute inset-0 opacity-30 pointer-events-none bg-[radial-gradient(circle_at_top,#fbbf24_0%,rgba(255,255,255,0)_55%)] blur-3xl" />
 
       {/* Logo/Header */}
-      <div className="relative p-6 border-b border-amber-500/20">
+      <div className="relative p-6 border-b border-amber-200">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-lg flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.35)]">
+            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-lg flex items-center justify-center shadow-lg">
               <LayoutDashboard className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white tracking-wide">لوحة التحكم</h2>
-              <p className="text-xs text-amber-400/80">نظام الإدارة</p>
+              <h2 className="text-xl font-bold text-gray-900 tracking-wide">لوحة التحكم</h2>
+              <p className="text-xs text-amber-600">نظام الإدارة</p>
             </div>
           </div>
           {isMobile && (
@@ -49,7 +49,7 @@ export default function AdminSidebar({ activeTab, onTabChange, onLogout, onClose
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="text-amber-200 hover:text-amber-100 hover:bg-amber-500/10"
+              className="text-gray-600 hover:text-gray-900 hover:bg-amber-100"
             >
               <X className="w-5 h-5" />
             </Button>
@@ -74,18 +74,18 @@ export default function AdminSidebar({ activeTab, onTabChange, onLogout, onClose
               }}
               className={cn(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
-                'hover:bg-gray-800/50 hover:translate-x-1',
-                isActive && 'bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30',
-                !isActive && 'hover:border hover:border-gray-700'
+                'hover:bg-amber-50 hover:translate-x-1',
+                isActive && 'bg-gradient-to-r from-amber-100 to-amber-50 border border-amber-300 shadow-sm',
+                !isActive && 'hover:border hover:border-amber-100'
               )}
             >
               <Icon className={cn(
                 'w-5 h-5',
-                isActive ? 'text-amber-400' : item.color ?? 'text-gray-400'
+                isActive ? 'text-amber-600' : item.color ?? 'text-gray-600'
               )} />
               <span className={cn(
                 'text-sm font-medium',
-                isActive ? 'text-white' : 'text-gray-300'
+                isActive ? 'text-gray-900' : 'text-gray-700'
               )}>
                 {item.label}
               </span>
@@ -98,10 +98,10 @@ export default function AdminSidebar({ activeTab, onTabChange, onLogout, onClose
       </nav>
 
       {/* Logout Button */}
-      <div className="relative p-4 border-t border-amber-500/20">
+      <div className="relative p-4 border-t border-amber-200">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+          className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50"
           onClick={() => {
             // Close the mobile sidebar first if provided, then run the logout handler.
             if (isMobile && onClose) {
