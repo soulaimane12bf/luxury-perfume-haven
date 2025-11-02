@@ -139,8 +139,8 @@ const OrderDetailsSection = ({
                 );
               })}
           </div>
-          <div className={`mt-2 pt-2 ${isMobile ? 'border-t border-amber-900/30' : 'border-t'}`}>
-            <div className={`flex justify-between font-bold ${isMobile ? 'text-xs text-amber-400' : 'text-sm'}`}>
+          <div className={`mt-2 pt-2 ${isMobile ? 'border-t' : 'border-t'}`}>
+            <div className={`flex justify-between font-bold ${isMobile ? 'text-xs' : 'text-sm'}`}>
               <span>المجموع:</span>
               <span>{order.total_amount} درهم</span>
             </div>
