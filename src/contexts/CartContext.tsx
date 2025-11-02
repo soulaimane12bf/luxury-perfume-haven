@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { productsApi } from '@/lib/api';
 
 interface CartItem {
   id: string;
@@ -49,6 +50,44 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
+
+  // Validate cart items against database on mount
+  useEffect(() => {
+    const validateCart = async () => {
+      if (items.length === 0) return;
+      
+      try {
+        // Check each cart item against database
+        const validationResults = await Promise.all(
+          items.map(async (item) => {
+            try {
+              await productsApi.getById(item.id);
+              return { id: item.id, exists: true };
+            } catch (error) {
+              console.log(`Product ${item.id} (${item.name}) no longer exists in database, will be removed from cart`);
+              return { id: item.id, exists: false };
+            }
+          })
+        );
+        
+        // Remove items that no longer exist in database
+        const deletedProductIds = validationResults
+          .filter(result => !result.exists)
+          .map(result => result.id);
+        
+        if (deletedProductIds.length > 0) {
+          setItems(currentItems => 
+            currentItems.filter(item => !deletedProductIds.includes(item.id))
+          );
+          console.log(`Removed ${deletedProductIds.length} deleted product(s) from cart`);
+        }
+      } catch (error) {
+        console.error('Cart validation failed:', error);
+      }
+    };
+    
+    validateCart();
+  }, []); // Run once on mount
 
   const addToCart = (product: ProductInput, quantity: number = 1) => {
     setItems((currentItems) => {
