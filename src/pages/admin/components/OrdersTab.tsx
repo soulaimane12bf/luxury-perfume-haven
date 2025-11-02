@@ -209,41 +209,41 @@ export function OrdersTab({
   openDeleteDialog,
 }: OrdersTabProps) {
   return (
-    <Card className="border-amber-200 shadow-sm">
-      <CardHeader className="p-4 md:p-6 bg-gradient-to-r from-amber-50 to-amber-100/50 border-b border-amber-200">
+    <Card className="shadow-sm">
+      <CardHeader className="p-4 md:p-6">
         <div>
-          <CardTitle className="text-lg md:text-xl text-gray-900">إدارة الطلبات</CardTitle>
-          <CardDescription className="text-xs md:text-sm text-amber-700">
+          <CardTitle className="text-lg md:text-xl">إدارة الطلبات</CardTitle>
+          <CardDescription className="text-xs md:text-sm">
             {stats.totalOrders} طلب - {stats.pendingOrders} قيد الانتظار
           </CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="p-0 md:p-6 md:pt-0 bg-white">
-        <div className="hidden md:block rounded-md border border-amber-200">
+      <CardContent className="p-0 md:p-6 md:pt-0">
+        <div className="hidden md:block rounded-md border">
           <Table>
             <TableHeader>
-              <TableRow className="bg-amber-50 hover:bg-amber-50">
-                <TableHead className="text-right text-amber-800 font-semibold">رقم الطلب</TableHead>
-                <TableHead className="text-right text-amber-800 font-semibold">العميل</TableHead>
-                <TableHead className="text-right text-amber-800 font-semibold">المبلغ</TableHead>
-                <TableHead className="text-right text-amber-800 font-semibold">الحالة</TableHead>
-                <TableHead className="text-right text-amber-800 font-semibold">التاريخ</TableHead>
-                <TableHead className="text-right text-amber-800 font-semibold">إجراءات</TableHead>
+              <TableRow>
+                <TableHead className="text-right">رقم الطلب</TableHead>
+                <TableHead className="text-right">العميل</TableHead>
+                <TableHead className="text-right">المبلغ</TableHead>
+                <TableHead className="text-right">الحالة</TableHead>
+                <TableHead className="text-right">التاريخ</TableHead>
+                <TableHead className="text-right">إجراءات</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {orders.map((order) => (
                 <Fragment key={order.id}>
-                  <TableRow className="cursor-pointer hover:bg-amber-50 border-b border-amber-100" onClick={() => onToggleOrderDetails(order.id)}>
-                    <TableCell className="font-mono text-xs text-gray-900">
+                  <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => onToggleOrderDetails(order.id)}>
+                    <TableCell className="font-mono text-xs">
                       <div className="flex items-center gap-2">
-                        {expandedOrders.has(order.id) ? <ChevronUp className="h-4 w-4 text-amber-600" /> : <ChevronDown className="h-4 w-4 text-amber-600" />}
+                        {expandedOrders.has(order.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         {order.id}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium text-gray-900">{order.customer_name}</div>
+                        <div className="font-medium">{order.customer_name}</div>
                         {Array.isArray(order.items) && order.items.length > 0 && (
                           <div className="mt-1 flex items-center gap-3">
                             <div className="flex -space-x-2">
@@ -254,57 +254,55 @@ export function OrdersTab({
                                     key={index}
                                     src={src}
                                     alt={item.name || 'product'}
-                                    className="h-8 w-8 rounded object-cover border border-amber-200 bg-white"
+                                    className="h-8 w-8 rounded object-cover border bg-white"
                                   />
                                 );
                               })}
                               {order.items.length > 3 && (
-                                <div className="h-8 w-8 rounded bg-amber-100 flex items-center justify-center text-xs ml-1 border border-amber-200 text-amber-700">
+                                <div className="h-8 w-8 rounded bg-muted flex items-center justify-center text-xs ml-1 border">
                                   +{order.items.length - 3}
                                 </div>
                               )}
                             </div>
-                            <div className="text-xs text-gray-600 max-w-[220px] truncate">
+                            <div className="text-xs text-muted-foreground max-w-[220px] truncate">
                               {order.items[0]?.name}
                             </div>
                           </div>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="font-bold text-amber-600">{order.total_amount} درهم</TableCell>
+                    <TableCell className="font-bold">{order.total_amount} درهم</TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Select value={order.status} onValueChange={(value) => onUpdateOrderStatus(order.id, value)}>
-                        <SelectTrigger className="w-[130px] border-amber-200 bg-white hover:bg-amber-50">
+                        <SelectTrigger className="w-[130px]">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-amber-200">
+                        <SelectContent>
                           {ORDER_STATUS_OPTIONS.map((status) => (
-                            <SelectItem key={status.value} value={status.value} className="focus:bg-amber-50 focus:text-amber-700">
+                            <SelectItem key={status.value} value={status.value}>
                               {status.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className="text-gray-700">{formatOrderDate(order)}</TableCell>
+                    <TableCell>{formatOrderDate(order)}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="icon"
-                          className="border-amber-200 hover:bg-amber-50"
                           onClick={(event) => {
                             event.stopPropagation();
                             onToggleOrderDetails(order.id);
                           }}
                           aria-label={expandedOrders.has(order.id) ? 'إخفاء تفاصيل الطلب' : 'عرض تفاصيل الطلب'}
                         >
-                          {expandedOrders.has(order.id) ? <ChevronUp className="h-4 w-4 text-amber-600" /> : <ChevronDown className="h-4 w-4 text-amber-600" />}
+                          {expandedOrders.has(order.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         </Button>
                         <Button
                           variant="outline"
                           size="icon"
-                          className="border-green-300 hover:bg-green-50"
                           onClick={(event) => {
                             event.stopPropagation();
                             onContactCustomer(order);
@@ -314,9 +312,8 @@ export function OrdersTab({
                           <MessageCircle className="h-4 w-4 text-green-600" />
                         </Button>
                         <Button
-                          variant="outline"
+                          variant="destructive"
                           size="icon"
-                          className="border-red-300 hover:bg-red-50 text-red-600 hover:text-red-700"
                           onClick={(event) => {
                             event.stopPropagation();
                             openDeleteDialog({ type: 'order', id: order.id, name: order.customer_name, meta: order.customer_phone });
@@ -328,7 +325,7 @@ export function OrdersTab({
                     </TableCell>
                   </TableRow>
                   {expandedOrders.has(order.id) && (
-                    <TableRow className="bg-amber-50/30 border-b border-amber-100">
+                    <TableRow className="bg-muted/10">
                       <TableCell colSpan={6} className="p-6">
                         <OrderDetailsSection
                           order={order}
@@ -343,7 +340,7 @@ export function OrdersTab({
               ))}
               {orders.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-sm text-gray-600">
+                  <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
                     لا توجد طلبات حالياً.
                   </TableCell>
                 </TableRow>
