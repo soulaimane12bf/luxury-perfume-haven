@@ -1,5 +1,7 @@
 import { FileText, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import SEO from '@/components/SEO';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 export default function TermsOfService() {
   return (
@@ -8,8 +10,8 @@ export default function TermsOfService() {
         title="شروط الاستخدام - Cosmed Parfumerie"
         description="تعرف على شروط وأحكام استخدام موقع Cosmed Parfumerie"
       />
-      
-      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white py-12">
+      <Header />
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white pt-28 md:pt-32 py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             {/* Header */}
@@ -159,6 +161,7 @@ export default function TermsOfService() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

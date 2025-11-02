@@ -1,5 +1,7 @@
 import { Truck, Package, MapPin, Clock, DollarSign, CheckCircle2 } from 'lucide-react';
 import SEO from '@/components/SEO';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 export default function ShippingPolicy() {
   return (
@@ -8,8 +10,8 @@ export default function ShippingPolicy() {
         title="سياسة التوصيل والشحن - Cosmed Parfumerie"
         description="معلومات عن التوصيل والشحن لجميع مدن المغرب"
       />
-      
-      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white py-12">
+      <Header />
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white pt-28 md:pt-32 py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             {/* Header */}
@@ -203,6 +205,7 @@ export default function ShippingPolicy() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

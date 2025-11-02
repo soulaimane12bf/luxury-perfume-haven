@@ -65,80 +65,82 @@ const OrderDetailsSection = ({
 }: OrderDetailsSectionProps) => {
   const gridClasses =
     layout === 'mobile'
-      ? 'grid grid-cols-1 gap-4 text-sm'
+      ? 'grid grid-cols-1 gap-3 text-sm'
       : showManagementControls
         ? 'grid grid-cols-1 md:grid-cols-3 gap-4 text-sm'
         : 'grid grid-cols-1 md:grid-cols-2 gap-4 text-sm';
 
+  const isMobile = layout === 'mobile';
+
   return (
-    <div className="space-y-4">
+    <div className={isMobile ? "space-y-3" : "space-y-4"}>
       <div className={gridClasses}>
         <div>
-          <h4 className="font-semibold text-sm mb-2">تفاصيل العميل</h4>
-          <div className="space-y-1 text-xs">
+          <h4 className={`font-semibold mb-2 ${isMobile ? 'text-xs text-amber-400' : 'text-sm'}`}>تفاصيل العميل</h4>
+          <div className={`space-y-1 ${isMobile ? 'text-[11px] text-zinc-300' : 'text-xs'}`}>
             {order.customer_name && (
               <div>
-                <span className="font-medium">الاسم:</span> {order.customer_name}
+                <span className={isMobile ? "text-amber-500/70" : "font-medium"}>الاسم:</span> {order.customer_name}
               </div>
             )}
             {order.customer_phone && (
               <div>
-                <span className="font-medium">الهاتف:</span> {order.customer_phone}
+                <span className={isMobile ? "text-amber-500/70" : "font-medium"}>الهاتف:</span> {order.customer_phone}
               </div>
             )}
             {order.customer_email && (
               <div>
-                <span className="font-medium">البريد:</span> {order.customer_email}
+                <span className={isMobile ? "text-amber-500/70" : "font-medium"}>البريد:</span> {order.customer_email}
               </div>
             )}
             {order.customer_address && (
               <div>
-                <span className="font-medium">العنوان:</span> {order.customer_address}
+                <span className={isMobile ? "text-amber-500/70" : "font-medium"}>العنوان:</span> {order.customer_address}
               </div>
             )}
             {order.shipping_address && (
               <div>
-                <span className="font-medium">عنوان الشحن:</span> {order.shipping_address}
+                <span className={isMobile ? "text-amber-500/70" : "font-medium"}>عنوان الشحن:</span> {order.shipping_address}
               </div>
             )}
             {order.city && (
               <div>
-                <span className="font-medium">المدينة:</span> {order.city}
+                <span className={isMobile ? "text-amber-500/70" : "font-medium"}>المدينة:</span> {order.city}
               </div>
             )}
           </div>
         </div>
         <div>
-          <h4 className="font-semibold text-sm mb-2">المنتجات</h4>
-          <div className="space-y-1">
+          <h4 className={`font-semibold mb-2 ${isMobile ? 'text-xs text-amber-400' : 'text-sm'}`}>المنتجات</h4>
+          <div className="space-y-2">
             {Array.isArray(order.items) &&
               order.items.map((item: OrderItem, idx: number) => {
                 const img = item.image_url || item.image || item.image_urls?.[0] || '';
                 return (
-                  <div key={idx} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 min-w-0">
+                  <div key={idx} className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                       <img
                         src={img}
                         alt={item.name}
-                        className="h-12 w-12 rounded object-cover flex-shrink-0 bg-white border"
+                        className={`rounded object-cover flex-shrink-0 border ${isMobile ? 'h-10 w-10 border-amber-900/30' : 'h-12 w-12 bg-white border'}`}
                       />
                       <div className="min-w-0">
-                        <div className="font-medium truncate">{item.name}</div>
+                        <div className={`font-medium truncate ${isMobile ? 'text-[11px] text-amber-50' : ''}`}>{item.name}</div>
                         {item.variant && (
-                          <div className="text-xs text-muted-foreground truncate">{item.variant}</div>
+                          <div className={`text-xs truncate ${isMobile ? 'text-[10px] text-zinc-400' : 'text-muted-foreground'}`}>{item.variant}</div>
                         )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm">x{item.quantity}</div>
-                      <div className="font-medium">{item.price * item.quantity} درهم</div>
+                    <div className="text-right flex-shrink-0">
+                      <div className={`${isMobile ? 'text-[10px] text-zinc-400' : 'text-sm'}`}>x{item.quantity}</div>
+                      <div className={`font-medium ${isMobile ? 'text-xs text-amber-400' : ''}`}>{item.price * item.quantity} <span className="text-[10px]">درهم</span></div>
                     </div>
                   </div>
                 );
               })}
           </div>
-          <div className="mt-2 pt-2 border-t">
-            <div className="flex justify-between font-bold text-sm">
+          <div className={`mt-2 pt-2 ${isMobile ? 'border-t border-amber-900/30' : 'border-t'}`}>
+            <div className={`flex justify-between font-bold ${isMobile ? 'text-xs text-amber-400' : 'text-sm'}`}>
               <span>المجموع:</span>
               <span>{order.total_amount} درهم</span>
             </div>
@@ -188,11 +190,11 @@ const OrderDetailsSection = ({
       </div>
       {order.notes && (
         <div>
-          <h4 className="font-semibold text-sm mb-1">ملاحظات:</h4>
-          <p className="text-xs text-muted-foreground">{order.notes}</p>
+          <h4 className={`font-semibold mb-1 ${isMobile ? 'text-xs text-amber-400' : 'text-sm'}`}>ملاحظات:</h4>
+          <p className={`${isMobile ? 'text-[11px] text-zinc-300' : 'text-xs text-muted-foreground'}`}>{order.notes}</p>
         </div>
       )}
-      <div className="text-xs text-muted-foreground">التاريخ: {formatOrderDate(order)}</div>
+      {!isMobile && <div className="text-xs text-muted-foreground">التاريخ: {formatOrderDate(order)}</div>}
     </div>
   );
 };
@@ -351,128 +353,103 @@ export function OrdersTab({
           {orders.map((order) => {
             const expanded = expandedOrders.has(order.id);
             return (
-              <Card key={order.id} className="p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
+              <Card key={order.id} className="overflow-hidden border-amber-900/20 bg-gradient-to-br from-zinc-900 to-zinc-950">
+                {/* Header Section - Compact */}
+                <div className="bg-gradient-to-r from-amber-900/20 to-amber-800/10 p-3 border-b border-amber-900/30">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="font-semibold text-sm truncate">{order.customer_name}</div>
-                      <Badge variant="secondary" className="text-xs shrink-0">{getStatusLabel(order.status)}</Badge>
+                      <div className="text-[10px] font-mono text-amber-500/70">#{order.id.slice(0, 8)}</div>
+                      <Badge className="bg-amber-900/30 text-amber-400 border-amber-700/40 text-[10px] px-1.5 py-0">
+                        {getStatusLabel(order.status)}
+                      </Badge>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      {order.total_amount} د.م • {formatOrderDate(order)}
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-amber-500 hover:text-amber-400 hover:bg-amber-900/20"
+                      onClick={() => onToggleOrderDetails(order.id)}
+                      aria-label={expanded ? 'إخفاء تفاصيل الطلب' : 'عرض تفاصيل الطلب'}
+                    >
+                      {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onToggleOrderDetails(order.id)}
-                    className="shrink-0 h-8 w-8 p-0"
-                  >
-                    {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </Button>
                 </div>
-                
-                {/* Product Preview - Only show when collapsed */}
-                {!expanded && Array.isArray(order.items) && order.items.length > 0 && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <div className="flex -space-x-1">
-                      {order.items.slice(0, 3).map((item: OrderItem, index: number) => {
-                        const src = item.image_url || item.image || item.image_urls?.[0] || '';
-                        return (
-                          <img
-                            key={index}
-                            src={src}
-                            alt={item.name || 'product'}
-                            className="h-6 w-6 rounded object-cover border bg-white"
-                          />
-                        );
-                      })}
-                    </div>
-                    <span className="truncate">{order.items.length} منتج</span>
-                  </div>
-                )}
 
-                {expanded && (
-                  <div className="space-y-3 pt-2 border-t">
-                    {/* Contact Info */}
-                    <div className="space-y-1 text-xs">
-                      {order.customer_phone && <div>📱 {order.customer_phone}</div>}
-                      {order.customer_email && <div>✉️ {order.customer_email}</div>}
-                      {order.city && <div>📍 {order.city}</div>}
-                      {order.customer_address && <div className="text-muted-foreground">العنوان: {order.customer_address}</div>}
-                    </div>
-                    
-                    {/* Products */}
+                {/* Main Info - Compact Grid */}
+                <div className="p-3 space-y-2">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="text-xs font-semibold mb-2">المنتجات:</div>
-                      <div className="space-y-2">
-                        {order.items?.map((item: OrderItem, idx: number) => {
-                          const img = item.image_url || item.image || item.image_urls?.[0] || '';
-                          return (
-                            <div key={idx} className="flex items-center gap-2">
-                              <img
-                                src={img}
-                                alt={item.name}
-                                className="h-10 w-10 rounded object-cover bg-white border shrink-0"
-                              />
-                              <div className="flex-1 min-w-0 text-xs">
-                                <div className="font-medium truncate">{item.name}</div>
-                                <div className="text-muted-foreground">x{item.quantity} • {item.price * item.quantity} د.م</div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      <div className="text-[10px] text-amber-500/60 mb-0.5">العميل</div>
+                      <div className="font-medium text-sm text-amber-50">{order.customer_name}</div>
+                      {order.customer_phone && (
+                        <div className="text-[10px] text-zinc-400 mt-0.5">{order.customer_phone}</div>
+                      )}
                     </div>
-                    
-                    {/* Actions */}
-                    <div className="space-y-2 pt-2 border-t">
-                      <Select value={order.status} onValueChange={(value) => onUpdateOrderStatus(order.id, value)}>
-                        <SelectTrigger className="h-9 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ORDER_STATUS_OPTIONS.map((status) => (
-                            <SelectItem key={status.value} value={status.value}>
-                              {status.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => onContactCustomer(order)}
-                          className="flex-1 h-9"
-                        >
-                          <MessageCircle className="h-4 w-4 text-green-600 mr-2" />
-                          واتساب
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() =>
-                            openDeleteDialog({
-                              type: 'order',
-                              id: order.id,
-                              name: order.customer_name,
-                              meta: order.customer_phone,
-                            })
-                          }
-                          className="h-9 px-3"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                    <div className="text-left">
+                      <div className="text-[10px] text-amber-500/60 mb-0.5">المبلغ</div>
+                      <div className="font-bold text-lg text-amber-400">{order.total_amount} <span className="text-xs">درهم</span></div>
+                      <div className="text-[10px] text-zinc-400 mt-0.5">{formatOrderDate(order)}</div>
                     </div>
+                  </div>
+
+                  {/* Quick Actions - Horizontal */}
+                  <div className="flex gap-2 pt-2">
+                    <Select value={order.status} onValueChange={(value) => onUpdateOrderStatus(order.id, value)}>
+                      <SelectTrigger className="flex-1 h-8 text-xs bg-zinc-900/50 border-amber-900/30 text-amber-100 hover:bg-zinc-900">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-amber-900/30">
+                        {ORDER_STATUS_OPTIONS.map((status) => (
+                          <SelectItem key={status.value} value={status.value} className="text-amber-100 focus:bg-amber-900/20 focus:text-amber-400">
+                            {status.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 px-3 bg-green-900/20 border-green-700/40 text-green-400 hover:bg-green-900/30 hover:text-green-300"
+                      onClick={() => onContactCustomer(order)}
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 bg-red-900/20 border-red-700/40 text-red-400 hover:bg-red-900/30 hover:text-red-300"
+                      onClick={() =>
+                        openDeleteDialog({
+                          type: 'order',
+                          id: order.id,
+                          name: order.customer_name,
+                          meta: order.customer_phone,
+                        })
+                      }
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Expanded Details */}
+                {expanded && (
+                  <div className="border-t border-amber-900/20 bg-zinc-950/50 p-3">
+                    <OrderDetailsSection
+                      order={order}
+                      onUpdateOrderStatus={onUpdateOrderStatus}
+                      onContactCustomer={onContactCustomer}
+                      openDeleteDialog={openDeleteDialog}
+                      showManagementControls={false}
+                      layout="mobile"
+                    />
                   </div>
                 )}
               </Card>
             );
           })}
           {orders.length === 0 && (
-            <div className="py-6 text-center text-sm text-muted-foreground">لا توجد طلبات حالياً.</div>
+            <div className="py-8 text-center text-sm text-amber-500/50">لا توجد طلبات حالياً.</div>
           )}
         </div>
       </CardContent>

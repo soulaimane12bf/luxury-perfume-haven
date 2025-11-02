@@ -1,5 +1,7 @@
 import { Store, Heart, Shield, Sparkles, MapPin, Package, Award } from 'lucide-react';
 import SEO from '@/components/SEO';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 export default function AboutUs() {
   return (
@@ -8,8 +10,8 @@ export default function AboutUs() {
         title="من نحن - Cosmed Parfumerie"
         description="تعرف على Cosmed Parfumerie، متجرك الموثوق للعطور ومستحضرات التجميل الأصلية في المغرب"
       />
-      
-      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white py-12">
+      <Header />
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white pt-28 md:pt-32 py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             {/* Header */}
@@ -122,6 +124,7 @@ export default function AboutUs() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }
